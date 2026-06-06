@@ -1,0 +1,272 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:gap/gap.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../../core/components/app_avatar.dart';
+import '../../../../core/components/app_text_field.dart';
+import '../../../../core/components/shared_widgets.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_dimens.dart';
+import '../../../../core/constants/app_strings.dart';
+import '../../../../core/constants/app_text_styles.dart';
+import '../providers/edit_profile_provider.dart';
+
+class EditProfileScreen extends ConsumerWidget {
+  const EditProfileScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(editProfileProvider);
+    final notifier = ref.read(editProfileProvider.notifier);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      appBar: AppBar(
+        leading: BackButton(onPressed: () => context.pop()),
+        title: Text(AppStrings.editProfile),
+        actions: [
+          Padding(
+            padding: EdgeInsets.only(right: AppDimens.lg),
+            child: GestureDetector(
+              onTap: state.isSaving
+                  ? null
+                  : () async {
+                      await notifier.save();
+                      if (context.mounted) {
+                        context.pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(AppStrings.profileUpdated),
+                          ),
+                        );
+                      }
+                    },
+              child: Container(
+                height: AppDimens.buttonHeightSm,
+                padding: EdgeInsets.symmetric(horizontal: AppDimens.xl),
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  borderRadius:
+                      BorderRadius.circular(AppDimens.radiusFull),
+                ),
+                child: Center(
+                  child: state.isSaving
+                      ? SizedBox(
+                          width: 14.w,
+                          height: 14.w,
+                          child: const CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          AppStrings.save,
+                          style: AppTextStyles.buttonSmall
+                              .copyWith(color: Colors.white),
+                        ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.symmetric(
+          horizontal: AppDimens.screenPadding,
+          vertical: AppDimens.vxl,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Avatar upload
+            Center(
+              child: AvatarUpload(
+                imageUrl: state.avatarUrl,
+                onTap: notifier.pickAvatar,
+                size: 88,
+                label: AppStrings.changePhoto,
+              ),
+            ),
+            Gap(AppDimens.vxxxl),
+
+            // Fields
+            AppTextField(
+              controller: notifier.usernameController,
+              label: AppStrings.username,
+              textInputAction: TextInputAction.next,
+            ),
+            Gap(AppDimens.vlg),
+
+            AppTextField(
+              controller: notifier.displayNameController,
+              label: AppStrings.displayName,
+              textInputAction: TextInputAction.next,
+            ),
+            Gap(AppDimens.vlg),
+
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AppTextField(
+                  controller: notifier.bioController,
+                  label: AppStrings.bio,
+                  maxLines: 3,
+                  maxLength: 150,
+                  onChanged: (_) => notifier.onBioChanged(),
+                  textInputAction: TextInputAction.next,
+                ),
+                Gap(4.h),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    '${state.bioLength} / 150',
+                    style: AppTextStyles.caption.copyWith(
+                      color: isDark
+                          ? AppColors.darkTextMuted
+                          : AppColors.lightTextMuted,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Gap(AppDimens.vlg),
+
+            AppTextField(
+              controller: notifier.websiteController,
+              label: AppStrings.website,
+              keyboardType: TextInputType.url,
+              textInputAction: TextInputAction.next,
+              prefixIcon: Icon(
+                Icons.link_rounded,
+                size: AppDimens.iconSm,
+                color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+              ),
+            ),
+            Gap(AppDimens.vlg),
+
+            AppTextField(
+              controller: notifier.emailController,
+              label: AppStrings.email,
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.done,
+              prefixIcon: Icon(
+                Icons.mail_outline_rounded,
+                size: AppDimens.iconSm,
+                color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+              ),
+            ),
+
+            // Section divider
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: AppDimens.vxl),
+              child: Divider(
+                color: isDark
+                    ? AppColors.darkBorderSubtle
+                    : AppColors.lightBorderSubtle,
+              ),
+            ),
+
+            Text(
+              AppStrings.accountSettings.toUpperCase(),
+              style: AppTextStyles.sectionLabel.copyWith(
+                color: isDark
+                    ? AppColors.darkTextMuted
+                    : AppColors.lightTextMuted,
+              ),
+            ),
+            Gap(AppDimens.vmd),
+
+            // Private account toggle
+            Container(
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+                border: Border.all(
+                  color: isDark
+                      ? AppColors.darkBorderSubtle
+                      : AppColors.lightBorderSubtle,
+                ),
+              ),
+              child: Column(
+                children: [
+                  _ToggleRow(
+                    title: AppStrings.privateAccount,
+                    subtitle: AppStrings.privateAccountSub,
+                    value: state.isPrivate,
+                    onChanged: notifier.setPrivate,
+                  ),
+                  const AppDivider(),
+                  _ToggleRow(
+                    title: AppStrings.showActivityStatus,
+                    subtitle: AppStrings.showActivityStatusSub,
+                    value: state.showActivityStatus,
+                    onChanged: notifier.setShowActivity,
+                  ),
+                ],
+              ),
+            ),
+            Gap(AppDimens.vmassive),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ToggleRow extends StatelessWidget {
+  const _ToggleRow({
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String title;
+  final String subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: AppDimens.lg,
+        vertical: AppDimens.vmd,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
+                  ),
+                ),
+                Gap(3.h),
+                Text(
+                  subtitle,
+                  style: AppTextStyles.caption.copyWith(
+                    color: isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch(value: value, onChanged: onChanged),
+        ],
+      ),
+    );
+  }
+}
