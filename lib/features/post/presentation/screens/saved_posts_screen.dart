@@ -13,8 +13,8 @@ import '../../../../core/errors/result.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/providers/current_user_provider.dart';
 import '../../data/providers/post_data_providers.dart';
+import '../../../../core/components/post_card.dart';
 import '../../domain/entities/post.dart';
-import '../widgets/post_grid_cell.dart';
 
 class SavedPostsScreen extends ConsumerStatefulWidget {
   const SavedPostsScreen({super.key});
@@ -115,17 +115,23 @@ class _SavedPostsScreenState extends ConsumerState<SavedPostsScreen> {
     return RefreshIndicator(
       color: AppColors.primary,
       onRefresh: _load,
-      child: GridView.builder(
-        padding: const EdgeInsets.all(2),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          mainAxisSpacing: 2,
-          crossAxisSpacing: 2,
-        ),
+      child: ListView.builder(
         itemCount: posts.length,
-        itemBuilder: (context, i) => GestureDetector(
-          onTap: () => context.push(AppRoutes.postDetailPath(posts[i].id)),
-          child: PostGridCell(post: posts[i]),
+        itemBuilder: (context, i) => PostCard(
+          post: posts[i],
+          onLikeTap: null,
+          onCommentTap: () =>
+              context.push(AppRoutes.postDetailPath(posts[i].id)),
+          onSaveTap: () async {
+            await ref.read(toggleSaveUseCaseProvider).call(
+                  postId: posts[i].id,
+                  currentUserId:
+                      ref.read(currentUserIdProvider) ?? '',
+                );
+            await _load();
+          },
+          onUserTap: () =>
+              context.push(AppRoutes.userProfilePath(posts[i].author.id)),
         ),
       ),
     );
