@@ -18,6 +18,7 @@ import '../../../../core/providers/locale_provider.dart';
 import '../../../../core/providers/theme_provider.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../i18n/strings.g.dart';
+import 'package:country_flags/country_flags.dart';
 import '../../../auth/data/providers/auth_data_providers.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../profile/domain/entities/profile.dart';
@@ -703,9 +704,9 @@ class _LanguagePickerSheet extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final langs = [
-      (AppLocale.en, AppStrings.english, 'ðŸ‡ºðŸ‡¸'),
-      (AppLocale.uz, AppStrings.uzbek, 'ðŸ‡ºðŸ‡¿'),
-      (AppLocale.ru, AppStrings.russian, 'ðŸ‡·ðŸ‡º'),
+      (AppLocale.en, AppStrings.english, 'US'),
+      (AppLocale.uz, AppStrings.uzbek, 'UZ'),
+      (AppLocale.ru, AppStrings.russian, 'RU'),
     ];
 
     return Container(
@@ -756,7 +757,12 @@ class _LanguagePickerSheet extends ConsumerWidget {
                 ),
                 child: Row(
                   children: [
-                    Text(flag, style: TextStyle(fontSize: 24.sp)),
+                    CountryFlag.fromCountryCode(
+                      flag,
+                      width: 36.w,
+                      height: 24.h,
+                      borderRadius: 4.r,
+                    ),
                     Gap(AppDimens.lg),
                     Expanded(
                       child: Text(
