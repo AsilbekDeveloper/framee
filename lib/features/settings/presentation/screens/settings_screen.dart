@@ -18,7 +18,6 @@ import '../../../../core/providers/locale_provider.dart';
 import '../../../../core/providers/theme_provider.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../i18n/strings.g.dart';
-import 'package:country_flags/country_flags.dart';
 import '../../../auth/data/providers/auth_data_providers.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../profile/domain/entities/profile.dart';
@@ -68,12 +67,7 @@ class SettingsScreen extends ConsumerWidget {
                   onChanged: (_) => themeNotifier.toggleDarkMode(),
                 ),
                 const AppDivider(),
-                _NavTile(
-                  icon: Icons.language_rounded,
-                  title: AppStrings.language,
-                  trailing: _localeName(currentLocale),
-                  onTap: () => _showLanguagePicker(context, ref, currentLocale),
-                ),
+                _LanguageTile(currentLocale: currentLocale),
               ],
             ),
           ),
@@ -193,22 +187,6 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
-
-  String _localeName(AppLocale locale) {
-    return switch (locale) {
-      AppLocale.en => AppStrings.english,
-      AppLocale.uz => AppStrings.uzbek,
-      AppLocale.ru => AppStrings.russian,
-    };
-  }
-
-  void _showLanguagePicker(BuildContext context, WidgetRef ref, AppLocale current) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _LanguagePickerSheet(current: current),
     );
   }
 
@@ -693,103 +671,77 @@ class _DangerTile extends StatelessWidget {
   }
 }
 
-// â”€â”€â”€ Language Picker Sheet â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-class _LanguagePickerSheet extends ConsumerWidget {
-  const _LanguagePickerSheet({required this.current});
+// ─── Language Tile ────────────────────────────────────────────────────────────
+class _LanguageTile extends ConsumerWidget {
+  const _LanguageTile({required this.currentLocale});
+  final AppLocale currentLocale;
 
-  final AppLocale current;
+  String _name(AppLocale l) => switch (l) {
+        AppLocale.en => AppStrings.english,
+        AppLocale.uz => AppStrings.uzbek,
+        AppLocale.ru => AppStrings.russian,
+      };
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor =
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final mutedColor =
+        isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted;
 
-    final langs = [
-      (AppLocale.en, AppStrings.english, 'US'),
-      (AppLocale.uz, AppStrings.uzbek, 'UZ'),
-      (AppLocale.ru, AppStrings.russian, 'RU'),
-    ];
-
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-        AppDimens.xl,
-        AppDimens.vxl,
-        AppDimens.xl,
-        AppDimens.vxl + MediaQuery.paddingOf(context).bottom,
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: AppDimens.xl,
+        vertical: AppDimens.vmd,
       ),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppDimens.radiusXl),
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Center(
-            child: Container(
-              width: 40.w,
-              height: 4.h,
-              decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.darkBorderSubtle
-                    : AppColors.lightBorderSubtle,
-                borderRadius: BorderRadius.circular(2.r),
+          Icon(Icons.language_rounded,
+              size: AppDimens.iconMd, color: AppColors.primary),
+          Gap(AppDimens.lg),
+          Expanded(
+            child: Text(
+              AppStrings.language,
+              style: AppTextStyles.bodyMedium.copyWith(
+                fontWeight: FontWeight.w500,
+                color: textColor,
               ),
             ),
           ),
-          Gap(AppDimens.vxl),
-          Text(AppStrings.language, style: AppTextStyles.h3),
-          Gap(AppDimens.vlg),
-          ...langs.map((item) {
-            final (locale, name, flag) = item;
-            final isSelected = locale == current;
-            return InkWell(
-              onTap: () async {
-                await ref.read(localeProvider.notifier).setLocale(locale);
-                if (context.mounted) context.pop();
-              },
-              borderRadius: BorderRadius.circular(AppDimens.radiusMd),
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  vertical: AppDimens.vmd,
-                  horizontal: AppDimens.sm,
-                ),
-                child: Row(
-                  children: [
-                    CountryFlag.fromCountryCode(
-                      flag,
-                      width: 36.w,
-                      height: 24.h,
-                      borderRadius: 4.r,
-                    ),
-                    Gap(AppDimens.lg),
-                    Expanded(
-                      child: Text(
-                        name,
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          fontWeight: isSelected
-                              ? FontWeight.w700
-                              : FontWeight.w400,
-                          color: isSelected
-                              ? AppColors.primary
-                              : (isDark
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.lightTextPrimary),
-                        ),
+          PopupMenuButton<AppLocale>(
+            initialValue: currentLocale,
+            onSelected: (locale) =>
+                ref.read(localeProvider.notifier).setLocale(locale),
+            itemBuilder: (_) => AppLocale.values
+                .map(
+                  (l) => PopupMenuItem(
+                    value: l,
+                    child: Text(
+                      _name(l),
+                      style: TextStyle(
+                        fontWeight: l == currentLocale
+                            ? FontWeight.w700
+                            : FontWeight.w400,
+                        color: l == currentLocale ? AppColors.primary : null,
                       ),
                     ),
-                    if (isSelected)
-                      Icon(
-                        Icons.check_rounded,
-                        color: AppColors.primary,
-                        size: AppDimens.iconSm,
-                      ),
-                  ],
+                  ),
+                )
+                .toList(),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _name(currentLocale),
+                  style: AppTextStyles.bodySmall.copyWith(color: mutedColor),
                 ),
-              ),
-            );
-          }),
+                Gap(AppDimens.xs),
+                Icon(Icons.arrow_drop_down_rounded,
+                    size: AppDimens.iconSm, color: mutedColor),
+              ],
+            ),
+          ),
         ],
       ),
     );
