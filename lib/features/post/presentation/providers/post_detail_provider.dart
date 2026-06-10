@@ -206,6 +206,32 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
     }
   }
 
+  // ── Save ────────────────────────────────────────────────────────────────────
+
+  Future<void> toggleSave() async {
+    final current = state.valueOrNull;
+    final post = current?.post;
+    if (post == null) return;
+
+    final userId = _currentUserId;
+    if (userId == null) return;
+
+    // Optimistic update
+    state = AsyncData(current!.copyWith(
+      post: post.copyWith(isSaved: !post.isSaved),
+    ));
+
+    final result = await ref.read(toggleSaveUseCaseProvider).call(
+          postId: post.id,
+          currentUserId: userId,
+        );
+
+    if (result is Err) {
+      // Rollback
+      state = AsyncData(current.copyWith(post: post));
+    }
+  }
+
   // ── Delete Post ─────────────────────────────────────────────────────────────
 
   Future<bool> deletePost() async {

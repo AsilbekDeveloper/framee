@@ -19,7 +19,6 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final postsAsync = ref.watch(homeProvider);
 
     return Scaffold(
@@ -59,7 +58,12 @@ class HomeScreen extends ConsumerWidget {
                             ref.read(homeProvider.notifier).toggleSave(
                                   posts[index].id,
                                 ),
-                        onMoreTap: () => _showPostOptions(context, isDark),
+                        onMoreTap: () => _showPostOptions(
+                          context,
+                          ref: ref,
+                          postId: posts[index].id,
+                          isSaved: posts[index].isSaved,
+                        ),
                         onUserTap: () => context.push(
                           AppRoutes.userProfilePath(posts[index].author.id),
                         ),
@@ -75,11 +79,21 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  void _showPostOptions(BuildContext context, bool isDark) {
+  void _showPostOptions(
+    BuildContext context, {
+    required WidgetRef ref,
+    required String postId,
+    required bool isSaved,
+  }) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) => _PostOptionsSheet(),
+      builder: (_) => _PostOptionsSheet(
+        postId: postId,
+        isSaved: isSaved,
+        onToggleSave: () =>
+            ref.read(homeProvider.notifier).toggleSave(postId),
+      ),
     );
   }
 }
@@ -148,6 +162,16 @@ class _LoadingFeed extends StatelessWidget {
 
 // ─── Post Options Bottom Sheet ────────────────────────────────────────────────
 class _PostOptionsSheet extends StatelessWidget {
+  const _PostOptionsSheet({
+    required this.postId,
+    required this.isSaved,
+    required this.onToggleSave,
+  });
+
+  final String postId;
+  final bool isSaved;
+  final VoidCallback onToggleSave;
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -163,7 +187,6 @@ class _PostOptionsSheet extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Gap(AppDimens.vmd),
-          // Handle
           Container(
             width: 36.w,
             height: 4.h,
@@ -190,9 +213,14 @@ class _PostOptionsSheet extends StatelessWidget {
           ),
           const AppDivider(),
           _SheetOption(
-            icon: Icons.bookmark_outline_rounded,
-            label: AppStrings.savePost,
-            onTap: () => context.pop(),
+            icon: isSaved
+                ? Icons.bookmark_rounded
+                : Icons.bookmark_outline_rounded,
+            label: isSaved ? AppStrings.postSaved : AppStrings.savePost,
+            onTap: () {
+              onToggleSave();
+              context.pop();
+            },
           ),
           const AppDivider(),
           _SheetOption(

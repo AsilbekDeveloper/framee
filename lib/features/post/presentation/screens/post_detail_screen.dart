@@ -92,7 +92,7 @@ class PostDetailScreen extends ConsumerWidget {
                         onCommentTap: null,
                         onShareTap: () =>
                             context.showSnackBar(AppStrings.linkCopied),
-                        onSaveTap: null,
+                        onSaveTap: () => notifier.toggleSave(),
                         onMoreTap: null,
                         onUserTap: () => context.push(
                           AppRoutes.userProfilePath(post.author.id),
