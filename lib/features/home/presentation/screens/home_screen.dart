@@ -10,60 +10,67 @@ import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../features/notifications/presentation/providers/notifications_provider.dart';
 import '../providers/home_provider.dart';
-import '../widgets/post_card.dart';
+import '../../../../core/components/post_card.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(homeProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final postsAsync = ref.watch(homeProvider);
 
     return Scaffold(
       appBar: _HomeAppBar(),
       body: RefreshIndicator(
         color: AppColors.primary,
         onRefresh: () => ref.read(homeProvider.notifier).refresh(),
-        child: state.isLoading
-            ? _LoadingFeed()
-            : state.posts.isEmpty
-                ? EmptyState(
-                    icon: Icons.photo_library_outlined,
-                    title: AppStrings.noPostsYet,
-                    subtitle: AppStrings.noPostsYetSub,
-                  )
-                : CustomScrollView(
-                    slivers: [
-                      SliverList.builder(
-                        itemCount: state.posts.length,
-                        itemBuilder: (context, index) => PostCard(
-                          post: state.posts[index],
-                          onLikeTap: () =>
-                              ref.read(homeProvider.notifier).toggleLike(
-                                    state.posts[index].id,
-                                  ),
-                          onCommentTap: () => context.push(
-                            AppRoutes.postDetailPath(state.posts[index].id),
-                          ),
-                          onShareTap: () {},
-                          onSaveTap: () =>
-                              ref.read(homeProvider.notifier).toggleSave(
-                                    state.posts[index].id,
-                                  ),
-                          onMoreTap: () => _showPostOptions(context, isDark),
-                          onUserTap: () => context.push(
-                            AppRoutes.userProfilePath(
-                                state.posts[index].author.id),
-                          ),
+        child: postsAsync.when(
+          loading: () => _LoadingFeed(),
+          error: (e, _) => const EmptyState(
+            icon: Icons.error_outline,
+            title: AppStrings.errorOccurred,
+            subtitle: AppStrings.tryAgain,
+          ),
+          data: (posts) => posts.isEmpty
+              ? const EmptyState(
+                  icon: Icons.photo_library_outlined,
+                  title: AppStrings.noPostsYet,
+                  subtitle: AppStrings.noPostsYetSub,
+                )
+              : CustomScrollView(
+                  slivers: [
+                    SliverList.builder(
+                      itemCount: posts.length,
+                      itemBuilder: (context, index) => PostCard(
+                        key: ValueKey(posts[index].id),
+                        post: posts[index],
+                        onLikeTap: () =>
+                            ref.read(homeProvider.notifier).toggleLike(
+                                  posts[index].id,
+                                ),
+                        onCommentTap: () => context.push(
+                          AppRoutes.postDetailPath(posts[index].id),
+                        ),
+                        onShareTap: () {},
+                        onSaveTap: () =>
+                            ref.read(homeProvider.notifier).toggleSave(
+                                  posts[index].id,
+                                ),
+                        onMoreTap: () => _showPostOptions(context, isDark),
+                        onUserTap: () => context.push(
+                          AppRoutes.userProfilePath(posts[index].author.id),
                         ),
                       ),
-                      SliverToBoxAdapter(
-                        child: SizedBox(height: AppDimens.vlg),
-                      ),
-                    ],
-                  ),
+                    ),
+                    SliverToBoxAdapter(
+                      child: SizedBox(height: AppDimens.vlg),
+                    ),
+                  ],
+                ),
+        ),
       ),
     );
   }
@@ -78,16 +85,18 @@ class HomeScreen extends ConsumerWidget {
 }
 
 // ─── App Bar ──────────────────────────────────────────────────────────────────
-class _HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
+class _HomeAppBar extends ConsumerWidget implements PreferredSizeWidget {
   @override
   Size get preferredSize => Size.fromHeight(AppDimens.appBarHeight);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final hasUnread = ref.watch(hasUnreadNotificationsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final topPadding = MediaQuery.paddingOf(context).top;
 
     return Container(
-      height: preferredSize.height,
+      height: preferredSize.height + topPadding,
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
         border: Border(
@@ -98,7 +107,11 @@ class _HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ),
       ),
-      padding: EdgeInsets.symmetric(horizontal: AppDimens.xl),
+      padding: EdgeInsets.only(
+        top: topPadding,
+        left: AppDimens.xl,
+        right: AppDimens.xl,
+      ),
       child: Row(
         children: [
           // + Create post
@@ -113,8 +126,8 @@ class _HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
           // Notifications
           AppIconButton(
             icon: Icons.notifications_outlined,
-            onTap: () => context.push(AppRoutes.notifications),
-            badge: true,
+            onTap: () => context.go(AppRoutes.notifications),
+            badge: hasUnread,
           ),
         ],
       ),
@@ -128,7 +141,7 @@ class _LoadingFeed extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.builder(
       itemCount: 3,
-      itemBuilder: (_, __) => const PostCardShimmer(),
+      itemBuilder: (_, _) => const PostCardShimmer(),
     );
   }
 }
@@ -167,32 +180,32 @@ class _PostOptionsSheet extends StatelessWidget {
           _SheetOption(
             icon: Icons.link_rounded,
             label: AppStrings.copyLink,
-            onTap: () => Navigator.pop(context),
+            onTap: () => context.pop(),
           ),
           const AppDivider(),
           _SheetOption(
             icon: Icons.share_outlined,
             label: AppStrings.sharePost,
-            onTap: () => Navigator.pop(context),
+            onTap: () => context.pop(),
           ),
           const AppDivider(),
           _SheetOption(
             icon: Icons.bookmark_outline_rounded,
             label: AppStrings.savePost,
-            onTap: () => Navigator.pop(context),
+            onTap: () => context.pop(),
           ),
           const AppDivider(),
           _SheetOption(
             icon: Icons.flag_outlined,
             label: AppStrings.reportPost,
-            onTap: () => Navigator.pop(context),
+            onTap: () => context.pop(),
           ),
           const AppDivider(),
           _SheetOption(
             icon: Icons.delete_outline_rounded,
             label: AppStrings.deletePost,
             color: AppColors.error,
-            onTap: () => Navigator.pop(context),
+            onTap: () => context.pop(),
           ),
           Gap(AppDimens.vlg + MediaQuery.paddingOf(context).bottom),
         ],

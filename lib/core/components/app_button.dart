@@ -134,7 +134,7 @@ class _PrimaryButton extends StatelessWidget {
             backgroundColor: Colors.transparent,
             shadowColor: Colors.transparent,
             foregroundColor: Colors.white,
-            shape: StadiumBorder(),
+            shape: const StadiumBorder(),
             padding: EdgeInsets.symmetric(horizontal: 24.w),
           ),
           child: isLoading
@@ -354,11 +354,14 @@ class FollowButton extends StatelessWidget {
     required this.isFollowing,
     required this.onTap,
     this.isLoading = false,
+    this.label,
   });
 
   final bool isFollowing;
   final VoidCallback onTap;
   final bool isLoading;
+  /// Optional override label (e.g. 'Requested')
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
@@ -401,7 +404,7 @@ class FollowButton extends StatelessWidget {
                   ),
                 )
               : Text(
-                  isFollowing ? AppStrings.following : AppStrings.follow,
+                  label ?? (isFollowing ? AppStrings.following : AppStrings.follow),
                   style: AppTextStyles.buttonSmall.copyWith(
                     color: isFollowing
                         ? (isDark

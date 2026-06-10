@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/auth/data/providers/auth_data_providers.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/signup_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
@@ -14,6 +15,8 @@ import '../../features/profile/presentation/screens/edit_profile_screen.dart';
 import '../../features/profile/presentation/screens/followers_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
+import '../../features/post/presentation/screens/saved_posts_screen.dart';
+import '../components/avatar_crop_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../components/scaffold_with_nav_bar.dart';
 
@@ -30,38 +33,76 @@ abstract final class AppRoutes {
   static const String editProfile = '/edit-profile';
   static const String settings = '/settings';
 
+  static const String savedPosts = '/saved-posts';
+  static const String avatarCrop = '/avatar-crop';
+
   static String postDetailPath(String postId) => '/post/$postId';
   static String followersPath(String userId) => '/followers/$userId';
   static String userProfilePath(String userId) => '/user/$userId';
 }
 
+// Navigator keys for each shell branch
 final _shellNavigatorHomeKey =
     GlobalKey<NavigatorState>(debugLabel: 'home');
 final _shellNavigatorSearchKey =
     GlobalKey<NavigatorState>(debugLabel: 'search');
+final _shellNavigatorNotificationsKey =
+    GlobalKey<NavigatorState>(debugLabel: 'notifications');
 final _shellNavigatorProfileKey =
     GlobalKey<NavigatorState>(debugLabel: 'profile');
 
+/// Foydalanuvchi kirishisiz ochiq sahifalar.
+/// profileSetup bu ro'yxatda YO'Q — faqat autentifikatsiya qilingan
+/// foydalanuvchi profilini to'ldirishi mumkin.
+const _unauthenticatedRoutes = {
+  AppRoutes.onboarding,
+  AppRoutes.login,
+  AppRoutes.signUp,
+};
+
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final notifier = _AuthRouterNotifier(ref);
+
   return GoRouter(
     initialLocation: AppRoutes.onboarding,
     debugLogDiagnostics: false,
+    refreshListenable: notifier,
+    redirect: (context, routerState) {
+      final authAsync = ref.read(authUserStreamProvider);
+      final location = routerState.matchedLocation;
+
+      // Auth holati hali yuklanmoqda — hech qayerga yo'naltirmaslik.
+      // Bu "flash of wrong route" muammosini bartaraf etadi.
+      if (authAsync.isLoading) return null;
+
+      final isAuthenticated = authAsync.valueOrNull != null;
+      final isUnauthRoute = _unauthenticatedRoutes.contains(location);
+
+      // Kirish qilinmagan holda himoyalangan sahifaga urinish
+      if (!isAuthenticated && !isUnauthRoute) return AppRoutes.onboarding;
+
+      // Tizimga kirgan foydalanuvchi onboarding/login/signup sahifasiga kirmasin
+      if (isAuthenticated && isUnauthRoute) return AppRoutes.home;
+
+      return null;
+    },
     routes: [
       GoRoute(
         path: AppRoutes.onboarding,
-        builder: (_, __) => const OnboardingScreen(),
+        builder: (_, _) => const OnboardingScreen(),
       ),
       GoRoute(
         path: AppRoutes.login,
-        builder: (_, __) => const LoginScreen(),
+        builder: (_, _) => const LoginScreen(),
       ),
       GoRoute(
         path: AppRoutes.signUp,
-        builder: (_, __) => const SignUpScreen(),
+        builder: (_, _) => const SignUpScreen(),
       ),
+      // profileSetup — faqat authenticated user uchun (public routes'dan tashqarida)
       GoRoute(
         path: AppRoutes.profileSetup,
-        builder: (_, __) => const ProfileSetupScreen(),
+        builder: (_, _) => const ProfileSetupScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
@@ -72,7 +113,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: AppRoutes.home,
-                builder: (_, __) => const HomeScreen(),
+                builder: (_, _) => const HomeScreen(),
               ),
             ],
           ),
@@ -81,7 +122,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: AppRoutes.search,
-                builder: (_, __) => const SearchScreen(),
+                builder: (_, _) => const SearchScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: _shellNavigatorNotificationsKey,
+            routes: [
+              GoRoute(
+                path: AppRoutes.notifications,
+                builder: (_, _) => const NotificationsScreen(),
               ),
             ],
           ),
@@ -90,7 +140,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: AppRoutes.profile,
-                builder: (_, __) => const ProfileScreen(),
+                builder: (_, _) => const ProfileScreen(),
               ),
             ],
           ),
@@ -98,7 +148,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.createPost,
-        pageBuilder: (_, __) => const MaterialPage(
+        pageBuilder: (_, _) => const MaterialPage(
           fullscreenDialog: true,
           child: CreatePostScreen(),
         ),
@@ -110,10 +160,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
-        path: AppRoutes.notifications,
-        builder: (_, __) => const NotificationsScreen(),
-      ),
-      GoRoute(
         path: '/followers/:userId',
         builder: (_, state) => FollowersScreen(
           userId: state.pathParameters['userId']!,
@@ -122,14 +168,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: AppRoutes.editProfile,
-        pageBuilder: (_, __) => const MaterialPage(
+        pageBuilder: (_, _) => const MaterialPage(
           fullscreenDialog: true,
           child: EditProfileScreen(),
         ),
       ),
       GoRoute(
         path: AppRoutes.settings,
-        builder: (_, __) => const SettingsScreen(),
+        builder: (_, _) => const SettingsScreen(),
       ),
       GoRoute(
         path: '/user/:userId',
@@ -137,6 +183,30 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           userId: state.pathParameters['userId'],
         ),
       ),
+      GoRoute(
+        path: AppRoutes.savedPosts,
+        builder: (_, _) => const SavedPostsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.avatarCrop,
+        pageBuilder: (_, state) => MaterialPage(
+          fullscreenDialog: true,
+          child: AvatarCropScreen(imagePath: state.extra as String),
+        ),
+      ),
     ],
   );
 });
+
+/// Supabase auth holati o'zgarganda GoRouter'ni yangilaydi.
+/// [notifyListeners] microtask orqali chaqiriladi — build jarayonida
+/// sinxron chaqiruv semantics loop keltirib chiqarishi mumkin.
+class _AuthRouterNotifier extends ChangeNotifier {
+  _AuthRouterNotifier(this._ref) {
+    _ref.listen(authUserStreamProvider, (_, _) {
+      Future.microtask(notifyListeners);
+    });
+  }
+
+  final Ref _ref;
+}

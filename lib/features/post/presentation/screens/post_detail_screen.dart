@@ -1,19 +1,20 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/router/app_router.dart';
 
 import '../../../../core/components/app_avatar.dart';
+import '../../../../core/components/post_card.dart';
 import '../../../../core/components/shared_widgets.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/extensions/extensions.dart';
-import '../../../../core/models/ui_models.dart';
-import '../../../../core/utils/mock_data.dart';
+import '../../../../core/router/app_router.dart';
+import '../../../../core/providers/current_user_provider.dart';
 import '../providers/post_detail_provider.dart';
 import '../widgets/comment_tile.dart';
 
@@ -23,288 +24,216 @@ class PostDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(postDetailProvider(postId));
-    final notifier = ref.read(postDetailProvider(postId).notifier);
+    final postAsync = ref.watch(postDetailProvider(postId));
 
-    if (state.isLoading) {
-      return const Scaffold(
+    return postAsync.when(
+      loading: () => const Scaffold(
         body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    final post = state.post ?? MockData.posts.first;
-
-    return Scaffold(
-      appBar: AppBar(
-        leading: BackButton(
-          onPressed: () => context.pop(),
-        ),
-        title: Text(AppStrings.postDetail),
-        actions: [
-          AppIconButton(
-            icon: Icons.share_outlined,
-            onTap: () {},
-          ),
-        ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: CustomScrollView(
-              slivers: [
-                // Post content
-                SliverToBoxAdapter(
-                  child: _PostContent(
-                    post: post,
-                    onLikeTap: () => notifier.toggleLike(),
-                    onUserTap: () => context.push(
-                      AppRoutes.userProfilePath(post.author.id),
-                    ),
-                  ),
-                ),
-                // Comments section label
-                SliverToBoxAdapter(
-                  child: SectionLabel(
-                    '${AppStrings.comments} · ${post.commentsCount}',
-                  ),
-                ),
-                // Comments
-                SliverList.builder(
-                  itemCount: state.comments.length,
-                  itemBuilder: (context, index) => CommentTile(
-                    comment: state.comments[index],
-                    onLikeTap: () =>
-                        notifier.toggleCommentLike(state.comments[index].id),
-                    onReplyTap: () => notifier.setReplyTo(state.comments[index].id),
-                    onDeleteTap: null,
-                  ),
-                ),
-                SliverToBoxAdapter(child: SizedBox(height: AppDimens.vlg)),
-              ],
-            ),
+      error: (err, _) => Scaffold(
+        appBar: AppBar(leading: BackButton(onPressed: () => context.pop())),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+              const Gap(12),
+              Text(AppStrings.errorOccurred,
+                  style: AppTextStyles.bodyMedium),
+              const Gap(8),
+              TextButton(
+                onPressed: () =>
+                    ref.invalidate(postDetailProvider(postId)),
+                child: const Text(AppStrings.retry),
+              ),
+            ],
           ),
-          // Comment input
-          _CommentInputBar(
-            controller: notifier.commentController,
-            onSend: () => notifier.addComment(),
+        ),
+      ),
+      data: (data) {
+        final post = data.post;
+        if (post == null) {
+          return Scaffold(
+            appBar: AppBar(leading: BackButton(onPressed: () => context.pop())),
+            body: const Center(child: Text('Post topilmadi')),
+          );
+        }
+
+        final notifier = ref.read(postDetailProvider(postId).notifier);
+        final currentUserId =
+            ref.read(currentUserIdProvider);
+        final isOwnPost = post.author.id == currentUserId;
+
+        return Scaffold(
+          appBar: AppBar(
+            leading: BackButton(onPressed: () => context.pop()),
+            title: const Text(AppStrings.postDetail),
+            actions: [
+              AppIconButton(
+                icon: Icons.share_outlined,
+                onTap: () => context.showSnackBar(AppStrings.linkCopied),
+              ),
+              if (isOwnPost)
+                AppIconButton(
+                  icon: Icons.delete_outline_rounded,
+                  onTap: () => _confirmDelete(context, ref),
+                ),
+            ],
+          ),
+          body: Column(
+            children: [
+              Expanded(
+                child: CustomScrollView(
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: PostCard(
+                        post: post,
+                        onLikeTap: () => notifier.toggleLike(),
+                        onCommentTap: null,
+                        onShareTap: () =>
+                            context.showSnackBar(AppStrings.linkCopied),
+                        onSaveTap: null,
+                        onMoreTap: null,
+                        onUserTap: () => context.push(
+                          AppRoutes.userProfilePath(post.author.id),
+                        ),
+                      ),
+                    ),
+                    SliverToBoxAdapter(
+                      child: SectionLabel(
+                        '${AppStrings.comments} · ${post.commentsCount}',
+                      ),
+                    ),
+                    if (data.isLoadingComments)
+                      const SliverToBoxAdapter(
+                        child: Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(16),
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                      )
+                    else
+                      SliverList.builder(
+                        itemCount: data.comments.length,
+                        itemBuilder: (context, index) {
+                          final comment = data.comments[index];
+                          return CommentTile(
+                            comment: comment,
+                            onLikeTap: () =>
+                                notifier.toggleCommentLike(comment.id),
+                            onReplyTap: () => notifier.setReplyTo(comment.id),
+                            onDeleteTap: comment.author.id == currentUserId
+                                ? () => _deleteComment(
+                                      context, ref, comment.id)
+                                : null,
+                          );
+                        },
+                      ),
+                    SliverToBoxAdapter(
+                      child: SizedBox(height: AppDimens.vlg),
+                    ),
+                  ],
+                ),
+              ),
+              // Error message
+              if (data.hasError)
+                Container(
+                  color: AppColors.error.withValues(alpha: 0.1),
+                  padding: const EdgeInsets.all(8),
+                  child: Text(
+                    data.errorMessage!,
+                    style: AppTextStyles.caption
+                        .copyWith(color: AppColors.error),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              // Reply banner
+              if (data.replyToId != null)
+                _ReplyBanner(onClear: notifier.clearReply),
+              // Comment input
+              _CommentInputBar(
+                controller: notifier.commentController,
+                onSend: notifier.addComment,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Postni o\'chirish'),
+        content: const Text('Bu post butunlay o\'chiriladi. Davom etasizmi?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text(AppStrings.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text(AppStrings.delete,
+                style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),
     );
+    if (confirm == true && context.mounted) {
+      try {
+        await ref.read(postDetailProvider(postId).notifier).deletePost();
+        if (context.mounted) {
+          context.showSnackBar(AppStrings.postDeleted);
+          context.pop();
+        }
+      } catch (e) {
+        if (context.mounted) {
+          context.showSnackBar(AppStrings.somethingWentWrong);
+        }
+      }
+    }
+  }
+
+  Future<void> _deleteComment(
+      BuildContext context, WidgetRef ref, String commentId) async {
+    // TODO: deleteComment use case — qo'shiladi
   }
 }
 
-// ─── Post Content ─────────────────────────────────────────────────────────────
-class _PostContent extends StatelessWidget {
-  const _PostContent({
-    required this.post,
-    required this.onLikeTap,
-    required this.onUserTap,
-  });
-
-  final PostModel post;
-  final VoidCallback onLikeTap;
-  final VoidCallback onUserTap;
+// ─── Reply Banner ─────────────────────────────────────────────────────────────
+class _ReplyBanner extends StatelessWidget {
+  const _ReplyBanner({required this.onClear});
+  final VoidCallback onClear;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textColor =
-        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Header
-        Padding(
-          padding: EdgeInsets.fromLTRB(
-            AppDimens.lg, AppDimens.vmd, AppDimens.md, AppDimens.vsm,
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: AppDimens.lg,
+        vertical: AppDimens.vsm,
+      ),
+      color: isDark ? AppColors.darkElevated : AppColors.lightElevated,
+      child: Row(
+        children: [
+          Text(
+            'Javob yozilmoqda...',
+            style: AppTextStyles.caption.copyWith(color: AppColors.primary),
           ),
-          child: Row(
-            children: [
-              GestureDetector(
-                onTap: onUserTap,
-                child: Row(
-                  children: [
-                    AppAvatar(
-                      imageUrl: post.author.avatarUrl,
-                      initials: post.author.initials,
-                      size: AvatarSize.sm,
-                      hasStoryRing: true,
-                    ),
-                    Gap(AppDimens.md),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(post.author.username,
-                            style: AppTextStyles.username
-                                .copyWith(color: textColor)),
-                        Text(
-                          '${post.createdAt.fullDate} · 🌍',
-                          style: AppTextStyles.caption.copyWith(
-                            color: isDark
-                                ? AppColors.darkTextMuted
-                                : AppColors.lightTextMuted,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const Spacer(),
-              Icon(
-                Icons.more_vert_rounded,
-                size: AppDimens.iconMd,
-                color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-              ),
-            ],
+          const Spacer(),
+          GestureDetector(
+            onTap: onClear,
+            child: Icon(Icons.close_rounded,
+                size: 16.w,
+                color: isDark
+                    ? AppColors.darkTextMuted
+                    : AppColors.lightTextMuted),
           ),
-        ),
-
-        // Image
-        if (post.hasImage)
-          AspectRatio(
-            aspectRatio: 1,
-            child: Container(
-              color: isDark ? AppColors.darkElevated : AppColors.lightElevated,
-              child: Icon(
-                Icons.image_outlined,
-                size: 60.w,
-                color: AppColors.primary.withOpacity(0.2),
-              ),
-            ),
-          ),
-
-        // Actions
-        Padding(
-          padding: EdgeInsets.fromLTRB(AppDimens.sm, AppDimens.vsm, AppDimens.sm, 4.h),
-          child: Row(
-            children: [
-              GestureDetector(
-                onTap: onLikeTap,
-                child: Padding(
-                  padding: EdgeInsets.all(8.w),
-                  child: Row(
-                    children: [
-                      Icon(
-                        post.isLiked
-                            ? Icons.favorite_rounded
-                            : Icons.favorite_border_rounded,
-                        size: 22.w,
-                        color: post.isLiked
-                            ? AppColors.like
-                            : isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary,
-                      ),
-                      Gap(5.w),
-                      Text(
-                        post.likesCount.compact,
-                        style: AppTextStyles.labelSmall.copyWith(
-                          color: post.isLiked
-                              ? AppColors.like
-                              : isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.lightTextSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(8.w),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.chat_bubble_outline_rounded,
-                      size: 22.w,
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
-                    ),
-                    Gap(5.w),
-                    Text(
-                      post.commentsCount.compact,
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: isDark
-                            ? AppColors.darkTextSecondary
-                            : AppColors.lightTextSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(8.w),
-                child: Icon(
-                  Icons.share_outlined,
-                  size: 22.w,
-                  color: isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.lightTextSecondary,
-                ),
-              ),
-              const Spacer(),
-              Padding(
-                padding: EdgeInsets.all(8.w),
-                child: Icon(
-                  post.isSaved
-                      ? Icons.bookmark_rounded
-                      : Icons.bookmark_outline_rounded,
-                  size: 22.w,
-                  color: post.isSaved
-                      ? AppColors.primary
-                      : isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // Likes count
-        Padding(
-          padding: EdgeInsets.fromLTRB(AppDimens.lg, 2.h, AppDimens.lg, 2.h),
-          child: Text(
-            '${post.likesCount.compact} ${AppStrings.likes}',
-            style: AppTextStyles.labelSmall.copyWith(color: textColor),
-          ),
-        ),
-
-        // Caption
-        if (post.hasCaption)
-          Padding(
-            padding: EdgeInsets.fromLTRB(AppDimens.lg, 4.h, AppDimens.lg, 4.h),
-            child: RichText(
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                    text: '${post.author.username} ',
-                    style: AppTextStyles.username.copyWith(color: textColor),
-                  ),
-                  TextSpan(
-                    text: post.caption,
-                    style: AppTextStyles.bodySmall.copyWith(color: textColor),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-        Padding(
-          padding: EdgeInsets.fromLTRB(AppDimens.lg, 2.h, AppDimens.lg, AppDimens.vmd),
-          child: Text(
-            post.createdAt.fullDate,
-            style: AppTextStyles.caption.copyWith(
-              color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-            ),
-          ),
-        ),
-        const AppDivider(indent: 0),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -317,7 +246,7 @@ class _CommentInputBar extends StatelessWidget {
   });
 
   final TextEditingController controller;
-  final VoidCallback onSend;
+  final AsyncCallback onSend;
 
   @override
   Widget build(BuildContext context) {
@@ -342,10 +271,7 @@ class _CommentInputBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          AppAvatar(
-            initials: 'A',
-            size: AvatarSize.xs,
-          ),
+          const AppAvatar(initials: 'A', size: AvatarSize.xs),
           Gap(AppDimens.md),
           Expanded(
             child: Container(
@@ -390,11 +316,7 @@ class _CommentInputBar extends StatelessWidget {
                 shape: BoxShape.circle,
                 boxShadow: AppColors.primaryShadow,
               ),
-              child: Icon(
-                Icons.send_rounded,
-                size: 18.w,
-                color: Colors.white,
-              ),
+              child: Icon(Icons.send_rounded, size: 18.w, color: Colors.white),
             ),
           ),
         ],
@@ -402,4 +324,3 @@ class _CommentInputBar extends StatelessWidget {
     );
   }
 }
-

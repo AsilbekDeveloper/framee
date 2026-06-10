@@ -1,0 +1,33 @@
+import '../../../../core/errors/result.dart';
+import '../entities/post.dart';
+import '../failures/post_failure.dart';
+import '../repositories/post_repository.dart';
+
+class CreatePostUseCase {
+  const CreatePostUseCase(this._repository);
+  final PostRepository _repository;
+
+  Future<Result<Post>> call(CreatePostParams params) {
+    // Client-side validatsiya
+    final caption = params.caption?.trim() ?? '';
+    final hasImage = params.imageLocalPath != null;
+
+    if (!hasImage && caption.isEmpty) {
+      return Future.value(
+        const Err(PostValidationFailure(
+          message: 'Post matn yoki rasm bo\'lishi kerak.',
+        )),
+      );
+    }
+
+    if (caption.length > 2200) {
+      return Future.value(
+        const Err(PostValidationFailure(
+          message: 'Matn 2200 belgidan oshmasligi kerak.',
+        )),
+      );
+    }
+
+    return _repository.createPost(params);
+  }
+}

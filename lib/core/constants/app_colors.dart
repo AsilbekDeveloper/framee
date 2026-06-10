@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 /// Framee centralized color palette.
 /// All colors in the app must come from this class.
@@ -87,7 +87,7 @@ abstract final class AppColors {
 
   static List<BoxShadow> get primaryShadow => [
     BoxShadow(
-      color: primary.withOpacity(0.35),
+      color: primary.withValues(alpha: 0.35),
       blurRadius: 20,
       offset: const Offset(0, 6),
     ),

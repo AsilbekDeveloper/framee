@@ -8,7 +8,7 @@ import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/extensions/extensions.dart';
-import '../../../../core/models/ui_models.dart';
+import '../../domain/entities/post.dart';
 
 class CommentTile extends StatelessWidget {
   const CommentTile({
@@ -20,7 +20,7 @@ class CommentTile extends StatelessWidget {
     this.isReply = false,
   });
 
-  final CommentModel comment;
+  final Comment comment;
   final VoidCallback onLikeTap;
   final VoidCallback onReplyTap;
   final VoidCallback? onDeleteTap;
@@ -77,8 +77,7 @@ class CommentTile extends StatelessWidget {
                   children: [
                     Text(
                       comment.createdAt.timeAgo,
-                      style: AppTextStyles.caption
-                          .copyWith(color: mutedColor),
+                      style: AppTextStyles.caption.copyWith(color: mutedColor),
                     ),
                     Gap(AppDimens.lg),
                     GestureDetector(
@@ -138,8 +137,7 @@ class CommentTile extends StatelessWidget {
                   Gap(2.h),
                   Text(
                     comment.likesCount.compact,
-                    style: AppTextStyles.overline
-                        .copyWith(color: mutedColor),
+                    style: AppTextStyles.overline.copyWith(color: mutedColor),
                   ),
                 ],
               ],

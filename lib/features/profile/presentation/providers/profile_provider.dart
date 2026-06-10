@@ -1,80 +1,135 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/models/ui_models.dart';
-import '../../../../core/utils/mock_data.dart';
+import '../../../../core/config/app_logger.dart';
+import '../../../../core/errors/result.dart';
+import '../../../../core/providers/current_user_provider.dart';
+import '../../../follow/data/providers/follow_data_providers.dart';
+import '../../../follow/domain/entities/follow.dart';
+import '../../data/providers/profile_data_providers.dart';
+import '../../domain/entities/profile.dart';
+import '../../domain/usecases/get_profile_usecase.dart';
 
-class ProfileState {
-  const ProfileState({
-    this.user,
-    this.posts = const [],
-    this.isLoading = true,
-    this.tabIndex = 0,
-  });
+// ── Use case provider (private) ───────────────────────────────────────────────
 
-  final UserModel? user;
-  final List<PostModel> posts;
-  final bool isLoading;
-  final int tabIndex;
+final _getProfileUseCaseProvider = Provider<GetProfileUseCase>(
+  (ref) => GetProfileUseCase(ref.read(profileRepositoryProvider)),
+);
 
-  ProfileState copyWith({
-    UserModel? user,
-    List<PostModel>? posts,
-    bool? isLoading,
-    int? tabIndex,
-  }) =>
-      ProfileState(
-        user: user ?? this.user,
-        posts: posts ?? this.posts,
-        isLoading: isLoading ?? this.isLoading,
-        tabIndex: tabIndex ?? this.tabIndex,
-      );
-}
+// ── Profile Notifier ──────────────────────────────────────────────────────────
 
-class ProfileNotifier extends FamilyNotifier<ProfileState, String?> {
+class ProfileNotifier extends FamilyAsyncNotifier<Profile, String?> {
   @override
-  ProfileState build(String? userId) {
-    _load(userId);
-    return const ProfileState();
+  Future<Profile> build(String? userId) async {
+    final targetId = userId ?? _currentUserId;
+    if (targetId == null) throw StateError('Foydalanuvchi tizimga kirmagan');
+    AppLogger.d('ProfileNotifier: profil yuklanmoqda — $targetId');
+    return _fetchProfile(targetId);
   }
 
-  Future<void> _load(String? userId) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    final user = userId == null
-        ? MockData.currentUser
-        : MockData.users.firstWhere(
-            (u) => u.id == userId,
-            orElse: () => MockData.currentUser,
-          );
-    state = state.copyWith(
-      user: user,
-      posts: MockData.posts,
-      isLoading: false,
-    );
+  String? get _currentUserId =>
+      ref.read(currentUserIdProvider);
+
+  Future<Profile> _fetchProfile(String userId) async {
+    final result = await ref.read(_getProfileUseCaseProvider).call(
+          userId,
+          currentUserId: _currentUserId,
+        );
+    return switch (result) {
+      Ok(:final value) => value,
+      Err(:final failure) => throw failure,
+    };
   }
 
-  Future<void> refresh() => _load(arg);
-
-  void setTab(int index) => state = state.copyWith(tabIndex: index);
-
-  void updateUser(UserModel updatedUser) {
-    state = state.copyWith(user: updatedUser);
+  Future<void> refresh() async {
+    final targetId = arg ?? _currentUserId;
+    if (targetId == null) {
+      state = AsyncError(
+        StateError('Foydalanuvchi tizimga kirmagan'),
+        StackTrace.current,
+      );
+      return;
+    }
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() => _fetchProfile(targetId));
   }
 
-  void toggleFollow() {
-    final user = state.user;
-    if (user == null) return;
-    state = state.copyWith(
-      user: user.copyWith(
-        isFollowing: !user.isFollowing,
-        followersCount: user.isFollowing
-            ? user.followersCount - 1
-            : user.followersCount + 1,
+  // Double-tap himoyasi — async amal bajarilayotganda qayta chaqirishni bloklaydi
+  bool _isTogglingFollow = false;
+
+  /// Real Supabase follow/unfollow bilan bog'langan
+  Future<void> toggleFollow() async {
+    if (_isTogglingFollow) return; // double-tap guard
+    _isTogglingFollow = true;
+
+    final currentUserId = _currentUserId;
+    final targetUserId = arg;
+    if (currentUserId == null || targetUserId == null) {
+      _isTogglingFollow = false;
+      return;
+    }
+
+    final profile = state.valueOrNull;
+    if (profile == null) {
+      _isTogglingFollow = false;
+      return;
+    }
+
+    final wasFollowing = profile.isFollowing;
+
+    // Optimistic update
+    state = AsyncData(
+      profile.copyWith(
+        isFollowing: !wasFollowing,
+        followersCount: wasFollowing
+            ? profile.followersCount - 1
+            : profile.followersCount + 1,
       ),
     );
+
+    try {
+      if (wasFollowing) {
+        final result = await ref.read(unfollowUserUseCaseProvider).call(
+              currentUserId: currentUserId,
+              targetUserId: targetUserId,
+            );
+        if (result.isErr) {
+          // Rollback
+          state = AsyncData(profile);
+          AppLogger.w('ProfileNotifier: unfollow xatosi');
+        }
+      } else {
+        final result = await ref.read(followUserUseCaseProvider).call(
+              currentUserId: currentUserId,
+              targetUserId: targetUserId,
+            );
+        switch (result) {
+          case Ok(:final value):
+            // Private account → requested; public → following
+            if (value == FollowStatus.requested) {
+              state = AsyncData(profile.copyWith(isFollowing: false));
+            }
+          case Err(:final failure):
+            state = AsyncData(profile);
+            AppLogger.w(
+              'ProfileNotifier: follow xatosi — ${failure.code}: ${failure.message}',
+            );
+        }
+      }
+    } finally {
+      _isTogglingFollow = false;
+    }
+  }
+
+  void updateProfile(Profile updated) {
+    AppLogger.d('ProfileNotifier: profil yangilandi — ${updated.username}');
+    state = AsyncData(updated);
   }
 }
 
 final profileProvider =
-    NotifierProviderFamily<ProfileNotifier, ProfileState, String?>(
+    AsyncNotifierProviderFamily<ProfileNotifier, Profile, String?>(
   ProfileNotifier.new,
 );
+
+final profileTabIndexProvider =
+    StateProviderFamily<int, String?>((ref, _) => 0);

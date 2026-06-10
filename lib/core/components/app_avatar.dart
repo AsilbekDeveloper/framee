@@ -84,19 +84,28 @@ class AppAvatar extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: imageUrl != null && imageUrl!.isNotEmpty
-          ? CachedNetworkImage(
-              imageUrl: imageUrl!,
-              fit: BoxFit.cover,
-              placeholder: (context, url) => Shimmer.fromColors(
-                baseColor: isDark ? AppColors.darkElevated : AppColors.lightElevated,
-                highlightColor: isDark ? AppColors.darkBorderSubtle : AppColors.lightBorderSubtle,
-                child: Container(color: Colors.white),
-              ),
-              errorWidget: (context, url, error) => _Initials(
-                initials: initials,
-                fontSize: _fontSize,
-              ),
-            )
+          ? imageUrl!.startsWith('http')
+              ? CachedNetworkImage(
+                  imageUrl: imageUrl!,
+                  fit: BoxFit.cover,
+                  fadeInDuration: Duration.zero,
+                  fadeOutDuration: Duration.zero,
+                  placeholder: (context, url) => Shimmer.fromColors(
+                    baseColor: isDark ? AppColors.darkElevated : AppColors.lightElevated,
+                    highlightColor: isDark ? AppColors.darkBorderSubtle : AppColors.lightBorderSubtle,
+                    child: Container(color: Colors.white),
+                  ),
+                  errorWidget: (context, url, error) => _Initials(
+                    initials: initials,
+                    fontSize: _fontSize,
+                  ),
+                )
+              : Image.file(
+                  File(imageUrl!),
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                )
           : _Initials(initials: initials, fontSize: _fontSize),
     );
   }
@@ -135,7 +144,7 @@ class _StoryRing extends StatelessWidget {
     return Container(
       width: size + 6.w,
       height: size + 6.w,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         shape: BoxShape.circle,
         gradient: AppColors.storyRingGradient,
       ),
@@ -187,8 +196,13 @@ class AvatarUpload extends StatelessWidget {
                 clipBehavior: Clip.antiAlias,
                 child: imageUrl != null
                     ? (imageUrl!.startsWith('http')
-                        ? CachedNetworkImage(imageUrl: imageUrl!, fit: BoxFit.cover)
-                        : Image.file(File(imageUrl!), fit: BoxFit.cover))
+                        ? CachedNetworkImage(imageUrl: imageUrl!, fit: BoxFit.cover, fadeInDuration: Duration.zero, fadeOutDuration: Duration.zero)
+                        : Image.file(
+                  File(imageUrl!),
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                ))
                     : Icon(
                         Icons.person_outline_rounded,
                         size: 32.w,

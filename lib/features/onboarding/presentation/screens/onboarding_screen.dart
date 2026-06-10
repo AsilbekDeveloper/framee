@@ -4,11 +4,11 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/components/app_button.dart';
+import '../../../../core/components/responsive_builder.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_text_styles.dart';
-import '../../../../core/components/responsive_builder.dart';
 import '../../../../core/router/app_router.dart';
 
 class OnboardingScreen extends StatelessWidget {
@@ -19,36 +19,35 @@ class OnboardingScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: MaxWidthBox(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: AppDimens.screenPadding),
-            child: Column(
-              children: [
-                const Spacer(flex: 2),
-                _LogoArt(),
-                Gap(AppDimens.vxxxl),
-                Text(
-                  AppStrings.appTagline,
-                  style: AppTextStyles.h2.copyWith(
-                    color: context.isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // Kichik ekranlarda (< 600 px) scroll bilan ishlaydi,
+              // katta ekranlarda Spacer orqali vertikal markazda ko'rinadi.
+              final isCompact = constraints.maxHeight < 600;
+
+              if (isCompact) {
+                return SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppDimens.screenPadding,
+                    vertical: AppDimens.vxxxl,
                   ),
-                  textAlign: TextAlign.center,
+                  child: _OnboardingContent(),
+                );
+              }
+
+              return Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppDimens.screenPadding,
                 ),
-                const Spacer(flex: 3),
-                AppButton(
-                  label: AppStrings.createAccount,
-                  onPressed: () => context.push(AppRoutes.signUp),
+                child: Column(
+                  children: [
+                    const Spacer(flex: 2),
+                    _OnboardingContent(),
+                    const Spacer(flex: 1),
+                  ],
                 ),
-                Gap(AppDimens.vmd),
-                AppButton(
-                  label: AppStrings.signIn,
-                  variant: AppButtonVariant.secondary,
-                  onPressed: () => context.push(AppRoutes.login),
-                ),
-                Gap(AppDimens.vxl),
-              ],
-            ),
+              );
+            },
           ),
         ),
       ),
@@ -56,36 +55,71 @@ class OnboardingScreen extends StatelessWidget {
   }
 }
 
+// ─── Onboarding asosiy kontent ────────────────────────────────────────────────
+class _OnboardingContent extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _LogoArt(),
+        Gap(AppDimens.vxxxl),
+        Text(
+          AppStrings.appTagline,
+          style: AppTextStyles.h2.copyWith(
+            color: isDark
+                ? AppColors.darkTextPrimary
+                : AppColors.lightTextPrimary,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        Gap(AppDimens.vhuge),
+        AppButton(
+          label: AppStrings.createAccount,
+          onPressed: () => context.push(AppRoutes.signUp),
+        ),
+        Gap(AppDimens.vmd),
+        AppButton(
+          label: AppStrings.signIn,
+          variant: AppButtonVariant.secondary,
+          onPressed: () => context.push(AppRoutes.login),
+        ),
+        Gap(AppDimens.vlg),
+      ],
+    );
+  }
+}
+
+// ─── Logo art ─────────────────────────────────────────────────────────────────
 class _LogoArt extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Decorative circles
         Stack(
           alignment: Alignment.center,
           children: [
-            // Outer glow ring
             Container(
-              width: 200.w,
-              height: 200.w,
-              decoration: BoxDecoration(
+              width: 180.w,
+              height: 180.w,
+              decoration: const BoxDecoration(
                 shape: BoxShape.circle,
                 color: AppColors.primaryMuted,
               ),
             ),
-            // Inner circle with logo
             Container(
-              width: 140.w,
-              height: 140.w,
+              width: 124.w,
+              height: 124.w,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: AppColors.primaryGradient,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.4),
-                    blurRadius: 40,
-                    offset: const Offset(0, 20),
+                    color: AppColors.primary.withValues(alpha: 0.4),
+                    blurRadius: 32,
+                    offset: const Offset(0, 16),
                   ),
                 ],
               ),
@@ -94,7 +128,7 @@ class _LogoArt extends StatelessWidget {
                   'F',
                   style: AppTextStyles.displayLarge.copyWith(
                     color: Colors.white,
-                    fontSize: 64.sp,
+                    fontSize: 56.sp,
                   ),
                 ),
               ),
@@ -109,9 +143,4 @@ class _LogoArt extends StatelessWidget {
       ],
     );
   }
-}
-
-// ignore: unused_element
-extension _ContextX on BuildContext {
-  bool get isDark => Theme.of(this).brightness == Brightness.dark;
 }

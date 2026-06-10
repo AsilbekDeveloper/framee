@@ -22,6 +22,7 @@ abstract final class AppStrings {
   static const String fullNamePlaceholder = 'Your full name';
   static const String continueWithGoogle = 'Continue with Google';
   static const String welcomeBack = 'Welcome back 👋';
+  static const String forgotPassword = 'Forgot password?';
   static const String joinFramee = 'Join Framee today';
   static const String dontHaveAccount = "Don't have an account?";
   static const String alreadyHaveAccount = 'Already have an account?';
@@ -64,6 +65,13 @@ abstract final class AppStrings {
   static const String allPosts = 'All';
   static const String textOnly = 'Text only';
   static const String imageOnly = 'Image only';
+  static const String cropImage = 'Crop Image';
+  static const String discardPost = 'Discard post?';
+  static const String discardPostSub = 'Your changes will be lost.';
+  static const String discardPostConfirm = 'Discard';
+  static const String errorNotLoggedIn = 'Please sign in to create a post.';
+  static const String errorImageRequired = 'Please select an image first.';
+  static const String errorCaptionTooLong = 'Caption exceeds 2200 character limit.';
   static const String postDetail = 'Post';
   static const String likes = 'likes';
   static const String comments = 'Comments';
@@ -87,6 +95,7 @@ abstract final class AppStrings {
   static const String searchUsersPlaceholder = 'Search users...';
   static const String people = 'People';
   static const String explore = 'Explore';
+  static const String textPostsSection = 'Text posts';
   static const String followers = 'followers';
   static const String mutual = 'mutual';
 
@@ -131,6 +140,12 @@ abstract final class AppStrings {
   static const String privacySub = 'Account visibility, blocked users';
   static const String security = 'Security';
   static const String securitySub = 'Password, two-factor auth';
+  static const String changePassword = 'Change Password';
+  static const String saved = 'Saved';
+  static const String currentPassword = 'Current Password';
+  static const String newPassword = 'New Password';
+  static const String passwordChanged = 'Password changed successfully!';
+  static const String passwordMismatch = 'Parollar mos kelmadi';
   static const String notificationsLabel = 'Notifications';
   static const String pushNotifications = 'Push Notifications';
   static const String emailNotifications = 'Email Notifications';
@@ -158,6 +173,8 @@ abstract final class AppStrings {
   static const String somethingWentWrong = 'Something went wrong';
   static const String noInternetConnection = 'No internet connection';
   static const String tryAgain = 'Try Again';
+  static const String retry = 'Retry';
+  static const String errorOccurred = 'Something went wrong';
   static const String sessionExpired = 'Session expired. Please sign in again.';
 
   // ─── Empty States ─────────────────────────────────────────

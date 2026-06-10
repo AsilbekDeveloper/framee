@@ -12,103 +12,113 @@ import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/extensions/extensions.dart';
-import '../../../../core/models/ui_models.dart';
+import '../../../../core/providers/current_user_provider.dart';
 import '../../../../core/router/app_router.dart';
+import '../../domain/entities/profile.dart';
 import '../providers/profile_provider.dart';
-import '../widgets/profile_grid.dart';
+import '../providers/user_posts_provider.dart';
+import '../widgets/profile_image_grid.dart';
+import '../widgets/profile_text_list.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key, this.userId});
 
-  /// If null → own profile. If set → other user's profile.
   final String? userId;
-
-  bool get isOwnProfile => userId == null;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(profileProvider(userId));
-    final notifier = ref.read(profileProvider(userId).notifier);
+    final currentUserId = ref.watch(currentUserIdProvider);
+    // userId null bo'lsa yoki currentUser'ning o'z ID'si bo'lsa — o'z profili
+    final isOwnProfile = userId == null || userId == currentUserId;
 
-    if (state.isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
+    final profileAsync = ref.watch(profileProvider(userId));
+    final tabIndex = ref.watch(profileTabIndexProvider(userId));
 
-    final user = state.user;
-    if (user == null) return const SizedBox.shrink();
-
-    return Scaffold(
-      appBar: _ProfileAppBar(
-        username: user.username,
-        isOwnProfile: isOwnProfile,
-        onSettingsTap: () => context.push(AppRoutes.settings),
-        onCreateTap: () => context.push(AppRoutes.createPost),
-        onBackTap: isOwnProfile ? null : () => context.pop(),
+    return profileAsync.when(
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
       ),
-      body: RefreshIndicator(
-        color: AppColors.primary,
-        onRefresh: notifier.refresh,
-        child: CustomScrollView(
-          slivers: [
-            // Profile Info
-            SliverToBoxAdapter(
-              child: _ProfileInfo(
-                user: user,
-                isOwnProfile: isOwnProfile,
-                onFollowersTap: () => context.push(
-                  '${AppRoutes.followersPath(user.id)}?tab=followers',
-                ),
-                onFollowingTap: () => context.push(
-                  '${AppRoutes.followersPath(user.id)}?tab=following',
-                ),
-                onEditTap: () => context.push(AppRoutes.editProfile),
-                onShareTap: () => context.showSnackBar(AppStrings.profileLinkCopied),
-                onFollowTap: () => notifier.toggleFollow(),
+      error: (err, _) => Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+              const Gap(12),
+              Text(AppStrings.errorOccurred, style: AppTextStyles.bodyMedium),
+              const Gap(8),
+              AppButton(
+                label: AppStrings.retry,
+                onPressed: () =>
+                    ref.read(profileProvider(userId).notifier).refresh(),
               ),
-            ),
-
-            // Tab bar
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _ProfileTabDelegate(
-                selectedIndex: state.tabIndex,
-                onTabChanged: notifier.setTab,
+            ],
+          ),
+        ),
+      ),
+      data: (profile) => Scaffold(
+        appBar: _ProfileAppBar(
+          username: profile.username,
+          isOwnProfile: isOwnProfile,
+          onSettingsTap: () => context.push(AppRoutes.settings),
+          onCreateTap: () => context.push(AppRoutes.createPost),
+          onBackTap: isOwnProfile ? null : () => context.pop(),
+        ),
+        body: RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: () =>
+              ref.read(profileProvider(userId).notifier).refresh(),
+          child: CustomScrollView(
+            slivers: [
+              // Profile info
+              SliverToBoxAdapter(
+                child: _ProfileInfo(
+                  profile: profile,
+                  isOwnProfile: isOwnProfile,
+                  onFollowersTap: () => context.push(
+                    '${AppRoutes.followersPath(profile.id)}?tab=followers',
+                  ),
+                  onFollowingTap: () => context.push(
+                    '${AppRoutes.followersPath(profile.id)}?tab=following',
+                  ),
+                  onEditTap: () => context.push(AppRoutes.editProfile),
+                  onShareTap: () =>
+                      context.showSnackBar(AppStrings.profileLinkCopied),
+                  onFollowTap: () =>
+                      ref.read(profileProvider(userId).notifier).toggleFollow(),
+                ),
               ),
-            ),
 
-            // Tab content
-            if (state.tabIndex == 0)
-              SliverPadding(
-                padding: const EdgeInsets.all(2),
-                sliver: ProfileGrid(
-                  posts: state.posts,
+              // Tab bar
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _ProfileTabDelegate(
+                  selectedIndex: tabIndex,
+                  onTabChanged: (i) =>
+                      ref.read(profileTabIndexProvider(userId).notifier).state =
+                          i,
+                ),
+              ),
+
+              // Tab content
+              if (tabIndex == 0)
+                _ImagePostsTab(
+                  userId: profile.id,
                   onPostTap: (postId) =>
                       context.push(AppRoutes.postDetailPath(postId)),
+                )
+              else
+                _TextPostsTab(
+                  userId: profile.id,
+                  onPostTap: (postId) =>
+                      context.push(AppRoutes.postDetailPath(postId)),
+                  onUserTap: (userId) =>
+                      context.push(AppRoutes.userProfilePath(userId)),
                 ),
-              ),
 
-            if (state.tabIndex == 1)
-              SliverList.builder(
-                itemCount: state.posts.length,
-                itemBuilder: (context, index) => _MiniPostRow(
-                  post: state.posts[index],
-                  onTap: () => context.push(
-                    AppRoutes.postDetailPath(state.posts[index].id),
-                  ),
-                ),
-              ),
-
-            if (state.tabIndex == 2)
-              SliverToBoxAdapter(
-                child: EmptyState(
-                  icon: Icons.label_outline_rounded,
-                  title: AppStrings.noTaggedPosts,
-                  subtitle: AppStrings.noTaggedPostsSub,
-                ),
-              ),
-
-            SliverToBoxAdapter(child: SizedBox(height: AppDimens.vhuge)),
-          ],
+              SliverToBoxAdapter(child: SizedBox(height: AppDimens.vhuge)),
+            ],
+          ),
         ),
       ),
     );
@@ -137,9 +147,10 @@ class _ProfileAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final topPadding = MediaQuery.paddingOf(context).top;
 
     return Container(
-      height: preferredSize.height,
+      height: preferredSize.height + topPadding,
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
         border: Border(
@@ -150,10 +161,13 @@ class _ProfileAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ),
       ),
-      padding: EdgeInsets.symmetric(horizontal: AppDimens.xl),
+      padding: EdgeInsets.only(
+        top: topPadding,
+        left: AppDimens.xl,
+        right: AppDimens.xl,
+      ),
       child: Row(
         children: [
-          // Left: + (own) or back (other)
           if (isOwnProfile)
             AppIconButton(icon: Icons.add_rounded, onTap: onCreateTap)
           else
@@ -162,10 +176,8 @@ class _ProfileAppBar extends StatelessWidget implements PreferredSizeWidget {
               onTap: onBackTap ?? () {},
             ),
           const Spacer(),
-          // Center: username
           Text(username, style: AppTextStyles.h3),
           const Spacer(),
-          // Right: settings
           AppIconButton(
             icon: Icons.settings_outlined,
             onTap: onSettingsTap,
@@ -179,7 +191,7 @@ class _ProfileAppBar extends StatelessWidget implements PreferredSizeWidget {
 // ─── Profile Info ─────────────────────────────────────────────────────────────
 class _ProfileInfo extends StatelessWidget {
   const _ProfileInfo({
-    required this.user,
+    required this.profile,
     required this.isOwnProfile,
     required this.onFollowersTap,
     required this.onFollowingTap,
@@ -188,7 +200,7 @@ class _ProfileInfo extends StatelessWidget {
     required this.onFollowTap,
   });
 
-  final UserModel user;
+  final Profile profile;
   final bool isOwnProfile;
   final VoidCallback onFollowersTap;
   final VoidCallback onFollowingTap;
@@ -209,12 +221,12 @@ class _ProfileInfo extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Avatar + Stats row
+          // Avatar + Stats
           Row(
             children: [
               AppAvatar(
-                imageUrl: user.avatarUrl,
-                initials: user.initials,
+                imageUrl: profile.avatarUrl,
+                initials: profile.initials,
                 size: AvatarSize.xl,
                 hasStoryRing: true,
               ),
@@ -224,17 +236,17 @@ class _ProfileInfo extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     _StatColumn(
-                      value: user.postsCount.compact,
+                      value: profile.postsCount.compact,
                       label: AppStrings.posts,
                       onTap: null,
                     ),
                     _StatColumn(
-                      value: user.followersCount.compact,
+                      value: profile.followersCount.compact,
                       label: AppStrings.followersLabel,
                       onTap: onFollowersTap,
                     ),
                     _StatColumn(
-                      value: user.followingCount.compact,
+                      value: profile.followingCount.compact,
                       label: AppStrings.followingLabel,
                       onTap: onFollowingTap,
                     ),
@@ -245,17 +257,17 @@ class _ProfileInfo extends StatelessWidget {
           ),
           Gap(AppDimens.vmd),
 
-          // Name
+          // Display name
           Text(
-            user.displayName,
+            profile.displayName,
             style: AppTextStyles.h4.copyWith(color: textColor),
           ),
 
           // Bio
-          if (user.bio != null && user.bio!.isNotEmpty) ...[
+          if (profile.bio != null && profile.bio!.isNotEmpty) ...[
             Gap(4.h),
             Text(
-              user.bio!,
+              profile.bio!,
               style: AppTextStyles.bodySmall.copyWith(
                 color: isDark
                     ? AppColors.darkTextSecondary
@@ -266,15 +278,14 @@ class _ProfileInfo extends StatelessWidget {
           ],
 
           // Website
-          if (user.website != null && user.website!.isNotEmpty) ...[
+          if (profile.website != null && profile.website!.isNotEmpty) ...[
             Gap(5.h),
             Row(
               children: [
-                Icon(Icons.link_rounded,
-                    size: 14.w, color: AppColors.primary),
+                Icon(Icons.link_rounded, size: 14.w, color: AppColors.primary),
                 Gap(4.w),
                 Text(
-                  user.website!,
+                  profile.website!,
                   style: AppTextStyles.labelSmall
                       .copyWith(color: AppColors.primary),
                 ),
@@ -293,7 +304,7 @@ class _ProfileInfo extends StatelessWidget {
                     height: AppDimens.buttonHeightSm,
                     child: OutlinedButton(
                       onPressed: onEditTap,
-                      child: Text(AppStrings.editProfile),
+                      child: const Text(AppStrings.editProfile),
                     ),
                   ),
                 ),
@@ -303,7 +314,7 @@ class _ProfileInfo extends StatelessWidget {
                     height: AppDimens.buttonHeightSm,
                     child: OutlinedButton(
                       onPressed: onShareTap,
-                      child: Text(AppStrings.shareProfile),
+                      child: const Text(AppStrings.shareProfile),
                     ),
                   ),
                 ),
@@ -314,21 +325,19 @@ class _ProfileInfo extends StatelessWidget {
               children: [
                 Expanded(
                   child: FollowButton(
-                    isFollowing: user.isFollowing,
+                    isFollowing: profile.isFollowing,
                     onTap: onFollowTap,
                   ),
                 ),
                 Gap(AppDimens.sm),
-                SizedBox(
-                  height: AppDimens.buttonHeightSm,
-                  child: OutlinedButton(
-                    onPressed: onShareTap,
-                    style: OutlinedButton.styleFrom(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: AppDimens.lg),
-                    ),
-                    child: Text(AppStrings.shareProfile),
+                OutlinedButton(
+                  onPressed: onShareTap,
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: Size(0, AppDimens.buttonHeightSm),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: AppDimens.lg),
                   ),
+                  child: const Text(AppStrings.shareProfile),
                 ),
               ],
             ),
@@ -370,7 +379,9 @@ class _StatColumn extends StatelessWidget {
           Text(
             label,
             style: AppTextStyles.statLabel.copyWith(
-              color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+              color: isDark
+                  ? AppColors.darkTextMuted
+                  : AppColors.lightTextMuted,
             ),
           ),
         ],
@@ -395,11 +406,7 @@ class _ProfileTabDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => 44;
 
   @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
@@ -425,11 +432,6 @@ class _ProfileTabDelegate extends SliverPersistentHeaderDelegate {
             isActive: selectedIndex == 1,
             onTap: () => onTabChanged(1),
           ),
-          _Tab(
-            icon: Icons.label_outline_rounded,
-            isActive: selectedIndex == 2,
-            onTap: () => onTabChanged(2),
-          ),
         ],
       ),
     );
@@ -438,6 +440,94 @@ class _ProfileTabDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(_ProfileTabDelegate old) =>
       old.selectedIndex != selectedIndex;
+}
+
+// ─── Image Posts Tab ──────────────────────────────────────────────────────────
+
+class _ImagePostsTab extends ConsumerWidget {
+  const _ImagePostsTab({required this.userId, required this.onPostTap});
+
+  final String userId;
+  final ValueChanged<String> onPostTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final postsAsync = ref.watch(userPostsProvider(userId));
+
+    return postsAsync.when(
+      loading: () => const SliverToBoxAdapter(
+        child: Center(
+          child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()),
+        ),
+      ),
+      error: (_, _) => const SliverToBoxAdapter(
+        child: EmptyState(icon: Icons.error_outline_rounded, title: AppStrings.errorOccurred),
+      ),
+      data: (posts) {
+        final imagePosts = posts.where((p) => p.hasImage).toList();
+        if (imagePosts.isEmpty) {
+          return const SliverToBoxAdapter(
+            child: EmptyState(
+              icon: Icons.photo_outlined,
+              title: AppStrings.noPostsYet,
+              subtitle: AppStrings.noPostsYetSub,
+            ),
+          );
+        }
+        return SliverPadding(
+          padding: const EdgeInsets.all(2),
+          sliver: ProfileImageGrid(posts: imagePosts, onPostTap: onPostTap),
+        );
+      },
+    );
+  }
+}
+
+// ─── Text Posts Tab ───────────────────────────────────────────────────────────
+
+class _TextPostsTab extends ConsumerWidget {
+  const _TextPostsTab({
+    required this.userId,
+    required this.onPostTap,
+    required this.onUserTap,
+  });
+
+  final String userId;
+  final ValueChanged<String> onPostTap;
+  final ValueChanged<String> onUserTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final postsAsync = ref.watch(userPostsProvider(userId));
+
+    return postsAsync.when(
+      loading: () => const SliverToBoxAdapter(
+        child: Center(
+          child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()),
+        ),
+      ),
+      error: (_, _) => const SliverToBoxAdapter(
+        child: EmptyState(icon: Icons.error_outline_rounded, title: AppStrings.errorOccurred),
+      ),
+      data: (posts) {
+        final textPosts = posts.where((p) => !p.hasImage).toList();
+        if (textPosts.isEmpty) {
+          return const SliverToBoxAdapter(
+            child: EmptyState(
+              icon: Icons.text_fields_rounded,
+              title: 'Matnli post yo\'q',
+              subtitle: 'Rasm siz yozgan postlar bu yerda chiqadi',
+            ),
+          );
+        }
+        return ProfileTextList(
+          posts: textPosts,
+          onPostTap: onPostTap,
+          onUserTap: onUserTap,
+        );
+      },
+    );
+  }
 }
 
 class _Tab extends StatelessWidget {
@@ -477,81 +567,6 @@ class _Tab extends StatelessWidget {
                     ? AppColors.darkTextMuted
                     : AppColors.lightTextMuted,
           ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Mini Post Row (list view) ────────────────────────────────────────────────
-class _MiniPostRow extends StatelessWidget {
-  const _MiniPostRow({required this.post, required this.onTap});
-
-  final PostModel post;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: AppDimens.lg,
-          vertical: AppDimens.vmd,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 52.w,
-              height: 52.w,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppDimens.radiusSm),
-                color: isDark ? AppColors.darkElevated : AppColors.lightElevated,
-              ),
-              child: Icon(
-                Icons.image_outlined,
-                size: 22.w,
-                color: AppColors.primary.withOpacity(0.3),
-              ),
-            ),
-            Gap(AppDimens.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (post.hasCaption)
-                    Text(
-                      post.caption!,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.lightTextPrimary,
-                      ),
-                    ),
-                  Gap(4.h),
-                  Row(
-                    children: [
-                      Icon(Icons.favorite_rounded,
-                          size: 14.w, color: AppColors.like),
-                      Gap(3.w),
-                      Text(
-                        post.likesCount.compact,
-                        style: AppTextStyles.caption.copyWith(
-                          color: isDark
-                              ? AppColors.darkTextMuted
-                              : AppColors.lightTextMuted,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
         ),
       ),
     );

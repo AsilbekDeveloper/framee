@@ -22,43 +22,67 @@ class EditProfileScreen extends ConsumerWidget {
     final notifier = ref.read(editProfileProvider.notifier);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    // Muvaffaqiyatli saqlanganda pop + snackbar
+    ref.listen<EditProfileState>(editProfileProvider, (prev, next) {
+      if (next.savedSuccessfully && !(prev?.savedSuccessfully ?? false)) {
+        if (context.mounted) {
+          context.pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(AppStrings.profileUpdated),
+              backgroundColor: AppColors.success,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+      // Xato xabarini SnackBar orqali ko'rsatamiz
+      if (next.errorMessage != null &&
+          next.errorMessage != prev?.errorMessage) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(next.errorMessage!),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    });
+
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         leading: BackButton(onPressed: () => context.pop()),
-        title: Text(AppStrings.editProfile),
+        title: const Text(AppStrings.editProfile),
         actions: [
           Padding(
             padding: EdgeInsets.only(right: AppDimens.lg),
             child: GestureDetector(
-              onTap: state.isSaving
-                  ? null
-                  : () async {
-                      await notifier.save();
-                      if (context.mounted) {
-                        context.pop();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(AppStrings.profileUpdated),
-                          ),
-                        );
-                      }
-                    },
+              onTap: state.isSaving ? null : notifier.save,
               child: Container(
                 height: AppDimens.buttonHeightSm,
                 padding: EdgeInsets.symmetric(horizontal: AppDimens.xl),
                 decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  borderRadius:
-                      BorderRadius.circular(AppDimens.radiusFull),
+                  gradient: state.isSaving
+                      ? null
+                      : AppColors.primaryGradient,
+                  color: state.isSaving
+                      ? (isDark ? AppColors.darkElevated : AppColors.lightElevated)
+                      : null,
+                  borderRadius: BorderRadius.circular(AppDimens.radiusFull),
                 ),
                 child: Center(
                   child: state.isSaving
                       ? SizedBox(
                           width: 14.w,
                           height: 14.w,
-                          child: const CircularProgressIndicator(
+                          child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: isDark
+                                ? AppColors.darkTextMuted
+                                : AppColors.lightTextMuted,
                           ),
                         )
                       : Text(
@@ -80,25 +104,32 @@ class EditProfileScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Avatar upload
+            // Avatar
             Center(
               child: AvatarUpload(
-                imageUrl: state.avatarUrl,
-                onTap: notifier.pickAvatar,
+                imageUrl: state.avatarPreviewPath,
+                onTap: () => notifier.pickAvatar(context),
                 size: 88,
                 label: AppStrings.changePhoto,
               ),
             ),
             Gap(AppDimens.vxxxl),
 
-            // Fields
+            // Username
             AppTextField(
               controller: notifier.usernameController,
               label: AppStrings.username,
               textInputAction: TextInputAction.next,
+              prefixIcon: Icon(
+                Icons.alternate_email_rounded,
+                size: AppDimens.iconSm,
+                color:
+                    isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+              ),
             ),
             Gap(AppDimens.vlg),
 
+            // Display name
             AppTextField(
               controller: notifier.displayNameController,
               label: AppStrings.displayName,
@@ -106,6 +137,7 @@ class EditProfileScreen extends ConsumerWidget {
             ),
             Gap(AppDimens.vlg),
 
+            // Bio
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -123,9 +155,11 @@ class EditProfileScreen extends ConsumerWidget {
                   child: Text(
                     '${state.bioLength} / 150',
                     style: AppTextStyles.caption.copyWith(
-                      color: isDark
-                          ? AppColors.darkTextMuted
-                          : AppColors.lightTextMuted,
+                      color: state.bioLength > 140
+                          ? AppColors.error
+                          : isDark
+                              ? AppColors.darkTextMuted
+                              : AppColors.lightTextMuted,
                     ),
                   ),
                 ),
@@ -133,6 +167,7 @@ class EditProfileScreen extends ConsumerWidget {
             ),
             Gap(AppDimens.vlg),
 
+            // Website
             AppTextField(
               controller: notifier.websiteController,
               label: AppStrings.website,
@@ -141,33 +176,35 @@ class EditProfileScreen extends ConsumerWidget {
               prefixIcon: Icon(
                 Icons.link_rounded,
                 size: AppDimens.iconSm,
-                color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                color:
+                    isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
               ),
             ),
             Gap(AppDimens.vlg),
 
+            // Email (faqat ko'rish — o'zgartirib bo'lmaydi)
             AppTextField(
               controller: notifier.emailController,
               label: AppStrings.email,
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.done,
+              enabled: false,
               prefixIcon: Icon(
                 Icons.mail_outline_rounded,
                 size: AppDimens.iconSm,
-                color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                color:
+                    isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
               ),
             ),
+            Gap(AppDimens.vxl),
 
-            // Section divider
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: AppDimens.vxl),
-              child: Divider(
-                color: isDark
-                    ? AppColors.darkBorderSubtle
-                    : AppColors.lightBorderSubtle,
-              ),
+            // Section label
+            Divider(
+              color: isDark
+                  ? AppColors.darkBorderSubtle
+                  : AppColors.lightBorderSubtle,
             ),
-
+            Gap(AppDimens.vmd),
             Text(
               AppStrings.accountSettings.toUpperCase(),
               style: AppTextStyles.sectionLabel.copyWith(
@@ -178,7 +215,7 @@ class EditProfileScreen extends ConsumerWidget {
             ),
             Gap(AppDimens.vmd),
 
-            // Private account toggle
+            // Toggles
             Container(
               decoration: BoxDecoration(
                 color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
@@ -215,6 +252,7 @@ class EditProfileScreen extends ConsumerWidget {
   }
 }
 
+// ─── Toggle Row ───────────────────────────────────────────────────────────────
 class _ToggleRow extends StatelessWidget {
   const _ToggleRow({
     required this.title,
@@ -264,7 +302,11 @@ class _ToggleRow extends StatelessWidget {
               ],
             ),
           ),
-          Switch(value: value, onChanged: onChanged),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeThumbColor: AppColors.primary,
+          ),
         ],
       ),
     );

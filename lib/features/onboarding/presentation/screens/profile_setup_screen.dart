@@ -44,7 +44,15 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     final notifier = ref.read(profileSetupProvider.notifier);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    // isSaved → home sahifasiga yo'naltirish
+    ref.listen<ProfileSetupState>(profileSetupProvider, (_, next) {
+      if (next.isSaved) {
+        context.go(AppRoutes.home);
+      }
+    });
+
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: Column(
           children: [
@@ -63,8 +71,8 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                     // Avatar upload
                     Center(
                       child: AvatarUpload(
-                        imageUrl: state.avatarUrl,
-                        onTap: notifier.pickAvatar,
+                        imageUrl: state.avatarLocalPath,
+                        onTap: () => notifier.pickAvatar(context),
                         size: 96,
                         label: AppStrings.addProfilePhoto,
                       ),

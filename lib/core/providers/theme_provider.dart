@@ -4,38 +4,44 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 const _kThemeKey = 'theme_mode';
 
-class ThemeModeNotifier extends Notifier<ThemeMode> {
+/// Theme holati — SharedPreferences dan async yuklaydi.
+///
+/// `AsyncNotifier<ThemeMode>` ishlatiladi, shuning uchun app birinchi
+/// renderda to'g'ri ThemeMode ni ko'rsatadi (race condition yo'q).
+///
+/// UI tomonida:
+/// ```dart
+/// final themeAsync = ref.watch(themeModeProvider);
+/// final isDark = themeAsync.valueOrNull == ThemeMode.dark;
+/// ```
+class ThemeModeNotifier extends AsyncNotifier<ThemeMode> {
   @override
-  ThemeMode build() {
-    _loadTheme();
-    return ThemeMode.system;
-  }
-
-  Future<void> _loadTheme() async {
+  Future<ThemeMode> build() async {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getString(_kThemeKey);
-    if (saved != null) {
-      state = ThemeMode.values.firstWhere(
-        (e) => e.name == saved,
-        orElse: () => ThemeMode.system,
-      );
-    }
+    if (saved == null) return ThemeMode.system;
+    return ThemeMode.values.firstWhere(
+      (e) => e.name == saved,
+      orElse: () => ThemeMode.system,
+    );
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
-    state = mode;
+    state = AsyncData(mode);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kThemeKey, mode.name);
   }
 
   Future<void> toggleDarkMode() async {
-    final next = state == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+    final current = state.valueOrNull ?? ThemeMode.system;
+    final next = current == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
     await setThemeMode(next);
   }
 
-  bool get isDark => state == ThemeMode.dark;
+  bool get isDark => state.valueOrNull == ThemeMode.dark;
 }
 
-final themeModeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(
+final themeModeProvider =
+    AsyncNotifierProvider<ThemeModeNotifier, ThemeMode>(
   ThemeModeNotifier.new,
 );

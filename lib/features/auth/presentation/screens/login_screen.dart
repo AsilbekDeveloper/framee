@@ -32,6 +32,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  void _showForgotPasswordDialog(BuildContext ctx) {
+    // Controller dialog ichida boshqariladi — StatefulBuilder orqali dispose qilinadi
+    final emailCtrl = TextEditingController(text: _emailController.text);
+    showDialog<void>(
+      context: ctx,
+      builder: (_) => _ForgotPasswordDialog(
+        initialEmail: _emailController.text,
+        onSend: (email) {
+          emailCtrl.dispose();
+          // TODO: Supabase resetPasswordForEmail(email) integratsiyasi
+          ScaffoldMessenger.of(ctx).showSnackBar(
+            const SnackBar(
+              content: Text('Parol tiklash havolasi emailingizga yuborildi'),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   void _submit() {
     ref.read(authProvider.notifier).signIn(
       email: _emailController.text,
@@ -42,7 +62,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     ref.listen<AuthState>(authProvider, (previous, next) {
-      if (next.isAuthenticated && previous?.isAuthenticated == false) {
+      // Faqat muvaffaqiyatli login bo'lgandagina navigate qilamiz.
+      // Xato holati alohida UI'da ko'rsatiladi.
+      if (next.isAuthenticated && !(previous?.isAuthenticated ?? false)) {
         context.go(AppRoutes.home);
       }
     });
@@ -51,6 +73,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: MaxWidthBox(
           child: SingleChildScrollView(
@@ -132,9 +155,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () {},
+                    onPressed: () => _showForgotPasswordDialog(context),
                     child: Text(
-                      'Forgot password?',
+                      AppStrings.forgotPassword,
                       style: AppTextStyles.labelSmall
                           .copyWith(color: AppColors.primary),
                     ),
@@ -223,6 +246,69 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 }
+
+// ── Forgot Password Dialog ────────────────────────────────────────────────────
+
+class _ForgotPasswordDialog extends StatefulWidget {
+  const _ForgotPasswordDialog({
+    required this.initialEmail,
+    required this.onSend,
+  });
+
+  final String initialEmail;
+  final ValueChanged<String> onSend;
+
+  @override
+  State<_ForgotPasswordDialog> createState() => _ForgotPasswordDialogState();
+}
+
+class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
+  late final TextEditingController _emailCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailCtrl = TextEditingController(text: widget.initialEmail);
+  }
+
+  @override
+  void dispose() {
+    _emailCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Parolni tiklash'),
+      content: TextField(
+        controller: _emailCtrl,
+        keyboardType: TextInputType.emailAddress,
+        autofocus: true,
+        decoration: const InputDecoration(
+          labelText: 'Email manzilingiz',
+          hintText: 'example@mail.com',
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => context.pop(),
+          child: const Text('Bekor qilish'),
+        ),
+        TextButton(
+          onPressed: () {
+            final email = _emailCtrl.text.trim();
+            context.pop();
+            widget.onSend(email);
+          },
+          child: const Text('Yuborish'),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Google Icon ───────────────────────────────────────────────────────────────
 
 class _GoogleIcon extends StatelessWidget {
   @override

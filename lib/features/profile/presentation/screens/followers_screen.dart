@@ -12,9 +12,9 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_text_styles.dart';
-import '../../../../core/extensions/extensions.dart';
-import '../../../../core/models/ui_models.dart';
-import '../../../../core/utils/mock_data.dart';
+import '../../../../core/router/app_router.dart';
+import '../../../follow/domain/entities/follow.dart';
+import '../providers/followers_provider.dart';
 
 class FollowersScreen extends ConsumerStatefulWidget {
   const FollowersScreen({
@@ -34,7 +34,7 @@ class _FollowersScreenState extends ConsumerState<FollowersScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final _searchController = TextEditingController();
-  String _query = '';
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -44,6 +44,7 @@ class _FollowersScreenState extends ConsumerState<FollowersScreen>
       vsync: this,
       initialIndex: widget.initialTab == 'following' ? 1 : 0,
     );
+    _tabController.addListener(() => setState(() {}));
   }
 
   @override
@@ -55,68 +56,134 @@ class _FollowersScreenState extends ConsumerState<FollowersScreen>
 
   @override
   Widget build(BuildContext context) {
-    final users = MockData.users
-        .where((u) =>
-            _query.isEmpty ||
-            u.username.toLowerCase().contains(_query.toLowerCase()))
-        .toList();
+    final stateAsync = ref.watch(followersProvider(widget.userId));
+    final notifier = ref.read(followersProvider(widget.userId).notifier);
 
     return Scaffold(
       appBar: AppBar(
         leading: BackButton(onPressed: () => context.pop()),
-        title: Text(widget.userId),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: [
-            Tab(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(AppStrings.followersLabel),
-                  Gap(6.w),
-                  _CountBadge(count: '200', isActive: _tabController.index == 0),
-                ],
+        title: stateAsync.maybeWhen(
+          data: (s) {
+            final followersCount = s.followers.length;
+            final followingCount = s.following.length;
+            return TabBar(
+              controller: _tabController,
+              tabs: [
+                Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(AppStrings.followersLabel),
+                      Gap(6.w),
+                      _CountBadge(
+                        count: followersCount.toString(),
+                        isActive: _tabController.index == 0,
+                      ),
+                    ],
+                  ),
+                ),
+                Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(AppStrings.followingLabel),
+                      Gap(6.w),
+                      _CountBadge(
+                        count: followingCount.toString(),
+                        isActive: _tabController.index == 1,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+          orElse: () => TabBar(
+            controller: _tabController,
+            tabs: [
+              const Tab(text: AppStrings.followersLabel),
+              const Tab(text: AppStrings.followingLabel),
+            ],
+          ),
+        ),
+        titleSpacing: 0,
+      ),
+      body: stateAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline_rounded,
+                  size: 48.w, color: AppColors.error),
+              Gap(AppDimens.vmd),
+              AppButton(
+                label: AppStrings.retry,
+                onPressed: notifier.refresh,
+                variant: AppButtonVariant.outline,
+              ),
+            ],
+          ),
+        ),
+        data: (state) => Column(
+          children: [
+            // Search
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                AppDimens.lg,
+                AppDimens.vmd,
+                AppDimens.lg,
+                AppDimens.vsm,
+              ),
+              child: AppSearchBar(
+                controller: _searchController,
+                hint: AppStrings.searchPlaceholder,
+                onChanged: (v) => setState(() => _searchQuery = v.toLowerCase()),
+                onClear: () => setState(() => _searchQuery = ''),
               ),
             ),
-            Tab(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+
+            // Lists
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
                 children: [
-                  Text(AppStrings.followingLabel),
-                  Gap(6.w),
-                  _CountBadge(count: '150', isActive: _tabController.index == 1),
+                  _UserList(
+                    users: _filter(state.followers),
+                    onUserTap: (id) =>
+                        context.push(AppRoutes.userProfilePath(id)),
+                    onFollowToggle: (id) =>
+                        notifier.toggleFollow(id, isFollowers: true),
+                  ),
+                  _UserList(
+                    users: _filter(state.following),
+                    onUserTap: (id) =>
+                        context.push(AppRoutes.userProfilePath(id)),
+                    onFollowToggle: (id) =>
+                        notifier.toggleFollow(id, isFollowers: false),
+                  ),
                 ],
               ),
             ),
           ],
         ),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.fromLTRB(
-              AppDimens.lg, AppDimens.vmd, AppDimens.lg, AppDimens.vsm,
-            ),
-            child: AppSearchBar(
-              controller: _searchController,
-              hint: AppStrings.searchPlaceholder,
-              onChanged: (val) => setState(() => _query = val),
-            ),
-          ),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _UserList(users: users),
-                _UserList(users: users),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
+
+  List<FollowUser> _filter(List<FollowUser> users) {
+    if (_searchQuery.isEmpty) return users;
+    return users
+        .where(
+          (u) =>
+              u.username.toLowerCase().contains(_searchQuery) ||
+              u.displayName.toLowerCase().contains(_searchQuery),
+        )
+        .toList();
+  }
 }
+
+// ─── Count Badge ──────────────────────────────────────────────────────────────
 
 class _CountBadge extends StatelessWidget {
   const _CountBadge({required this.count, required this.isActive});
@@ -146,107 +213,118 @@ class _CountBadge extends StatelessWidget {
   }
 }
 
-class _UserList extends StatefulWidget {
-  const _UserList({required this.users});
-  final List<UserModel> users;
+// ─── User List ────────────────────────────────────────────────────────────────
 
-  @override
-  State<_UserList> createState() => _UserListState();
-}
+class _UserList extends StatelessWidget {
+  const _UserList({
+    required this.users,
+    required this.onUserTap,
+    required this.onFollowToggle,
+  });
 
-class _UserListState extends State<_UserList> {
-  late List<UserModel> _users;
-
-  @override
-  void initState() {
-    super.initState();
-    _users = widget.users;
-  }
-
-  @override
-  void didUpdateWidget(_UserList oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.users != widget.users) _users = widget.users;
-  }
+  final List<FollowUser> users;
+  final ValueChanged<String> onUserTap;
+  final ValueChanged<String> onFollowToggle;
 
   @override
   Widget build(BuildContext context) {
-    if (_users.isEmpty) {
-      return EmptyState(
+    if (users.isEmpty) {
+      return const EmptyState(
         icon: Icons.group_outlined,
         title: AppStrings.noResults,
       );
     }
     return ListView.separated(
-      itemCount: _users.length,
-      separatorBuilder: (_, __) => const AppDivider(),
+      itemCount: users.length,
+      separatorBuilder: (_, _) => const AppDivider(),
       itemBuilder: (context, i) => _FollowerRow(
-        user: _users[i],
-        onFollowToggle: () {
-          setState(() {
-            _users = _users.map((u) {
-              if (u.id != _users[i].id) return u;
-              return u.copyWith(isFollowing: !u.isFollowing);
-            }).toList();
-          });
-        },
+        user: users[i],
+        onTap: () => onUserTap(users[i].id),
+        onFollowToggle: () => onFollowToggle(users[i].id),
       ),
     );
   }
 }
 
-class _FollowerRow extends StatelessWidget {
-  const _FollowerRow({required this.user, required this.onFollowToggle});
+// ─── Follower Row ─────────────────────────────────────────────────────────────
 
-  final UserModel user;
+class _FollowerRow extends StatelessWidget {
+  const _FollowerRow({
+    required this.user,
+    required this.onTap,
+    required this.onFollowToggle,
+  });
+
+  final FollowUser user;
+  final VoidCallback onTap;
   final VoidCallback onFollowToggle;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: AppDimens.lg,
-        vertical: AppDimens.vmd,
-      ),
-      child: Row(
-        children: [
-          AppAvatar(
-            imageUrl: user.avatarUrl,
-            initials: user.initials,
-            size: AvatarSize.md,
-          ),
-          Gap(AppDimens.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  user.username,
-                  style: AppTextStyles.username.copyWith(
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
-                  ),
-                ),
-                Gap(2.h),
-                Text(
-                  '@${user.username} · ${user.followersCount.compact} ${AppStrings.followers}',
-                  style: AppTextStyles.caption.copyWith(
-                    color: isDark
-                        ? AppColors.darkTextMuted
-                        : AppColors.lightTextMuted,
-                  ),
-                ),
-              ],
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: AppDimens.lg,
+          vertical: AppDimens.vmd,
+        ),
+        child: Row(
+          children: [
+            AppAvatar(
+              imageUrl: user.avatarUrl,
+              initials: user.initials,
+              size: AvatarSize.md,
             ),
-          ),
-          FollowButton(
-            isFollowing: user.isFollowing,
-            onTap: onFollowToggle,
-          ),
-        ],
+            Gap(AppDimens.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          user.displayName,
+                          style: AppTextStyles.username.copyWith(
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.lightTextPrimary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (user.isVerified) ...[
+                        Gap(4.w),
+                        Icon(
+                          Icons.verified_rounded,
+                          size: 14.w,
+                          color: AppColors.primary,
+                        ),
+                      ],
+                    ],
+                  ),
+                  Gap(2.h),
+                  Text(
+                    '@${user.username}',
+                    style: AppTextStyles.caption.copyWith(
+                      color: isDark
+                          ? AppColors.darkTextMuted
+                          : AppColors.lightTextMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Gap(AppDimens.sm),
+            FollowButton(
+              isFollowing: user.isFollowing || user.isRequested,
+              label: user.isRequested ? 'Requested' : null,
+              onTap: onFollowToggle,
+            ),
+          ],
+        ),
       ),
     );
   }

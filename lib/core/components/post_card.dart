@@ -4,32 +4,36 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../../../../core/components/app_avatar.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_dimens.dart';
-import '../../../../core/constants/app_text_styles.dart';
-import '../../../../core/extensions/extensions.dart';
-import '../../../../core/models/ui_models.dart';
+import '../constants/app_colors.dart';
+import '../constants/app_dimens.dart';
+import '../constants/app_text_styles.dart';
+import '../extensions/extensions.dart';
+import 'app_avatar.dart';
+import '../../features/post/domain/entities/post.dart';
 
+/// Ilovadagi universal post card.
+/// Home feed, post detail, profile list, search — hamma joyda ishlatiladi.
+/// Barcha callbacklar optional: null bo'lsa, tegishli element ko'rinmaydi yoki
+/// tap'ga javob bermaydi.
 class PostCard extends StatelessWidget {
   const PostCard({
     super.key,
     required this.post,
-    required this.onLikeTap,
-    required this.onCommentTap,
-    required this.onShareTap,
-    required this.onSaveTap,
-    required this.onMoreTap,
-    required this.onUserTap,
+    this.onLikeTap,
+    this.onCommentTap,
+    this.onShareTap,
+    this.onSaveTap,
+    this.onMoreTap,
+    this.onUserTap,
   });
 
-  final PostModel post;
-  final VoidCallback onLikeTap;
-  final VoidCallback onCommentTap;
-  final VoidCallback onShareTap;
-  final VoidCallback onSaveTap;
-  final VoidCallback onMoreTap;
-  final VoidCallback onUserTap;
+  final Post post;
+  final VoidCallback? onLikeTap;
+  final VoidCallback? onCommentTap;
+  final VoidCallback? onShareTap;
+  final VoidCallback? onSaveTap;
+  final VoidCallback? onMoreTap;
+  final VoidCallback? onUserTap;
 
   @override
   Widget build(BuildContext context) {
@@ -79,9 +83,9 @@ class _PostHeader extends StatelessWidget {
     required this.onMoreTap,
   });
 
-  final PostModel post;
-  final VoidCallback onUserTap;
-  final VoidCallback onMoreTap;
+  final Post post;
+  final VoidCallback? onUserTap;
+  final VoidCallback? onMoreTap;
 
   @override
   Widget build(BuildContext context) {
@@ -109,13 +113,25 @@ class _PostHeader extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      post.author.username,
-                      style: AppTextStyles.username.copyWith(
-                        color: isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.lightTextPrimary,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          post.author.username,
+                          style: AppTextStyles.username.copyWith(
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.lightTextPrimary,
+                          ),
+                        ),
+                        if (post.author.isVerified) ...[
+                          Gap(3.w),
+                          Icon(
+                            Icons.verified_rounded,
+                            size: 13.w,
+                            color: AppColors.primary,
+                          ),
+                        ],
+                      ],
                     ),
                     Text(
                       post.createdAt.timeAgo,
@@ -131,14 +147,16 @@ class _PostHeader extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          IconButton(
-            onPressed: onMoreTap,
-            icon: Icon(
-              Icons.more_vert_rounded,
-              size: AppDimens.iconMd,
-              color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+          if (onMoreTap != null)
+            IconButton(
+              onPressed: onMoreTap,
+              icon: Icon(
+                Icons.more_vert_rounded,
+                size: AppDimens.iconMd,
+                color:
+                    isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -154,19 +172,28 @@ class _PostImage extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return AspectRatio(
-      aspectRatio: AppDimens.postImageAspectRatio,
-      child: CachedNetworkImage(
-        imageUrl: imageUrl,
-        fit: BoxFit.cover,
-        placeholder: (context, url) => Shimmer.fromColors(
-          baseColor:
-              isDark ? AppColors.darkElevated : const Color(0xFFE8E5FF),
+    return CachedNetworkImage(
+      imageUrl: imageUrl,
+      width: double.infinity,
+      fadeInDuration: Duration.zero,
+      fadeOutDuration: Duration.zero,
+      imageBuilder: (context, imageProvider) => Image(
+        image: imageProvider,
+        width: double.infinity,
+        fit: BoxFit.fitWidth,
+      ),
+      placeholder: (context, url) => AspectRatio(
+        aspectRatio: AppDimens.postImageAspectRatio,
+        child: Shimmer.fromColors(
+          baseColor: isDark ? AppColors.darkElevated : const Color(0xFFE8E5FF),
           highlightColor:
               isDark ? AppColors.darkBorderSubtle : const Color(0xFFF4F3FB),
           child: Container(color: Colors.white),
         ),
-        errorWidget: (context, url, error) => Container(
+      ),
+      errorWidget: (context, url, error) => AspectRatio(
+        aspectRatio: AppDimens.postImageAspectRatio,
+        child: Container(
           color: isDark ? AppColors.darkElevated : AppColors.lightElevated,
           child: Icon(
             Icons.image_not_supported_outlined,
@@ -216,11 +243,11 @@ class _PostActions extends StatelessWidget {
     required this.onSaveTap,
   });
 
-  final PostModel post;
-  final VoidCallback onLikeTap;
-  final VoidCallback onCommentTap;
-  final VoidCallback onShareTap;
-  final VoidCallback onSaveTap;
+  final Post post;
+  final VoidCallback? onLikeTap;
+  final VoidCallback? onCommentTap;
+  final VoidCallback? onShareTap;
+  final VoidCallback? onSaveTap;
 
   @override
   Widget build(BuildContext context) {
@@ -229,10 +256,10 @@ class _PostActions extends StatelessWidget {
         isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(AppDimens.sm, AppDimens.vsm, AppDimens.sm, AppDimens.vxs),
+      padding: EdgeInsets.fromLTRB(
+          AppDimens.sm, AppDimens.vsm, AppDimens.sm, AppDimens.vxs),
       child: Row(
         children: [
-          // Like
           _ActionButton(
             icon: post.isLiked
                 ? Icons.favorite_rounded
@@ -241,28 +268,27 @@ class _PostActions extends StatelessWidget {
             color: post.isLiked ? AppColors.like : mutedColor,
             onTap: onLikeTap,
           ),
-          // Comment
           _ActionButton(
             icon: Icons.chat_bubble_outline_rounded,
             label: post.commentsCount.compact,
             color: mutedColor,
             onTap: onCommentTap,
           ),
-          // Share
-          _ActionButton(
-            icon: Icons.share_outlined,
-            color: mutedColor,
-            onTap: onShareTap,
-          ),
+          if (onShareTap != null)
+            _ActionButton(
+              icon: Icons.share_outlined,
+              color: mutedColor,
+              onTap: onShareTap,
+            ),
           const Spacer(),
-          // Save
-          _ActionButton(
-            icon: post.isSaved
-                ? Icons.bookmark_rounded
-                : Icons.bookmark_outline_rounded,
-            color: post.isSaved ? AppColors.primary : mutedColor,
-            onTap: onSaveTap,
-          ),
+          if (onSaveTap != null)
+            _ActionButton(
+              icon: post.isSaved
+                  ? Icons.bookmark_rounded
+                  : Icons.bookmark_outline_rounded,
+              color: post.isSaved ? AppColors.primary : mutedColor,
+              onTap: onSaveTap,
+            ),
         ],
       ),
     );
@@ -278,7 +304,7 @@ class _ActionButton extends StatelessWidget {
   });
 
   final IconData icon;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final Color color;
   final String? label;
 
@@ -309,8 +335,8 @@ class _ActionButton extends StatelessWidget {
 // ─── Caption ──────────────────────────────────────────────────────────────────
 class _PostCaption extends StatelessWidget {
   const _PostCaption({required this.post, required this.onUserTap});
-  final PostModel post;
-  final VoidCallback onUserTap;
+  final Post post;
+  final VoidCallback? onUserTap;
 
   @override
   Widget build(BuildContext context) {
@@ -319,7 +345,8 @@ class _PostCaption extends StatelessWidget {
         isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(AppDimens.lg, 2.h, AppDimens.lg, AppDimens.vlg),
+      padding: EdgeInsets.fromLTRB(
+          AppDimens.lg, 2.h, AppDimens.lg, AppDimens.vlg),
       child: RichText(
         text: TextSpan(
           children: [

@@ -1,41 +1,62 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../../../core/models/ui_models.dart';
-import '../../../../core/utils/mock_data.dart';
+import '../../../../core/config/app_logger.dart';
+import '../../../../core/router/app_router.dart';
+import '../../../../core/errors/result.dart';
+import '../../../../core/providers/current_user_provider.dart';
+import '../../../auth/data/providers/auth_data_providers.dart';
+import '../../data/providers/profile_data_providers.dart';
+import '../../domain/entities/profile.dart';
 import 'profile_provider.dart';
+
+// ── Edit Profile State ────────────────────────────────────────────────────────
 
 class EditProfileState {
   const EditProfileState({
-    this.avatarUrl,
+    this.avatarPreviewPath,
     this.bioLength = 0,
     this.isPrivate = false,
     this.showActivityStatus = true,
     this.isSaving = false,
+    this.errorMessage,
+    this.savedSuccessfully = false,
   });
 
-  final String? avatarUrl;
+  final String? avatarPreviewPath;
   final int bioLength;
   final bool isPrivate;
   final bool showActivityStatus;
   final bool isSaving;
+  final String? errorMessage;
+  final bool savedSuccessfully;
 
   EditProfileState copyWith({
-    String? avatarUrl,
+    String? avatarPreviewPath,
     int? bioLength,
     bool? isPrivate,
     bool? showActivityStatus,
     bool? isSaving,
+    String? errorMessage,
+    bool? savedSuccessfully,
+    bool clearError = false,
+    bool clearAvatar = false,
   }) =>
       EditProfileState(
-        avatarUrl: avatarUrl ?? this.avatarUrl,
+        avatarPreviewPath:
+            clearAvatar ? null : (avatarPreviewPath ?? this.avatarPreviewPath),
         bioLength: bioLength ?? this.bioLength,
         isPrivate: isPrivate ?? this.isPrivate,
         showActivityStatus: showActivityStatus ?? this.showActivityStatus,
         isSaving: isSaving ?? this.isSaving,
+        errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+        savedSuccessfully: savedSuccessfully ?? this.savedSuccessfully,
       );
 }
+
+// ── Edit Profile Notifier ─────────────────────────────────────────────────────
 
 class EditProfileNotifier extends Notifier<EditProfileState> {
   final usernameController = TextEditingController();
@@ -54,75 +75,135 @@ class EditProfileNotifier extends Notifier<EditProfileState> {
       websiteController.dispose();
       emailController.dispose();
     });
-    _preload();
-    return const EditProfileState();
+
+    return _buildInitialState();
   }
 
-  void _preload() {
-    final user = MockData.currentUser;
-    usernameController.text = user.username;
-    displayNameController.text = user.displayName;
-    bioController.text = user.bio ?? '';
-    websiteController.text = user.website ?? '';
-    emailController.text = user.email ?? '';
-    state = state.copyWith(
-      avatarUrl: user.avatarUrl,
-      bioLength: user.bio?.length ?? 0,
+  /// Controller'larni to'ldiradi va boshlang'ich state'ni qaytaradi.
+  /// auth user (doim mavjud) → profil (yuklanmagan bo'lishi mumkin) ketma-ketligi.
+  EditProfileState _buildInitialState() {
+    final authUser = ref.read(authRepositoryProvider).currentUser;
+    final profile = ref.read(profileProvider(null)).valueOrNull;
+
+    final username = profile?.username ??
+        authUser?.username ??
+        (authUser != null ? authUser.email.split('@').first : '');
+    final displayName = profile?.displayName ?? authUser?.fullName ?? '';
+    final bio = profile?.bio ?? '';
+    final website = profile?.website ?? '';
+    final avatarUrl = profile?.avatarUrl ?? authUser?.avatarUrl;
+
+    usernameController.text = username;
+    displayNameController.text = displayName;
+    bioController.text = bio;
+    websiteController.text = website;
+    emailController.text = authUser?.email ?? '';
+
+    AppLogger.d('EditProfile: boshlangich holat — $username');
+
+    // Profil hali yuklanmagan bo'lsa, stream orqali yangilaymiz
+    if (profile == null) {
+      ref.listen<AsyncValue<Profile>>(profileProvider(null), (_, next) {
+        next.whenData((p) {
+          final fallbackUsername = authUser?.email.split('@').first ?? '';
+          if (usernameController.text.isEmpty ||
+              usernameController.text == fallbackUsername) {
+            usernameController.text = p.username;
+          }
+          if (displayNameController.text.isEmpty) {
+            displayNameController.text = p.displayName;
+          }
+          if (bioController.text.isEmpty && (p.bio ?? '').isNotEmpty) {
+            bioController.text = p.bio!;
+            state = state.copyWith(bioLength: p.bio!.length);
+          }
+          if (websiteController.text.isEmpty && (p.website?.isNotEmpty ?? false)) {
+            websiteController.text = p.website!;
+          }
+          if (p.avatarUrl != null && state.avatarPreviewPath == null) {
+            state = state.copyWith(avatarPreviewPath: p.avatarUrl);
+          }
+        });
+      });
+    }
+
+    return EditProfileState(
+      avatarPreviewPath: avatarUrl,
+      bioLength: bio.length,
+      isPrivate: profile?.isPrivate ?? false,
     );
   }
+
+  // ── Reactive handlers ───────────────────────────────────────────────────────
 
   void onBioChanged() =>
       state = state.copyWith(bioLength: bioController.text.length);
 
   void setPrivate(bool val) => state = state.copyWith(isPrivate: val);
+
   void setShowActivity(bool val) =>
       state = state.copyWith(showActivityStatus: val);
 
-  Future<void> pickAvatar() async {
+  // ── Avatar tanlov ───────────────────────────────────────────────────────────
+
+  Future<void> pickAvatar(BuildContext context) async {
     final file = await _picker.pickImage(
       source: ImageSource.gallery,
-      maxWidth: 512,
-      maxHeight: 512,
-      imageQuality: 90,
+      imageQuality: 85,
     );
-    if (file != null) {
-      state = state.copyWith(avatarUrl: file.path);
+    if (file == null) return;
+    if (!context.mounted) return;
+
+    final croppedPath =
+        await context.push<String>(AppRoutes.avatarCrop, extra: file.path);
+
+    if (croppedPath != null) {
+      AppLogger.d('EditProfile: avatar tanlandi');
+      state = state.copyWith(avatarPreviewPath: croppedPath);
     }
   }
 
+  // ── Save ────────────────────────────────────────────────────────────────────
+
   Future<void> save() async {
-    state = state.copyWith(isSaving: true);
+    final userId = ref.read(currentUserIdProvider);
+    if (userId == null) {
+      state = state.copyWith(errorMessage: 'Foydalanuvchi tizimga kirmagan');
+      return;
+    }
 
-    // Replace with Supabase profiles table PATCH
-    await Future.delayed(const Duration(seconds: 1));
+    AppLogger.i('EditProfile: saqlash — $userId');
+    state = state.copyWith(isSaving: true, clearError: true);
 
-    final current = MockData.currentUser;
-    final bioText = bioController.text.trim();
-    final websiteText = websiteController.text.trim();
-
-    final updated = UserModel(
-      id: current.id,
+    final params = UpdateProfileParams(
+      userId: userId,
       username: usernameController.text.trim(),
       displayName: displayNameController.text.trim(),
-      email: emailController.text.trim(),
-      avatarUrl: state.avatarUrl,
-      bio: bioText.isEmpty ? null : bioText,
-      website: websiteText.isEmpty ? null : websiteText,
-      postsCount: current.postsCount,
-      followersCount: current.followersCount,
-      followingCount: current.followingCount,
-      isFollowing: current.isFollowing,
+      bio: bioController.text.trim(),
+      website: websiteController.text.trim(),
+      avatarLocalPath: state.avatarPreviewPath,
       isPrivate: state.isPrivate,
-      isVerified: current.isVerified,
     );
 
-    // Persist in mock data so other parts of the app see the update
-    MockData.currentUser = updated;
+    final result = await ref.read(updateProfileUseCaseProvider).call(params);
 
-    // Update the profile screen's state immediately
-    ref.read(profileProvider(null).notifier).updateUser(updated);
-
-    state = state.copyWith(isSaving: false);
+    switch (result) {
+      case Ok(:final value):
+        AppLogger.i('EditProfile: saqlandi — ${value.username}');
+        // profileProvider'ni yangilaymiz
+        ref.read(profileProvider(null).notifier).updateProfile(value);
+        state = state.copyWith(
+          isSaving: false,
+          savedSuccessfully: true,
+          avatarPreviewPath: value.avatarUrl,
+        );
+      case Err(:final failure):
+        AppLogger.w('EditProfile: saqlashda xato — ${failure.code}');
+        state = state.copyWith(
+          isSaving: false,
+          errorMessage: failure.message,
+        );
+    }
   }
 }
 

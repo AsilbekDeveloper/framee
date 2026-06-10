@@ -38,10 +38,33 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     super.dispose();
   }
 
+  void _showEmailConfirmationDialog(BuildContext ctx) {
+    showDialog<void>(
+      context: ctx,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        title: const Text('Emailingizni tasdiqlang'),
+        content: Text(
+          '${_emailController.text} manziliga tasdiqlash havolasi yuborildi. '
+          'Emailingizni tasdiqlang va qayta kiring.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              ctx.pop();
+              ctx.go(AppRoutes.login);
+            },
+            child: const Text('Kirish sahifasiga o\'tish'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _submit() {
     ref.read(authProvider.notifier).signUp(
-      fullName: _fullNameController.text, // Assuming you added this to your notifier
-      email: _emailController.text,       // Assuming you added this to your notifier
+      fullName: _fullNameController.text,
+      email: _emailController.text,
       password: _passwordController.text,
       confirmPassword: _confirmPasswordController.text,
     );
@@ -49,10 +72,15 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // 3. Listen for state changes to handle navigation
     ref.listen<AuthState>(authProvider, (previous, next) {
-      if (next.isAuthenticated && previous?.isAuthenticated == false) {
+      // Muvaffaqiyatli ro'yxatdan o'tish — profile setup sahifasiga
+      if (next.isAuthenticated && !(previous?.isAuthenticated ?? false)) {
         context.go(AppRoutes.profileSetup);
+      }
+      // Email tasdiqlash kutilmoqda — dialog ko'rsatamiz
+      if (next.awaitingEmailConfirmation &&
+          !(previous?.awaitingEmailConfirmation ?? false)) {
+        _showEmailConfirmationDialog(context);
       }
     });
 
@@ -60,6 +88,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: MaxWidthBox(
           child: Column(
@@ -233,7 +262,7 @@ class _SignUpHeader extends StatelessWidget {
       child: Row(
         children: [
           GestureDetector(
-            onTap: () => Navigator.of(context).pop(),
+            onTap: () => context.pop(),
             child: Icon(
               Icons.arrow_back_ios_new_rounded,
               size: AppDimens.iconMd,

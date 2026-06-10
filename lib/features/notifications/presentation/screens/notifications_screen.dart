@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -12,8 +13,9 @@ import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/extensions/extensions.dart';
-import '../../../../core/models/ui_models.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../follow/domain/entities/follow.dart';
+import '../../domain/entities/notification.dart';
 import '../providers/notifications_provider.dart';
 
 class NotificationsScreen extends ConsumerWidget {
@@ -21,89 +23,122 @@ class NotificationsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(notificationsProvider);
+    final notifAsync = ref.watch(notificationsProvider);
     final notifier = ref.read(notificationsProvider.notifier);
-
-    final unread = state.notifications.where((n) => !n.isRead).toList();
-    final read = state.notifications.where((n) => n.isRead).toList();
 
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(onPressed: () => context.pop()),
-        title: Text(AppStrings.notifications),
+        automaticallyImplyLeading: false,
+        title: const Text(AppStrings.notifications),
         actions: [
-          if (unread.isNotEmpty)
-            TextButton(
-              onPressed: notifier.markAllRead,
-              child: Text(
-                AppStrings.markAllRead,
-                style: AppTextStyles.labelSmall
-                    .copyWith(color: AppColors.primary),
-              ),
-            ),
+          notifAsync.whenOrNull(
+            data: (list) {
+              final hasUnread = list.any((n) => !n.isRead);
+              if (!hasUnread) return const SizedBox.shrink();
+              return TextButton(
+                onPressed: notifier.markAllRead,
+                child: Text(
+                  AppStrings.markAllRead,
+                  style: AppTextStyles.labelSmall
+                      .copyWith(color: AppColors.primary),
+                ),
+              );
+            },
+          ) ??
+              const SizedBox.shrink(),
         ],
       ),
-      body: state.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : state.notifications.isEmpty
-              ? EmptyState(
-                  icon: Icons.notifications_none_rounded,
-                  title: AppStrings.noNotifications,
-                  subtitle: AppStrings.noNotificationsSub,
-                )
-              : CustomScrollView(
-                  slivers: [
-                    if (unread.isNotEmpty) ...[
-                      SliverToBoxAdapter(
-                        child: SectionLabel(
-                          '${AppStrings.newSection} · ${unread.length}',
-                        ),
-                      ),
-                      SliverList.builder(
-                        itemCount: unread.length,
-                        itemBuilder: (context, i) => _NotifTile(
-                          notif: unread[i],
-                          onTap: () {
-                            notifier.markRead(unread[i].id);
-                            _navigate(context, unread[i]);
-                          },
-                          onFollowTap: () =>
-                              notifier.toggleFollow(unread[i].id),
-                        ),
-                      ),
-                    ],
-                    if (read.isNotEmpty) ...[
-                      SliverToBoxAdapter(
-                        child: SectionLabel(AppStrings.earlier),
-                      ),
-                      SliverList.builder(
-                        itemCount: read.length,
-                        itemBuilder: (context, i) => _NotifTile(
-                          notif: read[i],
-                          onTap: () => _navigate(context, read[i]),
-                          onFollowTap: () =>
-                              notifier.toggleFollow(read[i].id),
-                        ),
-                      ),
-                    ],
-                    SliverToBoxAdapter(child: SizedBox(height: AppDimens.vlg)),
-                  ],
+      body: notifAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline_rounded,
+                  size: 48.w, color: AppColors.error),
+              Gap(AppDimens.vmd),
+              Text(e.toString(), textAlign: TextAlign.center),
+              Gap(AppDimens.vmd),
+              AppButton(
+                label: AppStrings.retry,
+                onPressed: notifier.refresh,
+                variant: AppButtonVariant.outline,
+              ),
+            ],
+          ),
+        ),
+        data: (notifications) {
+          if (notifications.isEmpty) {
+            return const EmptyState(
+              icon: Icons.notifications_none_rounded,
+              title: AppStrings.noNotifications,
+              subtitle: AppStrings.noNotificationsSub,
+            );
+          }
+
+          final unread = notifications.where((n) => !n.isRead).toList();
+          final read = notifications.where((n) => n.isRead).toList();
+
+          return CustomScrollView(
+            slivers: [
+              if (unread.isNotEmpty) ...[
+                SliverToBoxAdapter(
+                  child: SectionLabel(
+                    '${AppStrings.newSection} · ${unread.length}',
+                  ),
                 ),
+                SliverList.builder(
+                  itemCount: unread.length,
+                  itemBuilder: (context, i) => _NotifTile(
+                    notif: unread[i],
+                    onTap: () {
+                      notifier.markRead(unread[i].id);
+                      _navigate(context, unread[i]);
+                    },
+                    onFollowTap: () =>
+                        notifier.acceptFollowRequest(unread[i].actor.id),
+                  ),
+                ),
+              ],
+              if (read.isNotEmpty) ...[
+                const SliverToBoxAdapter(
+                  child: SectionLabel(AppStrings.earlier),
+                ),
+                SliverList.builder(
+                  itemCount: read.length,
+                  itemBuilder: (context, i) => _NotifTile(
+                    notif: read[i],
+                    onTap: () => _navigate(context, read[i]),
+                    onFollowTap: () =>
+                        notifier.acceptFollowRequest(read[i].actor.id),
+                  ),
+                ),
+              ],
+              SliverToBoxAdapter(child: SizedBox(height: AppDimens.vlg)),
+            ],
+          );
+        },
+      ),
     );
   }
 
-  void _navigate(BuildContext context, NotificationModel notif) {
+  void _navigate(BuildContext context, AppNotification notif) {
     switch (notif.type) {
       case NotificationType.like:
       case NotificationType.comment:
-        context.push(AppRoutes.postDetailPath('post_001'));
+      case NotificationType.mention:
+        if (notif.postId != null) {
+          context.push(AppRoutes.postDetailPath(notif.postId!));
+        }
       case NotificationType.follow:
+      case NotificationType.followRequest:
         context.push(AppRoutes.userProfilePath(notif.actor.id));
     }
   }
 }
 
 // ─── Notification Tile ────────────────────────────────────────────────────────
+
 class _NotifTile extends StatelessWidget {
   const _NotifTile({
     required this.notif,
@@ -111,7 +146,7 @@ class _NotifTile extends StatelessWidget {
     required this.onFollowTap,
   });
 
-  final NotificationModel notif;
+  final AppNotification notif;
   final VoidCallback onTap;
   final VoidCallback onFollowTap;
 
@@ -122,9 +157,7 @@ class _NotifTile extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Container(
-        color: !notif.isRead
-            ? AppColors.primaryMuted
-            : Colors.transparent,
+        color: !notif.isRead ? AppColors.primaryMuted : Colors.transparent,
         padding: EdgeInsets.symmetric(
           horizontal: AppDimens.lg,
           vertical: AppDimens.vmd,
@@ -163,11 +196,15 @@ class _NotifTile extends StatelessWidget {
               ),
             ),
 
-            // Right side: follow button or post thumbnail
             Gap(AppDimens.md),
-            if (notif.type == NotificationType.follow)
+
+            // Right side: follow/accept button or post thumbnail
+            if (notif.type == NotificationType.followRequest)
+              _AcceptButton(onTap: onFollowTap)
+            else if (notif.type == NotificationType.follow)
               FollowButton(
-                isFollowing: notif.actor.isFollowing,
+                isFollowing:
+                    notif.actor.followStatus == FollowStatus.following,
                 onTap: onFollowTap,
               )
             else
@@ -178,6 +215,8 @@ class _NotifTile extends StatelessWidget {
     );
   }
 }
+
+// ─── Notif Icon ───────────────────────────────────────────────────────────────
 
 class _NotifIcon extends StatelessWidget {
   const _NotifIcon({required this.type});
@@ -191,12 +230,12 @@ class _NotifIcon extends StatelessWidget {
           AppColors.likeBackground,
           Icons.favorite_rounded,
         ),
-      NotificationType.follow => (
+      NotificationType.follow || NotificationType.followRequest => (
           AppColors.primary,
           AppColors.primaryMuted,
           Icons.person_add_rounded,
         ),
-      NotificationType.comment => (
+      NotificationType.comment || NotificationType.mention => (
           AppColors.success,
           AppColors.followBg,
           Icons.chat_bubble_rounded,
@@ -212,9 +251,11 @@ class _NotifIcon extends StatelessWidget {
   }
 }
 
+// ─── Notif Text ───────────────────────────────────────────────────────────────
+
 class _NotifText extends StatelessWidget {
   const _NotifText({required this.notif});
-  final NotificationModel notif;
+  final AppNotification notif;
 
   @override
   Widget build(BuildContext context) {
@@ -222,12 +263,12 @@ class _NotifText extends StatelessWidget {
     final textColor =
         isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
 
-    String body = switch (notif.type) {
-      NotificationType.like =>
-        '${AppStrings.andOthers} ${AppStrings.likedYourPost}',
+    final body = switch (notif.type) {
+      NotificationType.like => AppStrings.likedYourPost,
       NotificationType.follow => AppStrings.startedFollowingYou,
-      NotificationType.comment =>
-        '${AppStrings.commented} "${notif.commentText ?? ''}"',
+      NotificationType.followRequest => 'wants to follow you',
+      NotificationType.comment => 'commented on your post',
+      NotificationType.mention => 'mentioned you in a comment',
     };
 
     return RichText(
@@ -249,6 +290,36 @@ class _NotifText extends StatelessWidget {
   }
 }
 
+// ─── Accept Button ────────────────────────────────────────────────────────────
+
+class _AcceptButton extends StatelessWidget {
+  const _AcceptButton({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 32.h,
+      child: ElevatedButton(
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          padding: EdgeInsets.symmetric(horizontal: AppDimens.md),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+          ),
+        ),
+        child: Text(
+          'Accept',
+          style: AppTextStyles.labelSmall.copyWith(color: Colors.white),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Post Thumbnail ───────────────────────────────────────────────────────────
+
 class _PostThumbnail extends StatelessWidget {
   const _PostThumbnail({this.imageUrl});
   final String? imageUrl;
@@ -256,18 +327,43 @@ class _PostThumbnail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final size = 44.w;
 
-    return Container(
-      width: 44.w,
-      height: 44.w,
-      decoration: BoxDecoration(
+    return SizedBox(
+      width: size,
+      height: size,
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(AppDimens.radiusSm),
-        color: isDark ? AppColors.darkElevated : AppColors.lightElevated,
+        child: imageUrl != null
+            ? CachedNetworkImage(
+                imageUrl: imageUrl!,
+                fit: BoxFit.cover,
+                placeholder: (_, _) => _FallbackThumbnail(
+                    isDark: isDark, size: size),
+                errorWidget: (_, _, _) => _FallbackThumbnail(
+                    isDark: isDark, size: size),
+              )
+            : _FallbackThumbnail(isDark: isDark, size: size),
       ),
+    );
+  }
+}
+
+class _FallbackThumbnail extends StatelessWidget {
+  const _FallbackThumbnail({required this.isDark, required this.size});
+  final bool isDark;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      color: isDark ? AppColors.darkElevated : AppColors.lightElevated,
       child: Icon(
         Icons.image_outlined,
         size: 18.w,
-        color: AppColors.primary.withOpacity(0.3),
+        color: AppColors.primary.withValues(alpha: 0.3),
       ),
     );
   }

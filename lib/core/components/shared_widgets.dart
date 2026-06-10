@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:shimmer/shimmer.dart';
@@ -181,7 +181,7 @@ class EmptyState extends StatelessWidget {
               child: Icon(
                 icon,
                 size: 32.w,
-                color: AppColors.primary.withOpacity(0.55),
+                color: AppColors.primary.withValues(alpha: 0.55),
               ),
             ),
             Gap(AppDimens.vxl),
