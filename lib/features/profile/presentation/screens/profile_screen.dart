@@ -304,7 +304,10 @@ class _ProfileInfo extends StatelessWidget {
                     height: AppDimens.buttonHeightSm,
                     child: OutlinedButton(
                       onPressed: onEditTap,
-                      child: Text(AppStrings.editProfile),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(AppStrings.editProfile),
+                      ),
                     ),
                   ),
                 ),
@@ -314,7 +317,10 @@ class _ProfileInfo extends StatelessWidget {
                     height: AppDimens.buttonHeightSm,
                     child: OutlinedButton(
                       onPressed: onShareTap,
-                      child: Text(AppStrings.shareProfile),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(AppStrings.shareProfile),
+                      ),
                     ),
                   ),
                 ),
@@ -330,14 +336,17 @@ class _ProfileInfo extends StatelessWidget {
                   ),
                 ),
                 Gap(AppDimens.sm),
-                OutlinedButton(
-                  onPressed: onShareTap,
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: Size(0, AppDimens.buttonHeightSm),
-                    padding:
-                        EdgeInsets.symmetric(horizontal: AppDimens.lg),
+                Expanded(
+                  child: SizedBox(
+                    height: AppDimens.buttonHeightSm,
+                    child: OutlinedButton(
+                      onPressed: onShareTap,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(AppStrings.shareProfile),
+                      ),
+                    ),
                   ),
-                  child: Text(AppStrings.shareProfile),
                 ),
               ],
             ),
