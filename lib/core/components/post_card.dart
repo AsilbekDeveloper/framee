@@ -6,6 +6,7 @@ import 'package:shimmer/shimmer.dart';
 
 import '../constants/app_colors.dart';
 import '../constants/app_dimens.dart';
+import '../constants/app_strings.dart';
 import '../constants/app_text_styles.dart';
 import '../extensions/extensions.dart';
 import 'app_avatar.dart';
@@ -333,39 +334,107 @@ class _ActionButton extends StatelessWidget {
 }
 
 // ─── Caption ──────────────────────────────────────────────────────────────────
-class _PostCaption extends StatelessWidget {
+class _PostCaption extends StatefulWidget {
   const _PostCaption({required this.post, required this.onUserTap});
   final Post post;
   final VoidCallback? onUserTap;
+
+  @override
+  State<_PostCaption> createState() => _PostCaptionState();
+}
+
+class _PostCaptionState extends State<_PostCaption> {
+  static const _maxLines = 3;
+  bool _expanded = false;
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textColor =
         isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final mutedColor =
+        isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted;
+    final usernameStyle = AppTextStyles.username.copyWith(color: textColor);
+    final captionStyle = AppTextStyles.bodySmall.copyWith(color: textColor);
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
-          AppDimens.lg, 2.h, AppDimens.lg, AppDimens.vlg),
-      child: RichText(
-        text: TextSpan(
+          AppDimens.lg, 6.h, AppDimens.lg, AppDimens.vlg),
+      child: LayoutBuilder(builder: (_, constraints) {
+        // Username + caption birga o'lchaymiz
+        final overflows = _doesOverflow(
+          constraints.maxWidth,
+          usernameStyle,
+          captionStyle,
+        );
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            WidgetSpan(
-              child: GestureDetector(
-                onTap: onUserTap,
-                child: Text(
-                  '${post.author.username} ',
-                  style: AppTextStyles.username.copyWith(color: textColor),
-                ),
+            RichText(
+              maxLines: _expanded ? null : _maxLines,
+              overflow:
+                  _expanded ? TextOverflow.visible : TextOverflow.ellipsis,
+              text: TextSpan(
+                children: [
+                  WidgetSpan(
+                    alignment: PlaceholderAlignment.baseline,
+                    baseline: TextBaseline.alphabetic,
+                    child: GestureDetector(
+                      onTap: widget.onUserTap,
+                      child: Text(
+                        '${widget.post.author.username} ',
+                        style: usernameStyle,
+                      ),
+                    ),
+                  ),
+                  TextSpan(
+                    text: widget.post.caption,
+                    style: captionStyle,
+                  ),
+                ],
               ),
             ),
-            TextSpan(
-              text: post.caption,
-              style: AppTextStyles.bodySmall.copyWith(color: textColor),
-            ),
+            if (overflows && !_expanded) ...[
+              Gap(2.h),
+              GestureDetector(
+                onTap: () => setState(() => _expanded = true),
+                child: Text(
+                  AppStrings.more,
+                  style: captionStyle.copyWith(
+                    color: mutedColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ],
-        ),
-      ),
+        );
+      }),
     );
+  }
+
+  bool _doesOverflow(
+    double maxWidth,
+    TextStyle usernameStyle,
+    TextStyle captionStyle,
+  ) {
+    final tp = TextPainter(
+      text: TextSpan(
+        children: [
+          TextSpan(
+            text: '${widget.post.author.username} ',
+            style: usernameStyle,
+          ),
+          TextSpan(
+            text: widget.post.caption,
+            style: captionStyle,
+          ),
+        ],
+      ),
+      maxLines: _maxLines,
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: maxWidth);
+    return tp.didExceedMaxLines;
   }
 }

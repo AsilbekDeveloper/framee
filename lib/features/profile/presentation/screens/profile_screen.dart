@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
@@ -28,7 +28,7 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentUserId = ref.watch(currentUserIdProvider);
-    // userId null bo'lsa yoki currentUser'ning o'z ID'si bo'lsa — o'z profili
+    // userId null bo'lsa yoki currentUser'ning o'z ID'si bo'lsa â€” o'z profili
     final isOwnProfile = userId == null || userId == currentUserId;
 
     final profileAsync = ref.watch(profileProvider(userId));
@@ -125,7 +125,7 @@ class ProfileScreen extends ConsumerWidget {
   }
 }
 
-// ─── App Bar ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ App Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _ProfileAppBar extends StatelessWidget implements PreferredSizeWidget {
   const _ProfileAppBar({
     required this.username,
@@ -188,7 +188,7 @@ class _ProfileAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 }
 
-// ─── Profile Info ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Profile Info â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _ProfileInfo extends StatelessWidget {
   const _ProfileInfo({
     required this.profile,
@@ -304,7 +304,7 @@ class _ProfileInfo extends StatelessWidget {
                     height: AppDimens.buttonHeightSm,
                     child: OutlinedButton(
                       onPressed: onEditTap,
-                      child: const Text(AppStrings.editProfile),
+                      child: Text(AppStrings.editProfile),
                     ),
                   ),
                 ),
@@ -314,7 +314,7 @@ class _ProfileInfo extends StatelessWidget {
                     height: AppDimens.buttonHeightSm,
                     child: OutlinedButton(
                       onPressed: onShareTap,
-                      child: const Text(AppStrings.shareProfile),
+                      child: Text(AppStrings.shareProfile),
                     ),
                   ),
                 ),
@@ -337,7 +337,7 @@ class _ProfileInfo extends StatelessWidget {
                     padding:
                         EdgeInsets.symmetric(horizontal: AppDimens.lg),
                   ),
-                  child: const Text(AppStrings.shareProfile),
+                  child: Text(AppStrings.shareProfile),
                 ),
               ],
             ),
@@ -390,7 +390,7 @@ class _StatColumn extends StatelessWidget {
   }
 }
 
-// ─── Tab Delegate ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Tab Delegate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _ProfileTabDelegate extends SliverPersistentHeaderDelegate {
   const _ProfileTabDelegate({
     required this.selectedIndex,
@@ -442,7 +442,7 @@ class _ProfileTabDelegate extends SliverPersistentHeaderDelegate {
       old.selectedIndex != selectedIndex;
 }
 
-// ─── Image Posts Tab ──────────────────────────────────────────────────────────
+// â”€â”€â”€ Image Posts Tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _ImagePostsTab extends ConsumerWidget {
   const _ImagePostsTab({required this.userId, required this.onPostTap});
@@ -460,14 +460,12 @@ class _ImagePostsTab extends ConsumerWidget {
           child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()),
         ),
       ),
-      error: (_, _) => const SliverToBoxAdapter(
-        child: EmptyState(icon: Icons.error_outline_rounded, title: AppStrings.errorOccurred),
+      error: (_, _) => SliverToBoxAdapter(child: EmptyState(icon: Icons.error_outline_rounded, title: AppStrings.errorOccurred),
       ),
       data: (posts) {
         final imagePosts = posts.where((p) => p.hasImage).toList();
         if (imagePosts.isEmpty) {
-          return const SliverToBoxAdapter(
-            child: EmptyState(
+          return SliverToBoxAdapter(child: EmptyState(
               icon: Icons.photo_outlined,
               title: AppStrings.noPostsYet,
               subtitle: AppStrings.noPostsYetSub,
@@ -483,7 +481,7 @@ class _ImagePostsTab extends ConsumerWidget {
   }
 }
 
-// ─── Text Posts Tab ───────────────────────────────────────────────────────────
+// Text Posts Tab
 
 class _TextPostsTab extends ConsumerWidget {
   const _TextPostsTab({
@@ -506,14 +504,12 @@ class _TextPostsTab extends ConsumerWidget {
           child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()),
         ),
       ),
-      error: (_, _) => const SliverToBoxAdapter(
-        child: EmptyState(icon: Icons.error_outline_rounded, title: AppStrings.errorOccurred),
+      error: (_, _) => SliverToBoxAdapter(child: EmptyState(icon: Icons.error_outline_rounded, title: AppStrings.errorOccurred),
       ),
       data: (posts) {
         final textPosts = posts.where((p) => !p.hasImage).toList();
         if (textPosts.isEmpty) {
-          return const SliverToBoxAdapter(
-            child: EmptyState(
+          return SliverToBoxAdapter(child: EmptyState(
               icon: Icons.text_fields_rounded,
               title: 'Matnli post yo\'q',
               subtitle: 'Rasm siz yozgan postlar bu yerda chiqadi',
@@ -572,3 +568,5 @@ class _Tab extends StatelessWidget {
     );
   }
 }
+
+

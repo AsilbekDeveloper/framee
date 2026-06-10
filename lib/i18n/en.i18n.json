@@ -1,0 +1,211 @@
+{
+  "appName": "Framee",
+  "appTagline": "Capture your moments.\nShare your frame of life.",
+
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "createAccount": "Create Account",
+    "logOut": "Log Out",
+    "deleteAccount": "Delete Account",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "fullName": "Full Name",
+    "emailPlaceholder": "you@example.com",
+    "passwordPlaceholder": "••••••••",
+    "minPasswordPlaceholder": "Min. 8 characters",
+    "repeatPasswordPlaceholder": "Repeat password",
+    "fullNamePlaceholder": "Your full name",
+    "continueWithGoogle": "Continue with Google",
+    "welcomeBack": "Welcome back 👋",
+    "forgotPassword": "Forgot password?",
+    "joinFramee": "Join Framee today",
+    "dontHaveAccount": "Don't have an account?",
+    "alreadyHaveAccount": "Already have an account?",
+    "bySigningUp": "By signing up you agree to our Terms and Privacy Policy",
+    "terms": "Terms",
+    "privacyPolicy": "Privacy Policy"
+  },
+
+  "setup": {
+    "setUpProfile": "Set up your profile",
+    "setUpProfileSub": "Tell the world a bit about yourself",
+    "username": "Username",
+    "displayName": "Display Name",
+    "bio": "Bio",
+    "website": "Website",
+    "usernamePlaceholder": "@username",
+    "displayNamePlaceholder": "Your display name",
+    "bioPlaceholder": "Tell people about yourself...",
+    "websitePlaceholder": "https://yoursite.com",
+    "optional": "(optional)",
+    "usernameAvailable": "✓ Username available",
+    "usernameTaken": "Username already taken",
+    "addProfilePhoto": "Add profile photo",
+    "changePhoto": "Change photo",
+    "saveAndContinue": "Save & Continue",
+    "skipForNow": "Skip for now"
+  },
+
+  "home": {
+    "title": "Home",
+    "newPost": "New Post",
+    "pullToRefresh": "Pull to refresh"
+  },
+
+  "post": {
+    "post": "Post",
+    "createPost": "New Post",
+    "addPhoto": "Add Photo",
+    "photoFormats": "JPG, PNG up to 20 MB",
+    "writeCaptionPlaceholder": "Write a caption...",
+    "allPosts": "All",
+    "textOnly": "Text only",
+    "imageOnly": "Image only",
+    "cropImage": "Crop Image",
+    "discardPost": "Discard post?",
+    "discardPostSub": "Your changes will be lost.",
+    "discardPostConfirm": "Discard",
+    "errorNotLoggedIn": "Please sign in to create a post.",
+    "errorImageRequired": "Please select an image first.",
+    "errorCaptionTooLong": "Caption exceeds 2200 character limit.",
+    "postDetail": "Post",
+    "likes": "likes",
+    "comments": "Comments",
+    "addCommentPlaceholder": "Add a comment...",
+    "reply": "Reply",
+    "viewAllComments": "View all comments",
+    "deletePost": "Delete Post",
+    "reportPost": "Report Post",
+    "savePost": "Save Post",
+    "copyLink": "Copy Link",
+    "sharePost": "Share Post",
+    "linkCopied": "Link copied!",
+    "postSaved": "Post saved!",
+    "postDeleted": "Post deleted",
+    "postPublished": "Post published!",
+    "postReported": "Post reported"
+  },
+
+  "search": {
+    "search": "Search",
+    "discover": "Discover",
+    "searchUsersPlaceholder": "Search users...",
+    "people": "People",
+    "explore": "Explore",
+    "textPostsSection": "Text posts",
+    "followers": "followers",
+    "mutual": "mutual"
+  },
+
+  "profile": {
+    "profile": "Profile",
+    "posts": "Posts",
+    "followersLabel": "Followers",
+    "followingLabel": "Following",
+    "editProfile": "Edit Profile",
+    "shareProfile": "Share Profile",
+    "profileLinkCopied": "Profile link copied!",
+    "noTaggedPosts": "No tagged posts",
+    "noTaggedPostsSub": "When people tag you in posts, they'll appear here."
+  },
+
+  "follow": {
+    "follow": "Follow",
+    "following": "Following",
+    "followSuccess": "Following!",
+    "unfollowConfirm": "Unfollow"
+  },
+
+  "notifications": {
+    "notifications": "Notifications",
+    "markAllRead": "Mark all read",
+    "allMarkedRead": "All marked as read",
+    "newSection": "New",
+    "earlier": "Earlier",
+    "likedYourPost": "liked your post",
+    "andOthers": "and others",
+    "startedFollowingYou": "started following you",
+    "commented": "commented:"
+  },
+
+  "settings": {
+    "settings": "Settings",
+    "appearance": "Appearance",
+    "darkMode": "Dark Mode",
+    "darkModeSub": "Switch between light and dark",
+    "language": "Language",
+    "privacySecurity": "Privacy & Security",
+    "privacy": "Privacy",
+    "privacySub": "Account visibility, blocked users",
+    "security": "Security",
+    "securitySub": "Password, two-factor auth",
+    "changePassword": "Change Password",
+    "saved": "Saved",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "passwordChanged": "Password changed successfully!",
+    "passwordMismatch": "Passwords don't match",
+    "notificationsLabel": "Notifications",
+    "pushNotifications": "Push Notifications",
+    "emailNotifications": "Email Notifications",
+    "about": "About",
+    "helpSupport": "Help & Support",
+    "termsOfService": "Terms of Service",
+    "version": "Version",
+    "versionValue": "1.0.0 MVP",
+    "loggedOut": "Logged out!",
+    "accountDeletionRequested": "Account deletion requested"
+  },
+
+  "editProfile": {
+    "save": "Save",
+    "profileUpdated": "Profile updated!",
+    "privateAccount": "Private Account",
+    "privateAccountSub": "Only approved followers see your posts",
+    "showActivityStatus": "Show Activity Status",
+    "showActivityStatusSub": "Let others see when you were last active",
+    "accountSettings": "Account settings"
+  },
+
+  "followers": {
+    "searchPlaceholder": "Search..."
+  },
+
+  "errors": {
+    "somethingWentWrong": "Something went wrong",
+    "noInternetConnection": "No internet connection",
+    "tryAgain": "Try Again",
+    "retry": "Retry",
+    "sessionExpired": "Session expired. Please sign in again."
+  },
+
+  "empty": {
+    "noPostsYet": "No posts yet",
+    "noPostsYetSub": "When you post something, it will appear here.",
+    "noNotifications": "No notifications",
+    "noNotificationsSub": "When you get notifications, they'll appear here.",
+    "noResults": "No results found",
+    "noResultsSub": "Try a different search term."
+  },
+
+  "misc": {
+    "more": "more",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close",
+    "edit": "Edit",
+    "delete": "Delete",
+    "options": "Options",
+    "galleryOpened": "Gallery opened",
+    "minutesAgo": "min ago",
+    "hourAgo": "hr ago",
+    "yesterday": "Yesterday",
+    "of": "of",
+    "searchPlaceholder": "Search...",
+    "english": "English",
+    "uzbek": "O'zbek",
+    "russian": "Русский"
+  }
+}

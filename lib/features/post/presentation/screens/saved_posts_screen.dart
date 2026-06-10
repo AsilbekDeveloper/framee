@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
@@ -71,7 +71,7 @@ class _SavedPostsScreenState extends ConsumerState<SavedPostsScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: BackButton(onPressed: () => context.pop()),
-        title: const Text(AppStrings.saved),
+        title: Text(AppStrings.saved),
       ),
       body: _buildBody(),
     );
@@ -105,7 +105,7 @@ class _SavedPostsScreenState extends ConsumerState<SavedPostsScreen> {
     final posts = _posts ?? [];
 
     if (posts.isEmpty) {
-      return const EmptyState(
+      return EmptyState(
         icon: Icons.bookmark_border_rounded,
         title: AppStrings.saved,
         subtitle: 'Saqlagan postlaringiz bu yerda ko\'rinadi',
@@ -131,3 +131,5 @@ class _SavedPostsScreenState extends ConsumerState<SavedPostsScreen> {
     );
   }
 }
+
+

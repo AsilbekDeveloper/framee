@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -22,13 +22,13 @@ class CreatePostScreen extends ConsumerWidget {
     final notifier = ref.read(createPostProvider.notifier);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Post muvaffaqiyatli e'lon qilindi → snackbar + pop
+    // Post muvaffaqiyatli e'lon qilindi â†’ snackbar + pop
     ref.listen<CreatePostState>(createPostProvider, (prev, next) {
       if (!next.isPublished) return;
       if (prev?.isPublished == true) return;
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(AppStrings.postPublished),
             behavior: SnackBarBehavior.floating,
           ),
@@ -38,7 +38,7 @@ class CreatePostScreen extends ConsumerWidget {
     });
 
     return PopScope(
-      // Yozilgan content bo'lsa — chiqishdan oldin tasdiqlash
+      // Yozilgan content bo'lsa â€” chiqishdan oldin tasdiqlash
       canPop: !state.hasUnsavedContent,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
@@ -140,17 +140,17 @@ class CreatePostScreen extends ConsumerWidget {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text(AppStrings.discardPost),
-        content: const Text(AppStrings.discardPostSub),
+        title: Text(AppStrings.discardPost),
+        content: Text(AppStrings.discardPostSub),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(AppStrings.cancel),
+            child: Text(AppStrings.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text(AppStrings.discardPostConfirm),
+            child: Text(AppStrings.discardPostConfirm),
           ),
         ],
       ),
@@ -159,7 +159,7 @@ class CreatePostScreen extends ConsumerWidget {
   }
 }
 
-// ─── App Bar ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ App Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _CreatePostAppBar extends StatelessWidget implements PreferredSizeWidget {
   const _CreatePostAppBar({
     required this.onClose,
@@ -249,7 +249,7 @@ class _CreatePostAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 }
 
-// ─── Type Selector ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Type Selector â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _TypeSelector extends StatelessWidget {
   const _TypeSelector({required this.selected, required this.onSelect});
 
@@ -307,7 +307,7 @@ class _TypeSelector extends StatelessWidget {
   }
 }
 
-// ─── Image Picker Area ────────────────────────────────────────────────────────
+// â”€â”€â”€ Image Picker Area â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _ImagePickerArea extends StatelessWidget {
   const _ImagePickerArea({super.key, required this.onTap});
   final VoidCallback onTap;
@@ -364,7 +364,7 @@ class _ImagePickerArea extends StatelessWidget {
   }
 }
 
-// ─── Selected Image ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Selected Image â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Rasmni natural o'lchamida ko'rsatadi (crop qilingan nisbatda)
 class _SelectedImage extends StatelessWidget {
   const _SelectedImage({
@@ -382,7 +382,7 @@ class _SelectedImage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // Natural aspect ratio — AspectRatio yo'q, rasm o'z o'lchamida
+        // Natural aspect ratio â€” AspectRatio yo'q, rasm o'z o'lchamida
         ClipRRect(
           borderRadius: BorderRadius.circular(AppDimens.radiusLg),
           child: Image.file(
@@ -436,7 +436,7 @@ class _ImageActionButton extends StatelessWidget {
   }
 }
 
-// ─── Caption Field ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Caption Field â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _CaptionField extends StatelessWidget {
   const _CaptionField({
     required this.controller,
@@ -462,7 +462,7 @@ class _CaptionField extends StatelessWidget {
           controller: controller,
           onChanged: onChanged,
           maxLines: null,
-          // maxLength olib tashlandi — Flutter'ning built-in counter'i ishlatilmaydi
+          // maxLength olib tashlandi â€” Flutter'ning built-in counter'i ishlatilmaydi
           // _isOverLimit orqali o'zimiz ko'rsatamiz
           style: AppTextStyles.bodyMedium.copyWith(
             color: isDark
@@ -501,3 +501,4 @@ class _CaptionField extends StatelessWidget {
     );
   }
 }
+

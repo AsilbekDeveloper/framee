@@ -1,0 +1,211 @@
+{
+  "appName": "Framee",
+  "appTagline": "Запечатлейте свои моменты.\nПоделитесь своей жизнью.",
+
+  "auth": {
+    "signIn": "Войти",
+    "signUp": "Регистрация",
+    "createAccount": "Создать аккаунт",
+    "logOut": "Выйти",
+    "deleteAccount": "Удалить аккаунт",
+    "email": "Email",
+    "password": "Пароль",
+    "confirmPassword": "Подтвердить пароль",
+    "fullName": "Полное имя",
+    "emailPlaceholder": "вы@example.com",
+    "passwordPlaceholder": "••••••••",
+    "minPasswordPlaceholder": "Минимум 8 символов",
+    "repeatPasswordPlaceholder": "Повторите пароль",
+    "fullNamePlaceholder": "Ваше полное имя",
+    "continueWithGoogle": "Продолжить с Google",
+    "welcomeBack": "С возвращением 👋",
+    "forgotPassword": "Забыли пароль?",
+    "joinFramee": "Присоединяйтесь к Framee",
+    "dontHaveAccount": "Нет аккаунта?",
+    "alreadyHaveAccount": "Уже есть аккаунт?",
+    "bySigningUp": "Регистрируясь, вы соглашаетесь с Условиями и Политикой конфиденциальности",
+    "terms": "Условия",
+    "privacyPolicy": "Политика конфиденциальности"
+  },
+
+  "setup": {
+    "setUpProfile": "Настройте профиль",
+    "setUpProfileSub": "Расскажите миру немного о себе",
+    "username": "Имя пользователя",
+    "displayName": "Отображаемое имя",
+    "bio": "О себе",
+    "website": "Сайт",
+    "usernamePlaceholder": "@имя_пользователя",
+    "displayNamePlaceholder": "Ваше отображаемое имя",
+    "bioPlaceholder": "Расскажите о себе...",
+    "websitePlaceholder": "https://вашсайт.com",
+    "optional": "(необязательно)",
+    "usernameAvailable": "✓ Имя пользователя доступно",
+    "usernameTaken": "Имя пользователя занято",
+    "addProfilePhoto": "Добавить фото профиля",
+    "changePhoto": "Изменить фото",
+    "saveAndContinue": "Сохранить и продолжить",
+    "skipForNow": "Пропустить"
+  },
+
+  "home": {
+    "title": "Главная",
+    "newPost": "Новый пост",
+    "pullToRefresh": "Потяните для обновления"
+  },
+
+  "post": {
+    "post": "Пост",
+    "createPost": "Новый пост",
+    "addPhoto": "Добавить фото",
+    "photoFormats": "JPG, PNG до 20 МБ",
+    "writeCaptionPlaceholder": "Напишите подпись...",
+    "allPosts": "Все",
+    "textOnly": "Только текст",
+    "imageOnly": "Только фото",
+    "cropImage": "Обрезать фото",
+    "discardPost": "Отменить пост?",
+    "discardPostSub": "Ваши изменения будут утеряны.",
+    "discardPostConfirm": "Отменить",
+    "errorNotLoggedIn": "Войдите, чтобы создать пост.",
+    "errorImageRequired": "Сначала выберите изображение.",
+    "errorCaptionTooLong": "Подпись превышает 2200 символов.",
+    "postDetail": "Пост",
+    "likes": "лайков",
+    "comments": "Комментарии",
+    "addCommentPlaceholder": "Добавить комментарий...",
+    "reply": "Ответить",
+    "viewAllComments": "Все комментарии",
+    "deletePost": "Удалить пост",
+    "reportPost": "Пожаловаться",
+    "savePost": "Сохранить пост",
+    "copyLink": "Копировать ссылку",
+    "sharePost": "Поделиться постом",
+    "linkCopied": "Ссылка скопирована!",
+    "postSaved": "Пост сохранён!",
+    "postDeleted": "Пост удалён",
+    "postPublished": "Пост опубликован!",
+    "postReported": "Жалоба отправлена"
+  },
+
+  "search": {
+    "search": "Поиск",
+    "discover": "Открытия",
+    "searchUsersPlaceholder": "Найти пользователей...",
+    "people": "Люди",
+    "explore": "Обзор",
+    "textPostsSection": "Текстовые посты",
+    "followers": "подписчиков",
+    "mutual": "общих"
+  },
+
+  "profile": {
+    "profile": "Профиль",
+    "posts": "Публикации",
+    "followersLabel": "Подписчики",
+    "followingLabel": "Подписки",
+    "editProfile": "Редактировать профиль",
+    "shareProfile": "Поделиться профилем",
+    "profileLinkCopied": "Ссылка на профиль скопирована!",
+    "noTaggedPosts": "Нет отмеченных постов",
+    "noTaggedPostsSub": "Когда вас отметят в постах, они появятся здесь."
+  },
+
+  "follow": {
+    "follow": "Подписаться",
+    "following": "Вы подписаны",
+    "followSuccess": "Подписались!",
+    "unfollowConfirm": "Отписаться"
+  },
+
+  "notifications": {
+    "notifications": "Уведомления",
+    "markAllRead": "Отметить все как прочитанные",
+    "allMarkedRead": "Все отмечены как прочитанные",
+    "newSection": "Новые",
+    "earlier": "Ранее",
+    "likedYourPost": "понравился ваш пост",
+    "andOthers": "и другие",
+    "startedFollowingYou": "подписался на вас",
+    "commented": "прокомментировал:"
+  },
+
+  "settings": {
+    "settings": "Настройки",
+    "appearance": "Внешний вид",
+    "darkMode": "Тёмная тема",
+    "darkModeSub": "Переключение между светлой и тёмной",
+    "language": "Язык",
+    "privacySecurity": "Конфиденциальность и безопасность",
+    "privacy": "Конфиденциальность",
+    "privacySub": "Видимость аккаунта, заблокированные",
+    "security": "Безопасность",
+    "securitySub": "Пароль, двухфакторная аутентификация",
+    "changePassword": "Изменить пароль",
+    "saved": "Сохранённые",
+    "currentPassword": "Текущий пароль",
+    "newPassword": "Новый пароль",
+    "passwordChanged": "Пароль успешно изменён!",
+    "passwordMismatch": "Пароли не совпадают",
+    "notificationsLabel": "Уведомления",
+    "pushNotifications": "Push-уведомления",
+    "emailNotifications": "Email-уведомления",
+    "about": "О приложении",
+    "helpSupport": "Помощь и поддержка",
+    "termsOfService": "Условия использования",
+    "version": "Версия",
+    "versionValue": "1.0.0 MVP",
+    "loggedOut": "Вы вышли!",
+    "accountDeletionRequested": "Запрос на удаление аккаунта отправлен"
+  },
+
+  "editProfile": {
+    "save": "Сохранить",
+    "profileUpdated": "Профиль обновлён!",
+    "privateAccount": "Закрытый аккаунт",
+    "privateAccountSub": "Только подтверждённые подписчики видят ваши посты",
+    "showActivityStatus": "Показывать статус активности",
+    "showActivityStatusSub": "Позволить другим видеть время вашей последней активности",
+    "accountSettings": "Настройки аккаунта"
+  },
+
+  "followers": {
+    "searchPlaceholder": "Поиск..."
+  },
+
+  "errors": {
+    "somethingWentWrong": "Что-то пошло не так",
+    "noInternetConnection": "Нет подключения к интернету",
+    "tryAgain": "Попробовать снова",
+    "retry": "Повторить",
+    "sessionExpired": "Сессия истекла. Войдите снова."
+  },
+
+  "empty": {
+    "noPostsYet": "Пока нет постов",
+    "noPostsYetSub": "Когда вы что-то опубликуете, это появится здесь.",
+    "noNotifications": "Нет уведомлений",
+    "noNotificationsSub": "Когда у вас появятся уведомления, они отобразятся здесь.",
+    "noResults": "Ничего не найдено",
+    "noResultsSub": "Попробуйте другой запрос."
+  },
+
+  "misc": {
+    "more": "ещё",
+    "cancel": "Отмена",
+    "confirm": "Подтвердить",
+    "close": "Закрыть",
+    "edit": "Изменить",
+    "delete": "Удалить",
+    "options": "Варианты",
+    "galleryOpened": "Галерея открыта",
+    "minutesAgo": "мин назад",
+    "hourAgo": "ч назад",
+    "yesterday": "Вчера",
+    "of": "из",
+    "searchPlaceholder": "Поиск...",
+    "english": "English",
+    "uzbek": "O'zbek",
+    "russian": "Русский"
+  }
+}

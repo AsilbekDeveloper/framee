@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
@@ -14,8 +14,10 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/components/app_text_field.dart';
 import '../../../../core/errors/result.dart';
+import '../../../../core/providers/locale_provider.dart';
 import '../../../../core/providers/theme_provider.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../i18n/strings.g.dart';
 import '../../../auth/data/providers/auth_data_providers.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../profile/domain/entities/profile.dart';
@@ -28,13 +30,14 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final themeNotifier = ref.read(themeModeProvider.notifier);
     final isDark = ref.watch(themeModeProvider).valueOrNull == ThemeMode.dark;
+    final currentLocale = ref.watch(localeProvider).valueOrNull ?? AppLocale.en;
 
     final profile = ref.watch(profileProvider(null)).valueOrNull;
 
     return Scaffold(
       appBar: AppBar(
         leading: BackButton(onPressed: () => context.pop()),
-        title: const Text(AppStrings.settings),
+        title: Text(AppStrings.settings),
       ),
       body: CustomScrollView(
         slivers: [
@@ -50,7 +53,7 @@ class SettingsScreen extends ConsumerWidget {
           SliverToBoxAdapter(child: _SectionGap()),
 
           // Appearance
-          const SliverToBoxAdapter(
+          SliverToBoxAdapter(
             child: SectionLabel(AppStrings.appearance),
           ),
           SliverToBoxAdapter(
@@ -67,8 +70,8 @@ class SettingsScreen extends ConsumerWidget {
                 _NavTile(
                   icon: Icons.language_rounded,
                   title: AppStrings.language,
-                  trailing: AppStrings.english,
-                  onTap: () {},
+                  trailing: _localeName(currentLocale),
+                  onTap: () => _showLanguagePicker(context, ref, currentLocale),
                 ),
               ],
             ),
@@ -77,7 +80,7 @@ class SettingsScreen extends ConsumerWidget {
           SliverToBoxAdapter(child: _SectionGap()),
 
           // Privacy & Security
-          const SliverToBoxAdapter(
+          SliverToBoxAdapter(
             child: SectionLabel(AppStrings.privacySecurity),
           ),
           SliverToBoxAdapter(
@@ -109,7 +112,7 @@ class SettingsScreen extends ConsumerWidget {
           SliverToBoxAdapter(child: _SectionGap()),
 
           // Notifications
-          const SliverToBoxAdapter(
+          SliverToBoxAdapter(
             child: SectionLabel(AppStrings.notificationsLabel),
           ),
           SliverToBoxAdapter(
@@ -135,7 +138,7 @@ class SettingsScreen extends ConsumerWidget {
           SliverToBoxAdapter(child: _SectionGap()),
 
           // About
-          const SliverToBoxAdapter(
+          SliverToBoxAdapter(
             child: SectionLabel(AppStrings.about),
           ),
           SliverToBoxAdapter(
@@ -153,7 +156,7 @@ class SettingsScreen extends ConsumerWidget {
                   onTap: () {},
                 ),
                 const AppDivider(),
-                const _NavTile(
+                _NavTile(
                   icon: Icons.info_outline_rounded,
                   title: AppStrings.version,
                   trailing: AppStrings.versionValue,
@@ -192,6 +195,22 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
+  String _localeName(AppLocale locale) {
+    return switch (locale) {
+      AppLocale.en => AppStrings.english,
+      AppLocale.uz => AppStrings.uzbek,
+      AppLocale.ru => AppStrings.russian,
+    };
+  }
+
+  void _showLanguagePicker(BuildContext context, WidgetRef ref, AppLocale current) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _LanguagePickerSheet(current: current),
+    );
+  }
+
   void _showChangePasswordSheet(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(
       context: context,
@@ -205,14 +224,14 @@ class SettingsScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text(AppStrings.deleteAccount),
+        title: Text(AppStrings.deleteAccount),
         content: const Text(
           'Hisobingizni o\'chirishni xohlaysizmi? Bu amalni qaytarib bo\'lmaydi.',
         ),
         actions: [
           TextButton(
             onPressed: () => ctx.pop(),
-            child: const Text(AppStrings.cancel),
+            child: Text(AppStrings.cancel),
           ),
           TextButton(
             onPressed: () async {
@@ -225,7 +244,7 @@ class SettingsScreen extends ConsumerWidget {
               }
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text(AppStrings.deleteAccount),
+            child: Text(AppStrings.deleteAccount),
           ),
         ],
       ),
@@ -236,21 +255,21 @@ class SettingsScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text(AppStrings.logOut),
+        title: Text(AppStrings.logOut),
         content: const Text('Tizimdan chiqmoqchimisiz?'),
         actions: [
           TextButton(
             onPressed: () => ctx.pop(),
-            child: const Text(AppStrings.cancel),
+            child: Text(AppStrings.cancel),
           ),
           TextButton(
             onPressed: () async {
               ctx.pop();
-              // Supabase sessionini tugatadi — router avtomatik /onboarding ga yo'naltiradi
+              // Supabase sessionini tugatadi â€” router avtomatik /onboarding ga yo'naltiradi
               await ref.read(authProvider.notifier).signOut();
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text(AppStrings.logOut),
+            child: Text(AppStrings.logOut),
           ),
         ],
       ),
@@ -258,7 +277,7 @@ class SettingsScreen extends ConsumerWidget {
   }
 }
 
-// ─── Change Password Sheet ────────────────────────────────────────────────────
+// â”€â”€â”€ Change Password Sheet â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _ChangePasswordSheet extends ConsumerStatefulWidget {
   const _ChangePasswordSheet();
@@ -387,7 +406,7 @@ class _ChangePasswordSheetState extends ConsumerState<_ChangePasswordSheet> {
   }
 }
 
-// ─── Profile Preview ──────────────────────────────────────────────────────────
+// â”€â”€â”€ Profile Preview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _ProfilePreviewTile extends StatelessWidget {
   const _ProfilePreviewTile({required this.profile, required this.onEditTap});
 
@@ -448,7 +467,7 @@ class _ProfilePreviewTile extends StatelessWidget {
               minimumSize: Size(0, AppDimens.buttonHeightSm),
               padding: EdgeInsets.symmetric(horizontal: AppDimens.lg),
             ),
-            child: const Text(AppStrings.edit),
+            child: Text(AppStrings.edit),
           ),
         ],
       ),
@@ -456,7 +475,7 @@ class _ProfilePreviewTile extends StatelessWidget {
   }
 }
 
-// ─── Section Gap ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ Section Gap â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _SectionGap extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -468,7 +487,7 @@ class _SectionGap extends StatelessWidget {
   }
 }
 
-// ─── Settings Card ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Settings Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _SettingsCard extends StatelessWidget {
   const _SettingsCard({required this.children});
   final List<Widget> children;
@@ -483,7 +502,7 @@ class _SettingsCard extends StatelessWidget {
   }
 }
 
-// ─── Toggle Tile ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ Toggle Tile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _ToggleTile extends StatelessWidget {
   const _ToggleTile({
     required this.icon,
@@ -550,7 +569,7 @@ class _ToggleTile extends StatelessWidget {
   }
 }
 
-// ─── Nav Tile ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Nav Tile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _NavTile extends StatelessWidget {
   const _NavTile({
     required this.icon,
@@ -634,7 +653,7 @@ class _NavTile extends StatelessWidget {
   }
 }
 
-// ─── Danger Tile ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ Danger Tile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _DangerTile extends StatelessWidget {
   const _DangerTile({
     required this.icon,
@@ -657,7 +676,7 @@ class _DangerTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, size: AppDimens.iconMd, color: AppColors.error),
+            Icon(icon, size: AppDimens.iconMd, color: AppColors.error), // danger tile
             Gap(AppDimens.lg),
             Text(
               title,
@@ -672,3 +691,102 @@ class _DangerTile extends StatelessWidget {
     );
   }
 }
+
+// â”€â”€â”€ Language Picker Sheet â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+class _LanguagePickerSheet extends ConsumerWidget {
+  const _LanguagePickerSheet({required this.current});
+
+  final AppLocale current;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final langs = [
+      (AppLocale.en, AppStrings.english, 'ðŸ‡ºðŸ‡¸'),
+      (AppLocale.uz, AppStrings.uzbek, 'ðŸ‡ºðŸ‡¿'),
+      (AppLocale.ru, AppStrings.russian, 'ðŸ‡·ðŸ‡º'),
+    ];
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        AppDimens.xl,
+        AppDimens.vxl,
+        AppDimens.xl,
+        AppDimens.vxl + MediaQuery.paddingOf(context).bottom,
+      ),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppDimens.radiusXl),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40.w,
+              height: 4.h,
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.darkBorderSubtle
+                    : AppColors.lightBorderSubtle,
+                borderRadius: BorderRadius.circular(2.r),
+              ),
+            ),
+          ),
+          Gap(AppDimens.vxl),
+          Text(AppStrings.language, style: AppTextStyles.h3),
+          Gap(AppDimens.vlg),
+          ...langs.map((item) {
+            final (locale, name, flag) = item;
+            final isSelected = locale == current;
+            return InkWell(
+              onTap: () async {
+                await ref.read(localeProvider.notifier).setLocale(locale);
+                if (context.mounted) context.pop();
+              },
+              borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  vertical: AppDimens.vmd,
+                  horizontal: AppDimens.sm,
+                ),
+                child: Row(
+                  children: [
+                    Text(flag, style: TextStyle(fontSize: 24.sp)),
+                    Gap(AppDimens.lg),
+                    Expanded(
+                      child: Text(
+                        name,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          fontWeight: isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w400,
+                          color: isSelected
+                              ? AppColors.primary
+                              : (isDark
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.lightTextPrimary),
+                        ),
+                      ),
+                    ),
+                    if (isSelected)
+                      Icon(
+                        Icons.check_rounded,
+                        color: AppColors.primary,
+                        size: AppDimens.iconSm,
+                      ),
+                  ],
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+

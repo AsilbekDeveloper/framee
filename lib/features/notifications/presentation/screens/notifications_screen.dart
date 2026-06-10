@@ -1,4 +1,4 @@
-import 'package:cached_network_image/cached_network_image.dart';
+﻿import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -29,7 +29,7 @@ class NotificationsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text(AppStrings.notifications),
+        title: Text(AppStrings.notifications),
         actions: [
           notifAsync.whenOrNull(
             data: (list) {
@@ -69,7 +69,7 @@ class NotificationsScreen extends ConsumerWidget {
         ),
         data: (notifications) {
           if (notifications.isEmpty) {
-            return const EmptyState(
+            return EmptyState(
               icon: Icons.notifications_none_rounded,
               title: AppStrings.noNotifications,
               subtitle: AppStrings.noNotificationsSub,
@@ -84,7 +84,7 @@ class NotificationsScreen extends ConsumerWidget {
               if (unread.isNotEmpty) ...[
                 SliverToBoxAdapter(
                   child: SectionLabel(
-                    '${AppStrings.newSection} · ${unread.length}',
+                    '${AppStrings.newSection} Â· ${unread.length}',
                   ),
                 ),
                 SliverList.builder(
@@ -101,7 +101,7 @@ class NotificationsScreen extends ConsumerWidget {
                 ),
               ],
               if (read.isNotEmpty) ...[
-                const SliverToBoxAdapter(
+                SliverToBoxAdapter(
                   child: SectionLabel(AppStrings.earlier),
                 ),
                 SliverList.builder(
@@ -137,7 +137,7 @@ class NotificationsScreen extends ConsumerWidget {
   }
 }
 
-// ─── Notification Tile ────────────────────────────────────────────────────────
+// â”€â”€â”€ Notification Tile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _NotifTile extends StatelessWidget {
   const _NotifTile({
@@ -216,7 +216,7 @@ class _NotifTile extends StatelessWidget {
   }
 }
 
-// ─── Notif Icon ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Notif Icon â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _NotifIcon extends StatelessWidget {
   const _NotifIcon({required this.type});
@@ -251,7 +251,7 @@ class _NotifIcon extends StatelessWidget {
   }
 }
 
-// ─── Notif Text ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Notif Text â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _NotifText extends StatelessWidget {
   const _NotifText({required this.notif});
@@ -290,7 +290,7 @@ class _NotifText extends StatelessWidget {
   }
 }
 
-// ─── Accept Button ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Accept Button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _AcceptButton extends StatelessWidget {
   const _AcceptButton({required this.onTap});
@@ -318,7 +318,7 @@ class _AcceptButton extends StatelessWidget {
   }
 }
 
-// ─── Post Thumbnail ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Post Thumbnail â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _PostThumbnail extends StatelessWidget {
   const _PostThumbnail({this.imageUrl});
@@ -368,3 +368,4 @@ class _FallbackThumbnail extends StatelessWidget {
     );
   }
 }
+

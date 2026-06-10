@@ -29,13 +29,13 @@ class HomeScreen extends ConsumerWidget {
         onRefresh: () => ref.read(homeProvider.notifier).refresh(),
         child: postsAsync.when(
           loading: () => _LoadingFeed(),
-          error: (e, _) => const EmptyState(
+          error: (e, _) => EmptyState(
             icon: Icons.error_outline,
             title: AppStrings.errorOccurred,
             subtitle: AppStrings.tryAgain,
           ),
           data: (posts) => posts.isEmpty
-              ? const EmptyState(
+              ? EmptyState(
                   icon: Icons.photo_library_outlined,
                   title: AppStrings.noPostsYet,
                   subtitle: AppStrings.noPostsYetSub,

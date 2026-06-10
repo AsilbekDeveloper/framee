@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
@@ -73,7 +73,7 @@ class _FollowersScreenState extends ConsumerState<FollowersScreen>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(AppStrings.followersLabel),
+                      Text(AppStrings.followersLabel),
                       Gap(6.w),
                       _CountBadge(
                         count: followersCount.toString(),
@@ -86,7 +86,7 @@ class _FollowersScreenState extends ConsumerState<FollowersScreen>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(AppStrings.followingLabel),
+                      Text(AppStrings.followingLabel),
                       Gap(6.w),
                       _CountBadge(
                         count: followingCount.toString(),
@@ -101,8 +101,8 @@ class _FollowersScreenState extends ConsumerState<FollowersScreen>
           orElse: () => TabBar(
             controller: _tabController,
             tabs: [
-              const Tab(text: AppStrings.followersLabel),
-              const Tab(text: AppStrings.followingLabel),
+              Tab(text: AppStrings.followersLabel),
+              Tab(text: AppStrings.followingLabel),
             ],
           ),
         ),
@@ -183,7 +183,7 @@ class _FollowersScreenState extends ConsumerState<FollowersScreen>
   }
 }
 
-// ─── Count Badge ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ Count Badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _CountBadge extends StatelessWidget {
   const _CountBadge({required this.count, required this.isActive});
@@ -213,7 +213,7 @@ class _CountBadge extends StatelessWidget {
   }
 }
 
-// ─── User List ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ User List â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _UserList extends StatelessWidget {
   const _UserList({
@@ -229,7 +229,7 @@ class _UserList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (users.isEmpty) {
-      return const EmptyState(
+      return EmptyState(
         icon: Icons.group_outlined,
         title: AppStrings.noResults,
       );
@@ -246,7 +246,7 @@ class _UserList extends StatelessWidget {
   }
 }
 
-// ─── Follower Row ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Follower Row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _FollowerRow extends StatelessWidget {
   const _FollowerRow({
@@ -329,3 +329,5 @@ class _FollowerRow extends StatelessWidget {
     );
   }
 }
+
+

@@ -1,4 +1,4 @@
-import 'package:cached_network_image/cached_network_image.dart';
+﻿import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -44,10 +44,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final notifier = ref.read(searchProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(title: const Text(AppStrings.discover)),
+      appBar: AppBar(title: Text(AppStrings.discover)),
       body: Column(
         children: [
-          // ── Search Bar ───────────────────────────────────────────────────────
+          // â”€â”€ Search Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           Padding(
             padding: EdgeInsets.fromLTRB(
               AppDimens.lg,
@@ -67,7 +67,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             ),
           ),
 
-          // ── Content ──────────────────────────────────────────────────────────
+          // â”€â”€ Content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           Expanded(
             child: _buildContent(context, state, notifier),
           ),
@@ -87,7 +87,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         return const _SearchLoading(key: ValueKey('loading'));
       }
       if (state.userResults.isEmpty) {
-        return const EmptyState(
+        return EmptyState(
           key: ValueKey('empty'),
           icon: Icons.search_off_rounded,
           title: AppStrings.noResults,
@@ -116,7 +116,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 }
 
-// ─── Explore Tab View ─────────────────────────────────────────────────────────
+// â”€â”€â”€ Explore Tab View â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _ExploreGrid extends StatelessWidget {
   const _ExploreGrid({
@@ -142,7 +142,7 @@ class _ExploreGrid extends StatelessWidget {
       length: 2,
       child: Column(
         children: [
-          // ── Tab bar ───────────────────────────────────────────────────────
+          // â”€â”€ Tab bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           Container(
             decoration: BoxDecoration(
               color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
@@ -173,18 +173,18 @@ class _ExploreGrid extends StatelessWidget {
             ),
           ),
 
-          // ── Tab content ───────────────────────────────────────────────────
+          // â”€â”€ Tab content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           Expanded(
             child: TabBarView(
               children: [
-                // Tab 0 — Photos grid
+                // Tab 0 â€” Photos grid
                 _PhotosTab(
                   posts: imagePosts,
                   onPostTap: onPostTap,
                   onRefresh: onRefresh,
                   isDark: isDark,
                 ),
-                // Tab 1 — Text posts feed
+                // Tab 1 â€” Text posts feed
                 _TextTab(
                   posts: textPosts,
                   onPostTap: onPostTap,
@@ -201,7 +201,7 @@ class _ExploreGrid extends StatelessWidget {
   }
 }
 
-// ── Photos tab ────────────────────────────────────────────────────────────────
+// â”€â”€ Photos tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _PhotosTab extends StatelessWidget {
   const _PhotosTab({
@@ -261,7 +261,7 @@ class _PhotosTab extends StatelessWidget {
   }
 }
 
-// ── Text posts tab ────────────────────────────────────────────────────────────
+// â”€â”€ Text posts tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _TextTab extends StatelessWidget {
   const _TextTab({
@@ -324,7 +324,7 @@ class _TextTab extends StatelessWidget {
   }
 }
 
-// Faqat image postlar uchun — grid thumbnail
+// Faqat image postlar uchun â€” grid thumbnail
 class _ExploreCell extends StatelessWidget {
   const _ExploreCell({required this.post});
   final Post post;
@@ -353,7 +353,7 @@ class _ExploreCell extends StatelessWidget {
   }
 }
 
-// ─── Explore Shimmer ──────────────────────────────────────────────────────────
+// â”€â”€â”€ Explore Shimmer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _ExploreShimmer extends StatelessWidget {
   const _ExploreShimmer({super.key});
@@ -415,7 +415,7 @@ class _ExploreShimmer extends StatelessWidget {
   }
 }
 
-// ─── Search Results ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Search Results â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _SearchResults extends StatelessWidget {
   const _SearchResults({
@@ -435,7 +435,7 @@ class _SearchResults extends StatelessWidget {
       slivers: [
         SliverToBoxAdapter(
           child: SectionLabel(
-            '${AppStrings.people} · ${results.length}',
+            '${AppStrings.people} Â· ${results.length}',
           ),
         ),
         SliverList.separated(
@@ -522,7 +522,7 @@ class _UserRow extends StatelessWidget {
                   ),
                   Gap(2.h),
                   Text(
-                    '@${user.username} · ${user.followersCount.compact} ${AppStrings.followers}',
+                    '@${user.username} Â· ${user.followersCount.compact} ${AppStrings.followers}',
                     style: AppTextStyles.caption.copyWith(
                       color: isDark
                           ? AppColors.darkTextMuted
@@ -545,7 +545,7 @@ class _UserRow extends StatelessWidget {
   }
 }
 
-// ─── Search Loading ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Search Loading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _SearchLoading extends StatelessWidget {
   const _SearchLoading({super.key});
@@ -558,3 +558,5 @@ class _SearchLoading extends StatelessWidget {
     );
   }
 }
+
+

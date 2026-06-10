@@ -1,0 +1,211 @@
+{
+  "appName": "Framee",
+  "appTagline": "Lahzalaringizni abadiylashtiring.\nHayotingizning ramkasini ulashing.",
+
+  "auth": {
+    "signIn": "Kirish",
+    "signUp": "Ro'yxatdan o'tish",
+    "createAccount": "Hisob yaratish",
+    "logOut": "Chiqish",
+    "deleteAccount": "Hisobni o'chirish",
+    "email": "Email",
+    "password": "Parol",
+    "confirmPassword": "Parolni tasdiqlash",
+    "fullName": "To'liq ism",
+    "emailPlaceholder": "siz@example.com",
+    "passwordPlaceholder": "••••••••",
+    "minPasswordPlaceholder": "Kamida 8 ta belgi",
+    "repeatPasswordPlaceholder": "Parolni takrorlang",
+    "fullNamePlaceholder": "To'liq ismingiz",
+    "continueWithGoogle": "Google orqali davom etish",
+    "welcomeBack": "Xush kelibsiz 👋",
+    "forgotPassword": "Parolni unutdingizmi?",
+    "joinFramee": "Framee'ga qo'shiling",
+    "dontHaveAccount": "Hisobingiz yo'qmi?",
+    "alreadyHaveAccount": "Hisobingiz bormi?",
+    "bySigningUp": "Ro'yxatdan o'tib, Shartlar va Maxfiylik siyosatiga rozilik bildirasiz",
+    "terms": "Shartlar",
+    "privacyPolicy": "Maxfiylik siyosati"
+  },
+
+  "setup": {
+    "setUpProfile": "Profilingizni sozlang",
+    "setUpProfileSub": "Dunyo bilan o'zingiz haqingizda biroz ma'lumot ulashing",
+    "username": "Foydalanuvchi nomi",
+    "displayName": "Ko'rinish nomi",
+    "bio": "Bio",
+    "website": "Vebsayt",
+    "usernamePlaceholder": "@foydalanuvchi_nomi",
+    "displayNamePlaceholder": "Ko'rinish nomingiz",
+    "bioPlaceholder": "O'zingiz haqingizda yozing...",
+    "websitePlaceholder": "https://saytingiz.com",
+    "optional": "(ixtiyoriy)",
+    "usernameAvailable": "✓ Foydalanuvchi nomi bo'sh",
+    "usernameTaken": "Bu foydalanuvchi nomi band",
+    "addProfilePhoto": "Profil surati qo'shish",
+    "changePhoto": "Suratni o'zgartirish",
+    "saveAndContinue": "Saqlash va davom etish",
+    "skipForNow": "Hozircha o'tkazib yuborish"
+  },
+
+  "home": {
+    "title": "Bosh sahifa",
+    "newPost": "Yangi post",
+    "pullToRefresh": "Yangilash uchun torting"
+  },
+
+  "post": {
+    "post": "Post",
+    "createPost": "Yangi post",
+    "addPhoto": "Rasm qo'shish",
+    "photoFormats": "JPG, PNG, 20 MB gacha",
+    "writeCaptionPlaceholder": "Izoh yozing...",
+    "allPosts": "Hammasi",
+    "textOnly": "Faqat matn",
+    "imageOnly": "Faqat rasm",
+    "cropImage": "Rasmni qirqish",
+    "discardPost": "Postni bekor qilasizmi?",
+    "discardPostSub": "O'zgarishlaringiz yo'qoladi.",
+    "discardPostConfirm": "Bekor qilish",
+    "errorNotLoggedIn": "Post yaratish uchun tizimga kiring.",
+    "errorImageRequired": "Avval rasm tanlang.",
+    "errorCaptionTooLong": "Izoh 2200 ta belgidan oshib ketdi.",
+    "postDetail": "Post",
+    "likes": "yoqdi",
+    "comments": "Izohlar",
+    "addCommentPlaceholder": "Izoh yozing...",
+    "reply": "Javob berish",
+    "viewAllComments": "Barcha izohlarni ko'rish",
+    "deletePost": "Postni o'chirish",
+    "reportPost": "Postni shikoyat qilish",
+    "savePost": "Postni saqlash",
+    "copyLink": "Havolani nusxalash",
+    "sharePost": "Postni ulashish",
+    "linkCopied": "Havola nusxalandi!",
+    "postSaved": "Post saqlandi!",
+    "postDeleted": "Post o'chirildi",
+    "postPublished": "Post chop etildi!",
+    "postReported": "Post shikoyat qilindi"
+  },
+
+  "search": {
+    "search": "Qidirish",
+    "discover": "Kashf etish",
+    "searchUsersPlaceholder": "Foydalanuvchilarni qidiring...",
+    "people": "Odamlar",
+    "explore": "Tadqiq etish",
+    "textPostsSection": "Matn postlar",
+    "followers": "ta kuzatuvchi",
+    "mutual": "umumiy"
+  },
+
+  "profile": {
+    "profile": "Profil",
+    "posts": "Postlar",
+    "followersLabel": "Kuzatuvchilar",
+    "followingLabel": "Kuzatilayotganlar",
+    "editProfile": "Profilni tahrirlash",
+    "shareProfile": "Profilni ulashish",
+    "profileLinkCopied": "Profil havolasi nusxalandi!",
+    "noTaggedPosts": "Teglanmagan postlar yo'q",
+    "noTaggedPostsSub": "Odamlar sizni postlarda teglashsa, ular bu yerda ko'rinadi."
+  },
+
+  "follow": {
+    "follow": "Kuzatish",
+    "following": "Kuzatilmoqda",
+    "followSuccess": "Kuzatilmoqda!",
+    "unfollowConfirm": "Kuzatishni to'xtatish"
+  },
+
+  "notifications": {
+    "notifications": "Bildirishnomalar",
+    "markAllRead": "Barchasini o'qilgan deb belgilash",
+    "allMarkedRead": "Barchasi o'qilgan deb belgilandi",
+    "newSection": "Yangi",
+    "earlier": "Avvalgi",
+    "likedYourPost": "postingizni yoqladi",
+    "andOthers": "va boshqalar",
+    "startedFollowingYou": "sizni kuzata boshladi",
+    "commented": "izoh qoldirdi:"
+  },
+
+  "settings": {
+    "settings": "Sozlamalar",
+    "appearance": "Ko'rinish",
+    "darkMode": "Qorong'i rejim",
+    "darkModeSub": "Yorug' va qorong'i orasida almashtirish",
+    "language": "Til",
+    "privacySecurity": "Maxfiylik va xavfsizlik",
+    "privacy": "Maxfiylik",
+    "privacySub": "Hisob ko'rinishi, bloklangan foydalanuvchilar",
+    "security": "Xavfsizlik",
+    "securitySub": "Parol, ikki faktorli autentifikatsiya",
+    "changePassword": "Parolni o'zgartirish",
+    "saved": "Saqlangan",
+    "currentPassword": "Joriy parol",
+    "newPassword": "Yangi parol",
+    "passwordChanged": "Parol muvaffaqiyatli o'zgartirildi!",
+    "passwordMismatch": "Parollar mos kelmadi",
+    "notificationsLabel": "Bildirishnomalar",
+    "pushNotifications": "Push bildirishnomalar",
+    "emailNotifications": "Email bildirishnomalar",
+    "about": "Ilova haqida",
+    "helpSupport": "Yordam va qo'llab-quvvatlash",
+    "termsOfService": "Xizmat shartlari",
+    "version": "Versiya",
+    "versionValue": "1.0.0 MVP",
+    "loggedOut": "Tizimdan chiqildi!",
+    "accountDeletionRequested": "Hisob o'chirish so'rovi yuborildi"
+  },
+
+  "editProfile": {
+    "save": "Saqlash",
+    "profileUpdated": "Profil yangilandi!",
+    "privateAccount": "Yopiq hisob",
+    "privateAccountSub": "Faqat tasdiqlangan kuzatuvchilar postlaringizni ko'radi",
+    "showActivityStatus": "Faollik holatini ko'rsatish",
+    "showActivityStatusSub": "Boshqalar qachon faol bo'lganingizni ko'rishi mumkin",
+    "accountSettings": "Hisob sozlamalari"
+  },
+
+  "followers": {
+    "searchPlaceholder": "Qidirish..."
+  },
+
+  "errors": {
+    "somethingWentWrong": "Xatolik yuz berdi",
+    "noInternetConnection": "Internet aloqasi yo'q",
+    "tryAgain": "Qayta urinish",
+    "retry": "Qaytadan",
+    "sessionExpired": "Sessiya muddati tugadi. Qayta kiring."
+  },
+
+  "empty": {
+    "noPostsYet": "Hali postlar yo'q",
+    "noPostsYetSub": "Biror narsa postlaganingizda, bu yerda ko'rinadi.",
+    "noNotifications": "Bildirishnomalar yo'q",
+    "noNotificationsSub": "Bildirishnomalar olganingizda, ular bu yerda ko'rinadi.",
+    "noResults": "Natija topilmadi",
+    "noResultsSub": "Boshqa qidiruv so'zini sinab ko'ring."
+  },
+
+  "misc": {
+    "more": "ko'proq",
+    "cancel": "Bekor qilish",
+    "confirm": "Tasdiqlash",
+    "close": "Yopish",
+    "edit": "Tahrirlash",
+    "delete": "O'chirish",
+    "options": "Variantlar",
+    "galleryOpened": "Galereya ochildi",
+    "minutesAgo": "daqiqa oldin",
+    "hourAgo": "soat oldin",
+    "yesterday": "Kecha",
+    "of": "dan",
+    "searchPlaceholder": "Qidirish...",
+    "english": "English",
+    "uzbek": "O'zbek",
+    "russian": "Русский"
+  }
+}

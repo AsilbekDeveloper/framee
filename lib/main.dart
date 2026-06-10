@@ -7,10 +7,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/config/supabase_config.dart';
 import 'core/l10n/app_localizations.dart';
+import 'core/providers/locale_provider.dart';
 import 'core/providers/theme_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'firebase_options.dart';
+import 'i18n/strings.g.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,7 +35,7 @@ void main() async {
     const SystemUiOverlayStyle(statusBarColor: Colors.transparent),
   );
 
-  runApp(const ProviderScope(child: FrameeApp()));
+  runApp(TranslationProvider(child: const ProviderScope(child: FrameeApp())));
 }
 
 class FrameeApp extends ConsumerWidget {
@@ -44,6 +46,8 @@ class FrameeApp extends ConsumerWidget {
     final router = ref.watch(appRouterProvider);
     final themeMode =
         ref.watch(themeModeProvider).valueOrNull ?? ThemeMode.system;
+    // Initialize locale from persisted preference
+    ref.watch(localeProvider);
 
     return ScreenUtilInit(
       designSize: const Size(393, 852),
@@ -57,8 +61,9 @@ class FrameeApp extends ConsumerWidget {
           darkTheme: AppTheme.darkTheme,
           themeMode: themeMode,
           routerConfig: router,
+          locale: TranslationProvider.of(context).flutterLocale,
+          supportedLocales: AppLocaleUtils.supportedLocales,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
         );
       },
     );

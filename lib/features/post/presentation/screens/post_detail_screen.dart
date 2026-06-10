@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -44,7 +44,7 @@ class PostDetailScreen extends ConsumerWidget {
               TextButton(
                 onPressed: () =>
                     ref.invalidate(postDetailProvider(postId)),
-                child: const Text(AppStrings.retry),
+                child: Text(AppStrings.retry),
               ),
             ],
           ),
@@ -67,7 +67,7 @@ class PostDetailScreen extends ConsumerWidget {
         return Scaffold(
           appBar: AppBar(
             leading: BackButton(onPressed: () => context.pop()),
-            title: const Text(AppStrings.postDetail),
+            title: Text(AppStrings.postDetail),
             actions: [
               AppIconButton(
                 icon: Icons.share_outlined,
@@ -101,7 +101,7 @@ class PostDetailScreen extends ConsumerWidget {
                     ),
                     SliverToBoxAdapter(
                       child: SectionLabel(
-                        '${AppStrings.comments} · ${post.commentsCount}',
+                        '${AppStrings.comments} Â· ${post.commentsCount}',
                       ),
                     ),
                     if (data.isLoadingComments)
@@ -172,11 +172,11 @@ class PostDetailScreen extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(AppStrings.cancel),
+            child: Text(AppStrings.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(AppStrings.delete,
+            child: Text(AppStrings.delete,
                 style: TextStyle(color: AppColors.error)),
           ),
         ],
@@ -199,11 +199,11 @@ class PostDetailScreen extends ConsumerWidget {
 
   Future<void> _deleteComment(
       BuildContext context, WidgetRef ref, String commentId) async {
-    // TODO: deleteComment use case — qo'shiladi
+    // TODO: deleteComment use case â€” qo'shiladi
   }
 }
 
-// ─── Reply Banner ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Reply Banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _ReplyBanner extends StatelessWidget {
   const _ReplyBanner({required this.onClear});
   final VoidCallback onClear;
@@ -238,7 +238,7 @@ class _ReplyBanner extends StatelessWidget {
   }
 }
 
-// ─── Comment Input Bar ────────────────────────────────────────────────────────
+// â”€â”€â”€ Comment Input Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _CommentInputBar extends StatelessWidget {
   const _CommentInputBar({
     required this.controller,
@@ -324,3 +324,4 @@ class _CommentInputBar extends StatelessWidget {
     );
   }
 }
+

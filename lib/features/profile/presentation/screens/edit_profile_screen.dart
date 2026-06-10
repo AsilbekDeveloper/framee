@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
@@ -28,7 +28,7 @@ class EditProfileScreen extends ConsumerWidget {
         if (context.mounted) {
           context.pop();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
               content: Text(AppStrings.profileUpdated),
               backgroundColor: AppColors.success,
               behavior: SnackBarBehavior.floating,
@@ -55,7 +55,7 @@ class EditProfileScreen extends ConsumerWidget {
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
         leading: BackButton(onPressed: () => context.pop()),
-        title: const Text(AppStrings.editProfile),
+        title: Text(AppStrings.editProfile),
         actions: [
           Padding(
             padding: EdgeInsets.only(right: AppDimens.lg),
@@ -182,7 +182,7 @@ class EditProfileScreen extends ConsumerWidget {
             ),
             Gap(AppDimens.vlg),
 
-            // Email (faqat ko'rish — o'zgartirib bo'lmaydi)
+            // Email (faqat ko'rish â€” o'zgartirib bo'lmaydi)
             AppTextField(
               controller: notifier.emailController,
               label: AppStrings.email,
@@ -252,7 +252,7 @@ class EditProfileScreen extends ConsumerWidget {
   }
 }
 
-// ─── Toggle Row ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Toggle Row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 class _ToggleRow extends StatelessWidget {
   const _ToggleRow({
     required this.title,
@@ -312,3 +312,5 @@ class _ToggleRow extends StatelessWidget {
     );
   }
 }
+
+

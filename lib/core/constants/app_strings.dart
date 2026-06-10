@@ -1,201 +1,207 @@
+import '../../i18n/strings.g.dart';
+
 /// All user-facing strings.
-/// Replace with AppLocalizations.of(context).xxx for l10n.
+/// Delegates to slang translations — changes automatically when locale switches.
+/// Static const fields (charCountFormat, required) stay as-is (format templates).
 abstract final class AppStrings {
+  static Translations get _t => LocaleSettings.instance.currentTranslations;
+
   // ─── App ──────────────────────────────────────────────────
-  static const String appName = 'Framee';
-  static const String appTagline = 'Capture your moments.\nShare your frame of life.';
+  static String get appName => _t.appName;
+  static String get appTagline => _t.appTagline;
 
   // ─── Auth ─────────────────────────────────────────────────
-  static const String signIn = 'Sign In';
-  static const String signUp = 'Sign Up';
-  static const String createAccount = 'Create Account';
-  static const String logOut = 'Log Out';
-  static const String deleteAccount = 'Delete Account';
-  static const String email = 'Email';
-  static const String password = 'Password';
-  static const String confirmPassword = 'Confirm Password';
-  static const String fullName = 'Full Name';
-  static const String emailPlaceholder = 'you@example.com';
-  static const String passwordPlaceholder = '••••••••';
-  static const String minPasswordPlaceholder = 'Min. 8 characters';
-  static const String repeatPasswordPlaceholder = 'Repeat password';
-  static const String fullNamePlaceholder = 'Your full name';
-  static const String continueWithGoogle = 'Continue with Google';
-  static const String welcomeBack = 'Welcome back 👋';
-  static const String forgotPassword = 'Forgot password?';
-  static const String joinFramee = 'Join Framee today';
-  static const String dontHaveAccount = "Don't have an account?";
-  static const String alreadyHaveAccount = 'Already have an account?';
-  static const String bySigningUp =
-      'By signing up you agree to our Terms and Privacy Policy';
-  static const String terms = 'Terms';
-  static const String privacyPolicy = 'Privacy Policy';
+  static String get signIn => _t.auth.signIn;
+  static String get signUp => _t.auth.signUp;
+  static String get createAccount => _t.auth.createAccount;
+  static String get logOut => _t.auth.logOut;
+  static String get deleteAccount => _t.auth.deleteAccount;
+  static String get email => _t.auth.email;
+  static String get password => _t.auth.password;
+  static String get confirmPassword => _t.auth.confirmPassword;
+  static String get fullName => _t.auth.fullName;
+  static String get emailPlaceholder => _t.auth.emailPlaceholder;
+  static String get passwordPlaceholder => _t.auth.passwordPlaceholder;
+  static String get minPasswordPlaceholder => _t.auth.minPasswordPlaceholder;
+  static String get repeatPasswordPlaceholder => _t.auth.repeatPasswordPlaceholder;
+  static String get fullNamePlaceholder => _t.auth.fullNamePlaceholder;
+  static String get continueWithGoogle => _t.auth.continueWithGoogle;
+  static String get welcomeBack => _t.auth.welcomeBack;
+  static String get forgotPassword => _t.auth.forgotPassword;
+  static String get joinFramee => _t.auth.joinFramee;
+  static String get dontHaveAccount => _t.auth.dontHaveAccount;
+  static String get alreadyHaveAccount => _t.auth.alreadyHaveAccount;
+  static String get bySigningUp => _t.auth.bySigningUp;
+  static String get terms => _t.auth.terms;
+  static String get privacyPolicy => _t.auth.privacyPolicy;
 
   // ─── Profile Setup ────────────────────────────────────────
-  static const String setUpProfile = 'Set up your profile';
-  static const String setUpProfileSub = 'Tell the world a bit about yourself';
-  static const String username = 'Username';
-  static const String displayName = 'Display Name';
-  static const String bio = 'Bio';
-  static const String website = 'Website';
-  static const String usernamePlaceholder = '@username';
-  static const String displayNamePlaceholder = 'Your display name';
-  static const String bioPlaceholder = 'Tell people about yourself...';
-  static const String websitePlaceholder = 'https://yoursite.com';
-  static const String optional = '(optional)';
+  static String get setUpProfile => _t.setup.setUpProfile;
+  static String get setUpProfileSub => _t.setup.setUpProfileSub;
+  static String get username => _t.setup.username;
+  static String get displayName => _t.setup.displayName;
+  static String get bio => _t.setup.bio;
+  static String get website => _t.setup.website;
+  static String get usernamePlaceholder => _t.setup.usernamePlaceholder;
+  static String get displayNamePlaceholder => _t.setup.displayNamePlaceholder;
+  static String get bioPlaceholder => _t.setup.bioPlaceholder;
+  static String get websitePlaceholder => _t.setup.websitePlaceholder;
+  static String get optional => _t.setup.optional;
   static const String required = '*';
-  static const String usernameAvailable = '✓ Username available';
-  static const String usernameTaken = 'Username already taken';
-  static const String addProfilePhoto = 'Add profile photo';
-  static const String changePhoto = 'Change photo';
-  static const String saveAndContinue = 'Save & Continue';
-  static const String skipForNow = 'Skip for now';
+  static String get usernameAvailable => _t.setup.usernameAvailable;
+  static String get usernameTaken => _t.setup.usernameTaken;
+  static String get addProfilePhoto => _t.setup.addProfilePhoto;
+  static String get changePhoto => _t.setup.changePhoto;
+  static String get saveAndContinue => _t.setup.saveAndContinue;
+  static String get skipForNow => _t.setup.skipForNow;
 
   // ─── Home ─────────────────────────────────────────────────
-  static const String home = 'Home';
-  static const String newPost = 'New Post';
-  static const String pullToRefresh = 'Pull to refresh';
+  static String get home => _t.home.title;
+  static String get newPost => _t.home.newPost;
+  static String get pullToRefresh => _t.home.pullToRefresh;
 
   // ─── Post ─────────────────────────────────────────────────
-  static const String post = 'Post';
-  static const String createPost = 'New Post';
-  static const String addPhoto = 'Add Photo';
-  static const String photoFormats = 'JPG, PNG up to 20 MB';
-  static const String writeCaptionPlaceholder = 'Write a caption...';
-  static const String allPosts = 'All';
-  static const String textOnly = 'Text only';
-  static const String imageOnly = 'Image only';
-  static const String cropImage = 'Crop Image';
-  static const String discardPost = 'Discard post?';
-  static const String discardPostSub = 'Your changes will be lost.';
-  static const String discardPostConfirm = 'Discard';
-  static const String errorNotLoggedIn = 'Please sign in to create a post.';
-  static const String errorImageRequired = 'Please select an image first.';
-  static const String errorCaptionTooLong = 'Caption exceeds 2200 character limit.';
-  static const String postDetail = 'Post';
-  static const String likes = 'likes';
-  static const String comments = 'Comments';
-  static const String addCommentPlaceholder = 'Add a comment...';
-  static const String reply = 'Reply';
-  static const String viewAllComments = 'View all comments';
-  static const String deletePost = 'Delete Post';
-  static const String reportPost = 'Report Post';
-  static const String savePost = 'Save Post';
-  static const String copyLink = 'Copy Link';
-  static const String sharePost = 'Share Post';
-  static const String linkCopied = 'Link copied!';
-  static const String postSaved = 'Post saved!';
-  static const String postDeleted = 'Post deleted';
-  static const String postPublished = 'Post published!';
-  static const String postReported = 'Post reported';
+  static String get post => _t.post.post;
+  static String get createPost => _t.post.createPost;
+  static String get addPhoto => _t.post.addPhoto;
+  static String get photoFormats => _t.post.photoFormats;
+  static String get writeCaptionPlaceholder => _t.post.writeCaptionPlaceholder;
+  static String get allPosts => _t.post.allPosts;
+  static String get textOnly => _t.post.textOnly;
+  static String get imageOnly => _t.post.imageOnly;
+  static String get cropImage => _t.post.cropImage;
+  static String get discardPost => _t.post.discardPost;
+  static String get discardPostSub => _t.post.discardPostSub;
+  static String get discardPostConfirm => _t.post.discardPostConfirm;
+  static String get errorNotLoggedIn => _t.post.errorNotLoggedIn;
+  static String get errorImageRequired => _t.post.errorImageRequired;
+  static String get errorCaptionTooLong => _t.post.errorCaptionTooLong;
+  static String get postDetail => _t.post.postDetail;
+  static String get likes => _t.post.likes;
+  static String get comments => _t.post.comments;
+  static String get addCommentPlaceholder => _t.post.addCommentPlaceholder;
+  static String get reply => _t.post.reply;
+  static String get viewAllComments => _t.post.viewAllComments;
+  static String get deletePost => _t.post.deletePost;
+  static String get reportPost => _t.post.reportPost;
+  static String get savePost => _t.post.savePost;
+  static String get copyLink => _t.post.copyLink;
+  static String get sharePost => _t.post.sharePost;
+  static String get linkCopied => _t.post.linkCopied;
+  static String get postSaved => _t.post.postSaved;
+  static String get postDeleted => _t.post.postDeleted;
+  static String get postPublished => _t.post.postPublished;
+  static String get postReported => _t.post.postReported;
 
   // ─── Search ───────────────────────────────────────────────
-  static const String search = 'Search';
-  static const String discover = 'Discover';
-  static const String searchUsersPlaceholder = 'Search users...';
-  static const String people = 'People';
-  static const String explore = 'Explore';
-  static const String textPostsSection = 'Text posts';
-  static const String followers = 'followers';
-  static const String mutual = 'mutual';
+  static String get search => _t.search.search;
+  static String get discover => _t.search.discover;
+  static String get searchUsersPlaceholder => _t.search.searchUsersPlaceholder;
+  static String get people => _t.search.people;
+  static String get explore => _t.search.explore;
+  static String get textPostsSection => _t.search.textPostsSection;
+  static String get followers => _t.search.followers;
+  static String get mutual => _t.search.mutual;
 
   // ─── Profile ──────────────────────────────────────────────
-  static const String profile = 'Profile';
-  static const String posts = 'Posts';
-  static const String followersLabel = 'Followers';
-  static const String followingLabel = 'Following';
-  static const String editProfile = 'Edit Profile';
-  static const String shareProfile = 'Share Profile';
-  static const String profileLinkCopied = 'Profile link copied!';
-  static const String noTaggedPosts = 'No tagged posts';
-  static const String noTaggedPostsSub =
-      'When people tag you in posts, they\'ll appear here.';
+  static String get profile => _t.profile.profile;
+  static String get posts => _t.profile.posts;
+  static String get followersLabel => _t.profile.followersLabel;
+  static String get followingLabel => _t.profile.followingLabel;
+  static String get editProfile => _t.profile.editProfile;
+  static String get shareProfile => _t.profile.shareProfile;
+  static String get profileLinkCopied => _t.profile.profileLinkCopied;
+  static String get noTaggedPosts => _t.profile.noTaggedPosts;
+  static String get noTaggedPostsSub => _t.profile.noTaggedPostsSub;
 
   // ─── Follow ───────────────────────────────────────────────
-  static const String follow = 'Follow';
-  static const String following = 'Following';
-  static const String followSuccess = 'Following!';
-  static const String unfollowConfirm = 'Unfollow';
+  static String get follow => _t.follow.follow;
+  static String get following => _t.follow.following;
+  static String get followSuccess => _t.follow.followSuccess;
+  static String get unfollowConfirm => _t.follow.unfollowConfirm;
 
   // ─── Notifications ────────────────────────────────────────
-  static const String notifications = 'Notifications';
-  static const String markAllRead = 'Mark all read';
-  static const String allMarkedRead = 'All marked as read';
-  static const String newSection = 'New';
-  static const String earlier = 'Earlier';
-  static const String likedYourPost = 'liked your post';
-  static const String andOthers = 'and others';
-  static const String startedFollowingYou = 'started following you';
-  static const String commented = 'commented:';
+  static String get notifications => _t.notifications.notifications;
+  static String get markAllRead => _t.notifications.markAllRead;
+  static String get allMarkedRead => _t.notifications.allMarkedRead;
+  static String get newSection => _t.notifications.newSection;
+  static String get earlier => _t.notifications.earlier;
+  static String get likedYourPost => _t.notifications.likedYourPost;
+  static String get andOthers => _t.notifications.andOthers;
+  static String get startedFollowingYou => _t.notifications.startedFollowingYou;
+  static String get commented => _t.notifications.commented;
 
   // ─── Settings ─────────────────────────────────────────────
-  static const String settings = 'Settings';
-  static const String appearance = 'Appearance';
-  static const String darkMode = 'Dark Mode';
-  static const String darkModeSub = 'Switch between light and dark';
-  static const String language = 'Language';
-  static const String english = 'English';
-  static const String privacySecurity = 'Privacy & Security';
-  static const String privacy = 'Privacy';
-  static const String privacySub = 'Account visibility, blocked users';
-  static const String security = 'Security';
-  static const String securitySub = 'Password, two-factor auth';
-  static const String changePassword = 'Change Password';
-  static const String saved = 'Saved';
-  static const String currentPassword = 'Current Password';
-  static const String newPassword = 'New Password';
-  static const String passwordChanged = 'Password changed successfully!';
-  static const String passwordMismatch = 'Parollar mos kelmadi';
-  static const String notificationsLabel = 'Notifications';
-  static const String pushNotifications = 'Push Notifications';
-  static const String emailNotifications = 'Email Notifications';
-  static const String about = 'About';
-  static const String helpSupport = 'Help & Support';
-  static const String termsOfService = 'Terms of Service';
-  static const String version = 'Version';
-  static const String versionValue = '1.0.0 MVP';
-  static const String loggedOut = 'Logged out!';
-  static const String accountDeletionRequested = 'Account deletion requested';
+  static String get settings => _t.settings.settings;
+  static String get appearance => _t.settings.appearance;
+  static String get darkMode => _t.settings.darkMode;
+  static String get darkModeSub => _t.settings.darkModeSub;
+  static String get language => _t.settings.language;
+  static String get english => _t.misc.english;
+  static String get uzbek => _t.misc.uzbek;
+  static String get russian => _t.misc.russian;
+  static String get privacySecurity => _t.settings.privacySecurity;
+  static String get privacy => _t.settings.privacy;
+  static String get privacySub => _t.settings.privacySub;
+  static String get security => _t.settings.security;
+  static String get securitySub => _t.settings.securitySub;
+  static String get changePassword => _t.settings.changePassword;
+  static String get saved => _t.settings.saved;
+  static String get currentPassword => _t.settings.currentPassword;
+  static String get newPassword => _t.settings.newPassword;
+  static String get passwordChanged => _t.settings.passwordChanged;
+  static String get passwordMismatch => _t.settings.passwordMismatch;
+  static String get notificationsLabel => _t.settings.notificationsLabel;
+  static String get pushNotifications => _t.settings.pushNotifications;
+  static String get emailNotifications => _t.settings.emailNotifications;
+  static String get about => _t.settings.about;
+  static String get helpSupport => _t.settings.helpSupport;
+  static String get termsOfService => _t.settings.termsOfService;
+  static String get version => _t.settings.version;
+  static String get versionValue => _t.settings.versionValue;
+  static String get loggedOut => _t.settings.loggedOut;
+  static String get accountDeletionRequested => _t.settings.accountDeletionRequested;
 
   // ─── Edit Profile ─────────────────────────────────────────
-  static const String save = 'Save';
-  static const String profileUpdated = 'Profile updated!';
-  static const String privateAccount = 'Private Account';
-  static const String privateAccountSub = 'Only approved followers see your posts';
-  static const String showActivityStatus = 'Show Activity Status';
-  static const String showActivityStatusSub = 'Let others see when you were last active';
-  static const String accountSettings = 'Account settings';
+  static String get save => _t.editProfile.save;
+  static String get profileUpdated => _t.editProfile.profileUpdated;
+  static String get privateAccount => _t.editProfile.privateAccount;
+  static String get privateAccountSub => _t.editProfile.privateAccountSub;
+  static String get showActivityStatus => _t.editProfile.showActivityStatus;
+  static String get showActivityStatusSub => _t.editProfile.showActivityStatusSub;
+  static String get accountSettings => _t.editProfile.accountSettings;
 
   // ─── Followers ────────────────────────────────────────────
-  static const String searchPlaceholder = 'Search...';
+  static String get searchPlaceholder => _t.misc.searchPlaceholder;
 
   // ─── Errors ───────────────────────────────────────────────
-  static const String somethingWentWrong = 'Something went wrong';
-  static const String noInternetConnection = 'No internet connection';
-  static const String tryAgain = 'Try Again';
-  static const String retry = 'Retry';
-  static const String errorOccurred = 'Something went wrong';
-  static const String sessionExpired = 'Session expired. Please sign in again.';
+  static String get somethingWentWrong => _t.errors.somethingWentWrong;
+  static String get noInternetConnection => _t.errors.noInternetConnection;
+  static String get tryAgain => _t.errors.tryAgain;
+  static String get retry => _t.errors.retry;
+  static String get errorOccurred => _t.errors.somethingWentWrong;
+  static String get sessionExpired => _t.errors.sessionExpired;
 
   // ─── Empty States ─────────────────────────────────────────
-  static const String noPostsYet = 'No posts yet';
-  static const String noPostsYetSub = 'When you post something, it will appear here.';
-  static const String noNotifications = 'No notifications';
-  static const String noNotificationsSub = 'When you get notifications, they\'ll appear here.';
-  static const String noResults = 'No results found';
-  static const String noResultsSub = 'Try a different search term.';
+  static String get noPostsYet => _t.empty.noPostsYet;
+  static String get noPostsYetSub => _t.empty.noPostsYetSub;
+  static String get noNotifications => _t.empty.noNotifications;
+  static String get noNotificationsSub => _t.empty.noNotificationsSub;
+  static String get noResults => _t.empty.noResults;
+  static String get noResultsSub => _t.empty.noResultsSub;
 
   // ─── Misc ─────────────────────────────────────────────────
-  static const String cancel = 'Cancel';
-  static const String confirm = 'Confirm';
-  static const String close = 'Close';
-  static const String edit = 'Edit';
-  static const String delete = 'Delete';
-  static const String options = 'Options';
-  static const String galleryOpened = 'Gallery opened';
+  static String get more => _t.misc.more;
+  static String get cancel => _t.misc.cancel;
+  static String get confirm => _t.misc.confirm;
+  static String get close => _t.misc.close;
+  static String get edit => _t.misc.edit;
+  static String get delete => _t.misc.delete;
+  static String get options => _t.misc.options;
+  static String get galleryOpened => _t.misc.galleryOpened;
   static const String charCountFormat = '{count} / {max}';
-  static const String minutesAgo = 'min ago';
-  static const String hourAgo = 'hr ago';
-  static const String yesterday = 'Yesterday';
-  static const String of = 'of';
+  static String get minutesAgo => _t.misc.minutesAgo;
+  static String get hourAgo => _t.misc.hourAgo;
+  static String get yesterday => _t.misc.yesterday;
+  static String get of => _t.misc.of;
 }
