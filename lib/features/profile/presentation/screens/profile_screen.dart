@@ -300,21 +300,25 @@ class _ProfileInfo extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: SizedBox(
-                    height: AppDimens.buttonHeightSm,
-                    child: OutlinedButton(
-                      onPressed: onEditTap,
-                      child: Text(AppStrings.editProfile),
+                  child: OutlinedButton(
+                    onPressed: onEditTap,
+                    child: Text(
+                      AppStrings.editProfile,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ),
                 Gap(AppDimens.sm),
                 Expanded(
-                  child: SizedBox(
-                    height: AppDimens.buttonHeightSm,
-                    child: OutlinedButton(
-                      onPressed: onShareTap,
-                      child: Text(AppStrings.shareProfile),
+                  child: OutlinedButton(
+                    onPressed: onShareTap,
+                    child: Text(
+                      AppStrings.shareProfile,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ),
@@ -330,14 +334,16 @@ class _ProfileInfo extends StatelessWidget {
                   ),
                 ),
                 Gap(AppDimens.sm),
-                OutlinedButton(
-                  onPressed: onShareTap,
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: Size(0, AppDimens.buttonHeightSm),
-                    padding:
-                        EdgeInsets.symmetric(horizontal: AppDimens.lg),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: onShareTap,
+                    child: Text(
+                      AppStrings.shareProfile,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  child: Text(AppStrings.shareProfile),
                 ),
               ],
             ),
