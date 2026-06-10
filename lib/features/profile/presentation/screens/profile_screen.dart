@@ -300,25 +300,21 @@ class _ProfileInfo extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton(
-                    onPressed: onEditTap,
-                    child: Text(
-                      AppStrings.editProfile,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                  child: SizedBox(
+                    height: AppDimens.buttonHeightSm,
+                    child: OutlinedButton(
+                      onPressed: onEditTap,
+                      child: Text(AppStrings.editProfile),
                     ),
                   ),
                 ),
                 Gap(AppDimens.sm),
                 Expanded(
-                  child: OutlinedButton(
-                    onPressed: onShareTap,
-                    child: Text(
-                      AppStrings.shareProfile,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                  child: SizedBox(
+                    height: AppDimens.buttonHeightSm,
+                    child: OutlinedButton(
+                      onPressed: onShareTap,
+                      child: Text(AppStrings.shareProfile),
                     ),
                   ),
                 ),
@@ -334,16 +330,14 @@ class _ProfileInfo extends StatelessWidget {
                   ),
                 ),
                 Gap(AppDimens.sm),
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: onShareTap,
-                    child: Text(
-                      AppStrings.shareProfile,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                OutlinedButton(
+                  onPressed: onShareTap,
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: Size(0, AppDimens.buttonHeightSm),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: AppDimens.lg),
                   ),
+                  child: Text(AppStrings.shareProfile),
                 ),
               ],
             ),
