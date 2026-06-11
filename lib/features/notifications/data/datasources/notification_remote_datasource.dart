@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/config/app_logger.dart';
@@ -5,6 +7,12 @@ import '../../../../core/errors/failure.dart';
 import '../../../../core/errors/result.dart';
 import '../../domain/failures/notification_failure.dart';
 import '../dtos/notification_dto.dart';
+
+// Notification query — actor + post ma'lumotlari bilan
+const _kNotifSelect =
+    'id, type, is_read, created_at, actor_id, post_id, '
+    'actor:profiles!actor_id(username, display_name, avatar_url), '
+    'post:posts!post_id(image_url)';
 
 abstract interface class NotificationRemoteDataSource {
   Future<Result<List<NotificationDto>>> getNotifications({
@@ -30,15 +38,17 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
   }) async {
     try {
       AppLogger.d('NotificationDS: yuklanmoqda — $userId');
-      final data = await _client.rpc('get_notifications', params: {
-        'p_user_id': userId,
-        'p_limit': limit,
-        'p_offset': offset,
-      }) as List<dynamic>;
+      final data = await _client
+          .from('notifications')
+          .select(_kNotifSelect)
+          .eq('user_id', userId)
+          .order('created_at', ascending: false)
+          .limit(limit)
+          .range(offset, offset + limit - 1);
 
-      final dtos = data
+      final dtos = (data as List<dynamic>)
           .cast<Map<String, dynamic>>()
-          .map(NotificationDto.fromRpc)
+          .map(NotificationDto.fromJson)
           .toList();
 
       AppLogger.d('NotificationDS: ${dtos.length} ta bildirishnoma');
@@ -56,8 +66,7 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
     try {
       await _client
           .from('notifications')
-          .update({'is_read': true})
-          .eq('id', notificationId);
+          .update({'is_read': true}).eq('id', notificationId);
       return const Ok(true);
     } on PostgrestException catch (e) {
       return Err(NotificationMarkReadFailure(originalError: e));
@@ -85,15 +94,47 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
 
   @override
   Stream<NotificationDto> watchNewNotifications(String userId) {
-    // Supabase Realtime: notifications jadvaldagi INSERT'larni kuzatamiz
-    return _client
-        .from('notifications')
-        .stream(primaryKey: ['id'])
-        .eq('user_id', userId)
-        .order('created_at', ascending: false)
-        .limit(1)
-        .map((rows) => rows.isEmpty ? null : NotificationDto.fromRpc(rows.first))
-        .where((dto) => dto != null)
-        .cast<NotificationDto>();
+    final controller = StreamController<NotificationDto>.broadcast();
+
+    final channel = _client
+        .channel('notifications:$userId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'notifications',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'user_id',
+            value: userId,
+          ),
+          callback: (payload) async {
+            final id = payload.newRecord['id'] as String?;
+            if (id == null) return;
+            try {
+              // Yangi bildirishnomani actor ma'lumotlari bilan yuklaymiz
+              final row = await _client
+                  .from('notifications')
+                  .select(_kNotifSelect)
+                  .eq('id', id)
+                  .single();
+              controller.add(NotificationDto.fromJson(row));
+            } catch (e) {
+              AppLogger.w('NotificationDS: realtime notif yuklab bo\'lmadi — $e');
+            }
+          },
+        )
+        .subscribe((status, [error]) {
+          AppLogger.d('NotificationDS: realtime status — $status');
+          if (error != null) {
+            AppLogger.w('NotificationDS: realtime xato — $error');
+          }
+        });
+
+    controller.onCancel = () {
+      _client.removeChannel(channel);
+      controller.close();
+    };
+
+    return controller.stream;
   }
 }
