@@ -17,7 +17,10 @@ import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
 import '../../features/post/presentation/screens/saved_posts_screen.dart';
 import '../components/avatar_crop_screen.dart';
+import '../../features/settings/presentation/screens/help_support_screen.dart';
+import '../../features/settings/presentation/screens/privacy_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
+import '../../features/settings/presentation/screens/terms_screen.dart';
 import '../components/scaffold_with_nav_bar.dart';
 
 /// Named route path constants used throughout the app.
@@ -36,6 +39,9 @@ abstract final class AppRoutes {
 
   static const String savedPosts = '/saved-posts';
   static const String avatarCrop = '/avatar-crop';
+  static const String privacy = '/privacy';
+  static const String helpSupport = '/help-support';
+  static const String termsOfService = '/terms-of-service';
 
   static String postDetailPath(String postId) => '/post/$postId';
   static String followersPath(String userId) => '/followers/$userId';
@@ -193,6 +199,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           fullscreenDialog: true,
           child: AvatarCropScreen(imagePath: state.extra as String),
         ),
+      ),
+      GoRoute(
+        path: AppRoutes.privacy,
+        builder: (_, _) => const PrivacyScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.helpSupport,
+        builder: (_, _) => const HelpSupportScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.termsOfService,
+        builder: (_, _) => const TermsScreen(),
       ),
     ],
   );

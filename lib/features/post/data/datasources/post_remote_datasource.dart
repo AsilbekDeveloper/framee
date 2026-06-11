@@ -51,6 +51,11 @@ abstract interface class PostRemoteDataSource {
     required String currentUserId,
   });
 
+  Future<Result<bool>> toggleCommentLike({
+    required String commentId,
+    required String currentUserId,
+  });
+
   Future<Result<List<PostDto>>> getUserPosts({
     required String userId,
     required String currentUserId,
@@ -398,6 +403,43 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
       return Err(PostDeleteFailure(originalError: e));
     } catch (e, st) {
       return Err(PostDeleteFailure(originalError: e, stackTrace: st));
+    }
+  }
+
+  // ── Comment Like ────────────────────────────────────────────────────────────
+
+  @override
+  Future<Result<bool>> toggleCommentLike({
+    required String commentId,
+    required String currentUserId,
+  }) async {
+    try {
+      final existing = await _client
+          .from(_commentLikesTable)
+          .select('id')
+          .eq('comment_id', commentId)
+          .eq('user_id', currentUserId)
+          .maybeSingle();
+
+      if (existing != null) {
+        await _client
+            .from(_commentLikesTable)
+            .delete()
+            .eq('comment_id', commentId)
+            .eq('user_id', currentUserId);
+        return const Ok(false);
+      } else {
+        await _client.from(_commentLikesTable).insert({
+          'comment_id': commentId,
+          'user_id': currentUserId,
+        });
+        return const Ok(true);
+      }
+    } on PostgrestException catch (e) {
+      AppLogger.e('PostDS: toggleCommentLike error', error: e);
+      return Err(PostInteractionFailure(originalError: e));
+    } catch (e) {
+      return Err(PostInteractionFailure(originalError: e));
     }
   }
 

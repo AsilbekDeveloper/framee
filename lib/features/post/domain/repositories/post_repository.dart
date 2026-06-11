@@ -64,6 +64,12 @@ abstract interface class PostRepository {
     required String currentUserId,
   });
 
+  /// Toggles a like on a comment. Returns the new liked state.
+  Future<Result<bool>> toggleCommentLike({
+    required String commentId,
+    required String currentUserId,
+  });
+
   // ── User / Saved Posts ─────────────────────────────────────────────────────
 
   /// Returns posts created by a specific user.

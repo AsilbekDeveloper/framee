@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/components/post_card.dart';
 import '../../../../core/components/shared_widgets.dart';
@@ -66,7 +68,7 @@ class PostDetailScreen extends ConsumerWidget {
             actions: [
               AppIconButton(
                 icon: Icons.share_outlined,
-                onTap: () => context.showSnackBar(AppStrings.linkCopied),
+                onTap: () => _sharePost(context, post.id),
               ),
               if (isOwnPost)
                 AppIconButton(
@@ -85,8 +87,7 @@ class PostDetailScreen extends ConsumerWidget {
                         post: post,
                         onLikeTap: () => notifier.toggleLike(),
                         onCommentTap: null,
-                        onShareTap: () =>
-                            context.showSnackBar(AppStrings.linkCopied),
+                        onShareTap: () => _copyLink(context, post.id),
                         onSaveTap: () => notifier.toggleSave(),
                         onMoreTap: null,
                         onUserTap: () => context.push(
@@ -137,6 +138,8 @@ class PostDetailScreen extends ConsumerWidget {
                             currentUserId: currentUserId,
                             onLikeTap: () =>
                                 notifier.toggleCommentLike(comment.id),
+                            onReplyLikeTap: (id) =>
+                                notifier.toggleCommentLike(id),
                             onReplyTap: () => notifier.setReplyTo(
                               comment.id,
                               comment.author.username,
@@ -243,6 +246,19 @@ class PostDetailScreen extends ConsumerWidget {
       await ref
           .read(postDetailProvider(postId).notifier)
           .deleteComment(commentId);
+    }
+  }
+
+  void _sharePost(BuildContext context, String postId) {
+    final url = 'https://framee.app/posts/$postId';
+    Share.share(url);
+  }
+
+  void _copyLink(BuildContext context, String postId) {
+    final url = 'https://framee.app/posts/$postId';
+    Clipboard.setData(ClipboardData(text: url));
+    if (context.mounted) {
+      context.showSnackBar(AppStrings.linkCopied);
     }
   }
 }

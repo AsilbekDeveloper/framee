@@ -14,6 +14,7 @@ import '../../../../i18n/strings.g.dart';
 import '../../../auth/data/providers/auth_data_providers.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../profile/presentation/providers/profile_provider.dart';
+import '../providers/notification_settings_provider.dart';
 import '../widgets/change_password_sheet.dart';
 import '../widgets/settings_language_tile.dart';
 import '../widgets/settings_profile_tile.dart';
@@ -29,6 +30,10 @@ class SettingsScreen extends ConsumerWidget {
     final currentLocale =
         ref.watch(localeProvider).valueOrNull ?? AppLocale.en;
     final profile = ref.watch(profileProvider(null)).valueOrNull;
+    final notifSettings =
+        ref.watch(notificationSettingsProvider).valueOrNull ??
+            const NotificationSettingsState();
+    final notifNotifier = ref.read(notificationSettingsProvider.notifier);
 
     return Scaffold(
       appBar: AppBar(
@@ -80,7 +85,7 @@ class SettingsScreen extends ConsumerWidget {
                   icon: Icons.shield_outlined,
                   title: AppStrings.privacy,
                   subtitle: AppStrings.privacySub,
-                  onTap: () {},
+                  onTap: () => context.push(AppRoutes.privacy),
                 ),
                 const AppDivider(),
                 SettingsNavTile(
@@ -103,15 +108,15 @@ class SettingsScreen extends ConsumerWidget {
                 SettingsToggleTile(
                   icon: Icons.notifications_outlined,
                   title: AppStrings.pushNotifications,
-                  value: true,
-                  onChanged: (_) {},
+                  value: notifSettings.pushEnabled,
+                  onChanged: (v) => notifNotifier.setPushEnabled(v),
                 ),
                 const AppDivider(),
                 SettingsToggleTile(
                   icon: Icons.mail_outline_rounded,
                   title: AppStrings.emailNotifications,
-                  value: false,
-                  onChanged: (_) {},
+                  value: notifSettings.emailEnabled,
+                  onChanged: (v) => notifNotifier.setEmailEnabled(v),
                 ),
               ],
             ),
@@ -126,13 +131,13 @@ class SettingsScreen extends ConsumerWidget {
                 SettingsNavTile(
                   icon: Icons.help_outline_rounded,
                   title: AppStrings.helpSupport,
-                  onTap: () {},
+                  onTap: () => context.push(AppRoutes.helpSupport),
                 ),
                 const AppDivider(),
                 SettingsNavTile(
                   icon: Icons.description_outlined,
                   title: AppStrings.termsOfService,
-                  onTap: () {},
+                  onTap: () => context.push(AppRoutes.termsOfService),
                 ),
                 const AppDivider(),
                 SettingsNavTile(

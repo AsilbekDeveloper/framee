@@ -136,16 +136,30 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
   // ── Comment Like ────────────────────────────────────────────────────────────
 
   Future<void> toggleCommentLike(String commentId) async {
+    final userId = _currentUserId;
+    if (userId == null) return;
+
+    final current = state.valueOrNull;
+    if (current == null) return;
+
     // Optimistic update
-    state.whenData((data) {
-      state = AsyncData(data.copyWith(
-        comments: _mapComments(data.comments, commentId, (c) => c.copyWith(
-              isLiked: !c.isLiked,
-              likesCount: c.isLiked ? c.likesCount - 1 : c.likesCount + 1,
-            )),
-      ));
-    });
-    // TODO: persist comment like to the server (comment_likes table)
+    state = AsyncData(current.copyWith(
+      comments: _mapComments(current.comments, commentId, (c) => c.copyWith(
+            isLiked: !c.isLiked,
+            likesCount: c.isLiked ? c.likesCount - 1 : c.likesCount + 1,
+          )),
+    ));
+
+    final result = await ref.read(toggleCommentLikeUseCaseProvider).call(
+          commentId: commentId,
+          currentUserId: userId,
+        );
+
+    if (result is Err) {
+      // Rollback on failure
+      AppLogger.w('PostDetail: toggleCommentLike rollback');
+      state = AsyncData(current);
+    }
   }
 
   // ── Reply ───────────────────────────────────────────────────────────────────

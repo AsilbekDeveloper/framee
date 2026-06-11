@@ -19,6 +19,7 @@ class CommentTile extends StatelessWidget {
     this.onDeleteTap,
     this.currentUserId,
     this.isReply = false,
+    this.onReplyLikeTap,
   });
 
   final Comment comment;
@@ -28,6 +29,8 @@ class CommentTile extends StatelessWidget {
   final VoidCallback? onDeleteTap;
   final String? currentUserId;
   final bool isReply;
+  /// Used to wire up like taps for nested replies — called with the reply's comment ID.
+  final void Function(String commentId)? onReplyLikeTap;
 
   @override
   Widget build(BuildContext context) {
@@ -137,7 +140,7 @@ class CommentTile extends StatelessWidget {
                     (reply) => CommentTile(
                       comment: reply,
                       currentUserId: currentUserId,
-                      onLikeTap: () {},
+                      onLikeTap: () => onReplyLikeTap?.call(reply.id),
                       onReplyTap: onReplyTap,
                       onDeleteTap: reply.author.id == currentUserId
                           ? onDeleteTap

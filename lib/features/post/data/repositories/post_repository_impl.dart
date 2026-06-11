@@ -90,6 +90,16 @@ class PostRepositoryImpl implements PostRepository {
       );
 
   @override
+  Future<Result<bool>> toggleCommentLike({
+    required String commentId,
+    required String currentUserId,
+  }) =>
+      _dataSource.toggleCommentLike(
+        commentId: commentId,
+        currentUserId: currentUserId,
+      );
+
+  @override
   Future<Result<List<Post>>> getUserPosts({
     required String userId,
     required String currentUserId,

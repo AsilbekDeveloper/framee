@@ -44,7 +44,15 @@
       "Bash(Move-Item strings.i18n.json en.i18n.json)",
       "Bash(Move-Item strings_uz.i18n.json uz.i18n.json)",
       "Bash(Move-Item strings_ru.i18n.json ru.i18n.json)",
-      "Bash(xargs sed -i 's/const Text\\(AppStrings\\\\./Text\\(AppStrings./g; s/const Tab\\(text: AppStrings\\\\./Tab\\(text: AppStrings./g')"
+      "Bash(xargs sed -i 's/const Text\\(AppStrings\\\\./Text\\(AppStrings./g; s/const Tab\\(text: AppStrings\\\\./Tab\\(text: AppStrings./g')",
+      "Skill(code-review)",
+      "Skill(code-review:*)",
+      "Bash(xargs grep -l \"FilterType\\\\|PostgresChangeFilter\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(dart run *)",
+      "Bash(git push *)",
+      "Bash(flutter build *)"
     ]
   }
 }
