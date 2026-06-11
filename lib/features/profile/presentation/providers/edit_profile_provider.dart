@@ -79,8 +79,8 @@ class EditProfileNotifier extends Notifier<EditProfileState> {
     return _buildInitialState();
   }
 
-  /// Controller'larni to'ldiradi va boshlang'ich state'ni qaytaradi.
-  /// auth user (doim mavjud) → profil (yuklanmagan bo'lishi mumkin) ketma-ketligi.
+  /// Populates text controllers and returns the initial state.
+  /// Reads auth user first (always available), then the profile (may not be loaded yet).
   EditProfileState _buildInitialState() {
     final authUser = ref.read(authRepositoryProvider).currentUser;
     final profile = ref.read(profileProvider(null)).valueOrNull;
@@ -99,9 +99,9 @@ class EditProfileNotifier extends Notifier<EditProfileState> {
     websiteController.text = website;
     emailController.text = authUser?.email ?? '';
 
-    AppLogger.d('EditProfile: boshlangich holat — $username');
+    AppLogger.d('EditProfile: initial state — $username');
 
-    // Profil hali yuklanmagan bo'lsa, stream orqali yangilaymiz
+    // If the profile isn't loaded yet, update controllers reactively when it arrives
     if (profile == null) {
       ref.listen<AsyncValue<Profile>>(profileProvider(null), (_, next) {
         next.whenData((p) {
@@ -158,7 +158,7 @@ class EditProfileNotifier extends Notifier<EditProfileState> {
         await context.push<String>(AppRoutes.avatarCrop, extra: file.path);
 
     if (croppedPath != null) {
-      AppLogger.d('EditProfile: avatar tanlandi');
+      AppLogger.d('EditProfile: avatar selected');
       state = state.copyWith(avatarPreviewPath: croppedPath);
     }
   }
@@ -168,11 +168,11 @@ class EditProfileNotifier extends Notifier<EditProfileState> {
   Future<void> save() async {
     final userId = ref.read(currentUserIdProvider);
     if (userId == null) {
-      state = state.copyWith(errorMessage: 'Foydalanuvchi tizimga kirmagan');
+      state = state.copyWith(errorMessage: 'User is not authenticated.');
       return;
     }
 
-    AppLogger.i('EditProfile: saqlash — $userId');
+    AppLogger.i('EditProfile: saving — $userId');
     state = state.copyWith(isSaving: true, clearError: true);
 
     final params = UpdateProfileParams(
@@ -189,8 +189,8 @@ class EditProfileNotifier extends Notifier<EditProfileState> {
 
     switch (result) {
       case Ok(:final value):
-        AppLogger.i('EditProfile: saqlandi — ${value.username}');
-        // profileProvider'ni yangilaymiz
+        AppLogger.i('EditProfile: saved — ${value.username}');
+        // Push the fresh profile into profileProvider so it is reflected immediately
         ref.read(profileProvider(null).notifier).updateProfile(value);
         state = state.copyWith(
           isSaving: false,
@@ -198,7 +198,7 @@ class EditProfileNotifier extends Notifier<EditProfileState> {
           avatarPreviewPath: value.avatarUrl,
         );
       case Err(:final failure):
-        AppLogger.w('EditProfile: saqlashda xato — ${failure.code}');
+        AppLogger.w('EditProfile: save error — ${failure.code}');
         state = state.copyWith(
           isSaving: false,
           errorMessage: failure.message,

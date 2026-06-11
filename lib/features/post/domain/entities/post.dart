@@ -1,16 +1,16 @@
-/// Post domeniga tegishli entity'lar.
+/// Domain entities for the post feature.
 ///
-/// [PostAuthor]        — postda ko'rinadigan muallif snapshot'i (denormalized)
-/// [Post]              — asosiy post entity'si
-/// [Comment]           — izoh entity'si (ichida replies ham bo'lishi mumkin)
-/// [CreatePostParams]  — post yaratish uchun kiruvchi parametrlar
-/// [AddCommentParams]  — izoh qo'shish uchun kiruvchi parametrlar
+/// [PostAuthor]        — denormalized author snapshot stored alongside a post
+/// [Post]              — core post entity
+/// [Comment]           — comment entity (may contain nested replies)
+/// [CreatePostParams]  — input parameters for creating a post
+/// [AddCommentParams]  — input parameters for adding a comment
 library;
 
 // ─── PostAuthor ───────────────────────────────────────────────────────────────
 
-/// Postda saqlanadigan muallif ma'lumotlarining snapshot'i.
-/// Profildan alohida — feed uchun join qilmasdan tez yuklash imkonini beradi.
+/// Denormalized author snapshot stored with each post.
+/// Kept separate from Profile so the feed can load without an extra join.
 class PostAuthor {
   const PostAuthor({
     required this.id,
@@ -185,15 +185,15 @@ class CreatePostParams {
     this.caption,
   }) : assert(
           imageLocalPath != null || (caption != null && caption != ''),
-          'Post rasm yoki matn bo\'lishi kerak',
+          'Post must have either an image or a caption',
         );
 
   final String userId;
 
-  /// Lokal fayl yo'li yoki null (faqat matn post)
+  /// Local file path, or null for text-only posts.
   final String? imageLocalPath;
 
-  /// 2200 belgigacha
+  /// Up to 2 200 characters.
   final String? caption;
 }
 
@@ -208,10 +208,10 @@ class AddCommentParams {
   final String postId;
   final String userId;
 
-  /// Max 500 belgi
+  /// Max 500 characters.
   final String text;
 
-  /// Reply bo'lsa parent comment ID
+  /// Parent comment ID if this is a reply; null for top-level comments.
   final String? parentId;
 }
 

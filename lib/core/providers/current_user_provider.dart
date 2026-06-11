@@ -2,14 +2,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/auth/data/providers/auth_data_providers.dart';
 
-/// Joriy foydalanuvchining ID'sini qaytaradi.
+/// Exposes the current authenticated user's ID.
 ///
-/// `authUserStreamProvider` ga bog'liq — auth holati o'zgarganda
-/// avtomatik yangilanadi. Presentation qatlamida
-/// `ref.read(authRepositoryProvider).currentUser?.id` ni to'g'ridan-to'g'ri
-/// ishlatish o'rniga shu provider'dan foydalaning.
+/// Depends on [authUserStreamProvider] and updates automatically whenever
+/// the auth state changes. Prefer this over accessing
+/// `authRepositoryProvider.currentUser?.id` directly in the presentation layer.
 ///
-/// Agar foydalanuvchi tizimga kirmagan bo'lsa `null` qaytaradi.
+/// Returns `null` when no user is signed in.
 final currentUserIdProvider = Provider<String?>((ref) {
   final authAsync = ref.watch(authUserStreamProvider);
   return authAsync.valueOrNull?.id;

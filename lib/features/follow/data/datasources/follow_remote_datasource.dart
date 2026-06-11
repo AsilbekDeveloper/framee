@@ -61,7 +61,7 @@ class FollowRemoteDataSourceImpl implements FollowRemoteDataSource {
     required String targetUserId,
   }) async {
     try {
-      // Target foydalanuvchining private holatini tekshiramiz
+      // Check whether the target account is private
       final targetProfile = await _client
           .from(_profilesTable)
           .select('is_private')
@@ -73,9 +73,8 @@ class FollowRemoteDataSourceImpl implements FollowRemoteDataSource {
       final isPrivate = targetProfile['is_private'] as bool? ?? false;
       final status = isPrivate ? 'requested' : 'accepted';
 
-      // follows jadvaliga upsert — onConflict composite PK uchun explicit ko'rsatiladi
-      // (Supabase SDK ba'zi versiyalarida onConflict bo'lmasa 200 response'ni xato
-      // deb qaytaradi — explicit composite key conflict'i bu muammoni hal qiladi)
+      // Upsert into follows — onConflict must be explicit for composite PKs.
+      // Without it some Supabase SDK versions treat a 200 response as an error.
       await _client.from(_followsTable).upsert(
         {
           'follower_id': currentUserId,
@@ -90,10 +89,10 @@ class FollowRemoteDataSourceImpl implements FollowRemoteDataSource {
       AppLogger.i('FollowDS: follow — $status ($targetUserId)');
       return Ok(result);
     } on PostgrestException catch (e) {
-      AppLogger.e('FollowDS: followUser xatosi (Postgrest)', error: e);
+      AppLogger.e('FollowDS: followUser error (Postgrest)', error: e);
       return Err(FollowOperationFailure(originalError: e));
     } catch (e, st) {
-      AppLogger.e('FollowDS: followUser kutilmagan xato', error: e, stackTrace: st);
+      AppLogger.e('FollowDS: followUser unexpected error', error: e, stackTrace: st);
       return Err(FollowOperationFailure(originalError: e, stackTrace: st));
     }
   }
@@ -113,10 +112,10 @@ class FollowRemoteDataSourceImpl implements FollowRemoteDataSource {
       AppLogger.i('FollowDS: unfollow — $targetUserId');
       return const Ok(true);
     } on PostgrestException catch (e) {
-      AppLogger.e('FollowDS: unfollowUser xatosi (Postgrest)', error: e);
+      AppLogger.e('FollowDS: unfollowUser error (Postgrest)', error: e);
       return Err(FollowOperationFailure(originalError: e));
     } catch (e, st) {
-      AppLogger.e('FollowDS: unfollowUser kutilmagan xato', error: e, stackTrace: st);
+      AppLogger.e('FollowDS: unfollowUser unexpected error', error: e, stackTrace: st);
       return Err(FollowOperationFailure(originalError: e, stackTrace: st));
     }
   }
@@ -134,7 +133,7 @@ class FollowRemoteDataSourceImpl implements FollowRemoteDataSource {
           .eq('following_id', currentUserId)
           .eq('status', 'requested');
 
-      AppLogger.i('FollowDS: so\'rov qabul qilindi — $requesterId');
+      AppLogger.i('FollowDS: follow request accepted — $requesterId');
       return const Ok(true);
     } on PostgrestException catch (e) {
       return Err(FollowOperationFailure(originalError: e));
@@ -198,7 +197,7 @@ class FollowRemoteDataSourceImpl implements FollowRemoteDataSource {
     int offset = 0,
   }) async {
     try {
-      // Kimlar userId'ni follow qilayotgani
+      // Fetch users who follow userId
       final data = await _client
           .from(_followsTable)
           .select('follower_id, profiles!follower_id(id, username, display_name, avatar_url, is_verified, is_private)')
@@ -206,7 +205,7 @@ class FollowRemoteDataSourceImpl implements FollowRemoteDataSource {
           .eq('status', 'accepted')
           .range(offset, offset + limit - 1);
 
-      // Joriy foydalanuvchining ular bilan follow holati
+      // Resolve the current user's follow status for each fetched user
       final followerIds = (data as List)
           .map((e) => (e['profiles'] as Map)['id'] as String)
           .toList();
@@ -227,7 +226,7 @@ class FollowRemoteDataSourceImpl implements FollowRemoteDataSource {
 
       return Ok(dtos);
     } on PostgrestException catch (e) {
-      AppLogger.e('FollowDS: getFollowers xatosi', error: e);
+      AppLogger.e('FollowDS: getFollowers error', error: e);
       return Err(ServerFailure(message: e.message, originalError: e));
     } catch (e, st) {
       return Err(NetworkFailure(originalError: e, stackTrace: st));
@@ -269,7 +268,7 @@ class FollowRemoteDataSourceImpl implements FollowRemoteDataSource {
 
       return Ok(dtos);
     } on PostgrestException catch (e) {
-      AppLogger.e('FollowDS: getFollowing xatosi', error: e);
+      AppLogger.e('FollowDS: getFollowing error', error: e);
       return Err(ServerFailure(message: e.message, originalError: e));
     } catch (e, st) {
       return Err(NetworkFailure(originalError: e, stackTrace: st));
@@ -278,7 +277,7 @@ class FollowRemoteDataSourceImpl implements FollowRemoteDataSource {
 
   // ── Private helpers ─────────────────────────────────────────────────────────
 
-  /// Bir vaqtda bir nechta foydalanuvchining follow holatini tekshiradi
+  /// Fetches the follow status for multiple users in a single query.
   Future<Map<String, FollowStatus>> _getFollowStatusBatch({
     required String currentUserId,
     required List<String> targetIds,

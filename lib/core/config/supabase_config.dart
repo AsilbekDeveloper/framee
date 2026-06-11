@@ -1,10 +1,11 @@
-/// Supabase ulanish sozlamalari.
+/// Supabase connection configuration.
 ///
-/// **Production**: `--dart-define=SUPABASE_URL=...` va `--dart-define=SUPABASE_ANON_KEY=...`
-/// orqali xavfsiz uzatiladi — CI/CD muhitida secret sifatida saqlanadi.
+/// **Production**: values are injected securely via
+/// `--dart-define=SUPABASE_URL=...` and `--dart-define=SUPABASE_ANON_KEY=...`
+/// and stored as secrets in CI/CD.
 ///
-/// **Local dev**: `--dart-define-from-file=.env.json` (gitignore'da) yoki
-/// to'g'ridan-to'g'ri `--dart-define` flaglari ishlatiladi.
+/// **Local dev**: use `--dart-define-from-file=.env.json` (gitignored) or
+/// pass `--dart-define` flags directly.
 abstract final class SupabaseConfig {
   static const String url = String.fromEnvironment(
     'SUPABASE_URL',
@@ -18,7 +19,7 @@ abstract final class SupabaseConfig {
         '.DSOMomb47osPfRAKlfHKxs8IvVnOEebB2G_3KgucTk4',
   );
 
-  /// Muhit to'g'ri sozlanganligini tekshiradi — debug build'larda chaqiriladi
+  /// Verifies that environment variables are properly set — called in debug builds.
   static bool get isConfigured =>
       url.isNotEmpty && anonKey.isNotEmpty && url.startsWith('https://');
 }

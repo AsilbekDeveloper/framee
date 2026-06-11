@@ -1,17 +1,18 @@
-/// Follow domeniga tegishli entity'lar.
+/// Domain entities for the follow feature.
 library;
 
+/// Represents the follow relationship from the current user's perspective.
 enum FollowStatus {
-  /// Hech qanday munosabat yo'q
+  /// No relationship exists.
   none,
 
-  /// Joriy foydalanuvchi bu odamni follow qilgan
+  /// The current user follows this person.
   following,
 
-  /// Private account — follow so'rovi yuborilgan, hali qabul qilinmagan
+  /// Private account — a follow request has been sent but not yet accepted.
   requested,
 
-  /// Bu odam joriy foydalanuvchini follow qilgan (lekin aksi emas)
+  /// This person follows the current user (but not vice versa).
   followsYou,
 }
 

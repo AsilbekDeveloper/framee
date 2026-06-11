@@ -3,6 +3,7 @@ import '../entities/auth_user.dart';
 import '../failures/auth_failure.dart';
 import '../repositories/auth_repository.dart';
 
+/// Validates all sign-up fields client-side before calling the repository.
 class SignUpUseCase {
   const SignUpUseCase(this._repository);
   final AuthRepository _repository;

@@ -1,8 +1,8 @@
 import '../../domain/entities/post.dart';
 
-/// Supabase `comments` jadvalidan keladigan JSON → Comment entity.
+/// Maps JSON from the Supabase `comments` table to a [Comment] entity.
 ///
-/// Query: comments + profiles join + comment_likes join (is_liked uchun)
+/// Query: comments + profiles join + comment_likes join (for is_liked)
 class CommentDto {
   const CommentDto({
     required this.id,

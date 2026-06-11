@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../i18n/strings.g.dart';
 
+/// Manages the app locale, persisting the user's selection across sessions.
 class LocaleNotifier extends AsyncNotifier<AppLocale> {
   static const _key = 'app_locale';
 
@@ -15,6 +16,7 @@ class LocaleNotifier extends AsyncNotifier<AppLocale> {
     return locale;
   }
 
+  /// Persists the selected locale and applies it immediately.
   Future<void> setLocale(AppLocale locale) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_key, locale.languageTag);

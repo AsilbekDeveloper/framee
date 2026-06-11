@@ -1,13 +1,13 @@
 import '../../../../core/errors/result.dart';
 import '../entities/auth_user.dart';
 
-/// Auth domain shartnomasi — data layer bundan xabardor emas.
-/// Barcha metodlar [Result] qaytaradi: exception throw qilinmaydi.
+/// Auth domain contract — the data layer implements this interface.
+/// All methods return [Result] and never throw exceptions.
 abstract interface class AuthRepository {
-  /// Joriy foydalanuvchini sinxron ravishda qaytaradi (cache'dan)
+  /// Returns the currently cached user synchronously (may be null if not signed in).
   AuthUser? get currentUser;
 
-  /// Auth holati o'zgarganda stream'dan xabar beradi
+  /// Emits the current user whenever the auth state changes.
   Stream<AuthUser?> get authStateChanges;
 
   Future<Result<AuthUser>> signIn({
@@ -15,24 +15,23 @@ abstract interface class AuthRepository {
     required String password,
   });
 
-  /// Muvaffaqiyatli ro'yxatdan o'tish: [AuthUser] qaytaradi.
-  /// Email tasdiq kerak bo'lsa — `null` qaytaradi (Ok(null)).
+  /// Registers a new user. Returns `Ok(null)` when email confirmation is required.
   Future<Result<AuthUser?>> signUp({
     required String fullName,
     required String email,
     required String password,
   });
 
-  /// OAuth — natija [authStateChanges] stream'i orqali keladi
+  /// Initiates OAuth sign-in. The result arrives via [authStateChanges].
   Future<Result<void>> signInWithGoogle();
 
   Future<Result<void>> signOut();
 
   Future<Result<void>> sendPasswordResetEmail(String email);
 
-  /// Parolni yangilaydi (foydalanuvchi tizimga kirgan bo'lishi kerak)
+  /// Updates the password for the currently signed-in user.
   Future<Result<void>> updatePassword(String newPassword);
 
-  /// Foydalanuvchi hisobini butunlay o'chiradi
+  /// Permanently deletes the user's account and all associated data.
   Future<Result<void>> deleteAccount();
 }

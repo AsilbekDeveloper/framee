@@ -20,6 +20,7 @@ import '../components/avatar_crop_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../components/scaffold_with_nav_bar.dart';
 
+/// Named route path constants used throughout the app.
 abstract final class AppRoutes {
   static const String onboarding = '/onboarding';
   static const String login = '/login';
@@ -51,9 +52,8 @@ final _shellNavigatorNotificationsKey =
 final _shellNavigatorProfileKey =
     GlobalKey<NavigatorState>(debugLabel: 'profile');
 
-/// Foydalanuvchi kirishisiz ochiq sahifalar.
-/// profileSetup bu ro'yxatda YO'Q — faqat autentifikatsiya qilingan
-/// foydalanuvchi profilini to'ldirishi mumkin.
+/// Routes accessible without authentication.
+/// profileSetup is intentionally excluded — only authenticated users may set up a profile.
 const _unauthenticatedRoutes = {
   AppRoutes.onboarding,
   AppRoutes.login,
@@ -71,17 +71,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final authAsync = ref.read(authUserStreamProvider);
       final location = routerState.matchedLocation;
 
-      // Auth holati hali yuklanmoqda — hech qayerga yo'naltirmaslik.
-      // Bu "flash of wrong route" muammosini bartaraf etadi.
+      // Auth state is still loading — do not redirect yet.
+      // This prevents a "flash of wrong route" on startup.
       if (authAsync.isLoading) return null;
 
       final isAuthenticated = authAsync.valueOrNull != null;
       final isUnauthRoute = _unauthenticatedRoutes.contains(location);
 
-      // Kirish qilinmagan holda himoyalangan sahifaga urinish
+      // Unauthenticated user trying to access a protected route.
       if (!isAuthenticated && !isUnauthRoute) return AppRoutes.onboarding;
 
-      // Tizimga kirgan foydalanuvchi onboarding/login/signup sahifasiga kirmasin
+      // Authenticated user should not land on onboarding/login/signup.
       if (isAuthenticated && isUnauthRoute) return AppRoutes.home;
 
       return null;
@@ -99,7 +99,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.signUp,
         builder: (_, _) => const SignUpScreen(),
       ),
-      // profileSetup — faqat authenticated user uchun (public routes'dan tashqarida)
+      // profileSetup is outside the unauthenticated routes set — only reachable after sign-up.
       GoRoute(
         path: AppRoutes.profileSetup,
         builder: (_, _) => const ProfileSetupScreen(),
@@ -198,9 +198,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   );
 });
 
-/// Supabase auth holati o'zgarganda GoRouter'ni yangilaydi.
-/// [notifyListeners] microtask orqali chaqiriladi — build jarayonida
-/// sinxron chaqiruv semantics loop keltirib chiqarishi mumkin.
+/// Notifies GoRouter whenever the Supabase auth state changes.
+/// Uses a microtask to avoid calling [notifyListeners] synchronously
+/// during a widget build, which would cause a setState-during-build error.
 class _AuthRouterNotifier extends ChangeNotifier {
   _AuthRouterNotifier(this._ref) {
     _ref.listen(authUserStreamProvider, (_, _) {

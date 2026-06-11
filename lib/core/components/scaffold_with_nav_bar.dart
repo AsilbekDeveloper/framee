@@ -11,8 +11,8 @@ import '../router/app_router.dart';
 import '../../features/notifications/presentation/providers/notifications_provider.dart';
 import 'no_internet_banner.dart';
 
-/// Shell scaffold — 4 branch: Home(0), Search(1), Notifications(2), Profile(3).
-/// Create button — modal route sifatida push qilinadi (branch emas).
+/// Shell scaffold with 4 branches: Home(0), Search(1), Notifications(2), Profile(3).
+/// The create button pushes a modal route instead of switching branches.
 class ScaffoldWithNavBar extends ConsumerWidget {
   const ScaffoldWithNavBar({
     super.key,
@@ -167,8 +167,7 @@ class _NavItem extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // SizedBox ikonka o'lchamini qattiq belgilaydi —
-            // badge Positioned'i Column'ning balandligiga ta'sir qilmaydi
+            // Fixed-size SizedBox ensures the badge Positioned does not affect Column height
             SizedBox(
               width: AppDimens.bottomNavIconSize,
               height: AppDimens.bottomNavIconSize,
@@ -267,8 +266,7 @@ class _CreateButton extends StatelessWidget {
                 size: 24.w,
               ),
             ),
-            // Label maydoni balandligini simulatsiya qilish —
-            // Create ikonkasini _NavItem ikonkalari bilan vertikal hizalash uchun
+            // Simulate label height to vertically align the create icon with nav items
             SizedBox(height: 3.h + 13.h),
           ],
         ),

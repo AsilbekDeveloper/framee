@@ -23,7 +23,7 @@ class EditProfileScreen extends ConsumerWidget {
     final notifier = ref.read(editProfileProvider.notifier);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Muvaffaqiyatli saqlanganda pop + snackbar
+    // Pop the screen and show a success snackbar after a successful save
     ref.listen<EditProfileState>(editProfileProvider, (prev, next) {
       if (next.savedSuccessfully && !(prev?.savedSuccessfully ?? false)) {
         if (context.mounted) {
@@ -37,7 +37,7 @@ class EditProfileScreen extends ConsumerWidget {
           );
         }
       }
-      // Xato xabarini SnackBar orqali ko'rsatamiz
+      // Show error message via SnackBar
       if (next.errorMessage != null &&
           next.errorMessage != prev?.errorMessage) {
         if (context.mounted) {
@@ -183,7 +183,7 @@ class EditProfileScreen extends ConsumerWidget {
             ),
             Gap(AppDimens.vlg),
 
-            // Email (faqat ko'rish â€” o'zgartirib bo'lmaydi)
+            // Email (read-only — cannot be changed here)
             AppTextField(
               controller: notifier.emailController,
               label: AppStrings.email,

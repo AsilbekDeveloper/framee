@@ -1,8 +1,8 @@
 import 'failure.dart';
 
-/// Muvaffaqiyat yoki xato natijasini ifodalovchi sealed class.
+/// Sealed class representing either a success or a failure.
 ///
-/// Exception throw qilish o'rniga ishlatiladi — type-safe, aniq, test qilish oson.
+/// Used instead of throwing exceptions — type-safe, explicit, easy to test.
 ///
 /// ```dart
 /// // Repository
@@ -21,19 +21,19 @@ sealed class Result<T> {
   bool get isOk => this is Ok<T>;
   bool get isErr => this is Err<T>;
 
-  /// Muvaffaqiyat qiymatini qaytaradi, xato bo'lsa `null`
+  /// Returns the success value, or `null` on failure.
   T? get valueOrNull => switch (this) {
         Ok(:final value) => value,
         Err() => null,
       };
 
-  /// Xato ob'ektini qaytaradi, muvaffaqiyat bo'lsa `null`
+  /// Returns the failure object, or `null` on success.
   Failure? get failureOrNull => switch (this) {
         Ok() => null,
         Err(:final failure) => failure,
       };
 
-  /// Pattern matching yordamchi metod
+  /// Pattern-matching helper for handling both branches.
   R fold<R>({
     required R Function(T value) ok,
     required R Function(Failure failure) err,
@@ -43,13 +43,13 @@ sealed class Result<T> {
         Err(:final failure) => err(failure),
       };
 
-  /// Qiymatni transform qiladi — xato bo'lsa o'zgarmaydi
+  /// Transforms the success value; passes failures through unchanged.
   Result<U> map<U>(U Function(T value) transform) => switch (this) {
         Ok(:final value) => Ok(transform(value)),
         Err(:final failure) => Err(failure),
       };
 
-  /// Async chain: Ok bo'lsa keyingi amalga o'tadi
+  /// Async chain: proceeds to the next operation only on success.
   Future<Result<U>> flatMap<U>(
     Future<Result<U>> Function(T value) transform,
   ) =>
@@ -59,7 +59,7 @@ sealed class Result<T> {
       };
 }
 
-/// Muvaffaqiyatli natija
+/// Successful result carrying a value.
 final class Ok<T> extends Result<T> {
   const Ok(this.value);
   final T value;
@@ -68,7 +68,7 @@ final class Ok<T> extends Result<T> {
   String toString() => 'Ok($value)';
 }
 
-/// Xatolik natijasi
+/// Failed result carrying a failure.
 final class Err<T> extends Result<T> {
   const Err(this.failure);
   final Failure failure;
@@ -80,7 +80,7 @@ final class Err<T> extends Result<T> {
 // ── Extensions ────────────────────────────────────────────────────────────────
 
 extension ResultExtension<T> on Result<T> {
-  /// Exception'ni Result'ga o'giradi
+  /// Wraps a synchronous body in a Result, catching any exceptions.
   static Result<T> guard<T>(T Function() body) {
     try {
       return Ok(body());
@@ -93,12 +93,12 @@ extension ResultExtension<T> on Result<T> {
 }
 
 extension AsyncResultExtension<T> on Future<Result<T>> {
-  /// `map` ning async versiyasi
+  /// Async version of [Result.map].
   Future<Result<U>> thenMap<U>(U Function(T value) transform) async {
     return (await this).map(transform);
   }
 
-  /// `flatMap` ning async versiyasi
+  /// Async version of [Result.flatMap].
   Future<Result<U>> thenFlatMap<U>(
     Future<Result<U>> Function(T value) transform,
   ) async {

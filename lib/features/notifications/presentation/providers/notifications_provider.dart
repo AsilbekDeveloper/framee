@@ -17,7 +17,7 @@ class NotificationsNotifier extends AsyncNotifier<List<AppNotification>> {
     final userId = ref.read(currentUserIdProvider);
     if (userId == null) return const [];
 
-    // Realtime kuzatuv — yangi bildirishnoma kelsa, listni yangilaymiz
+    // Subscribe to realtime — prepend new notifications as they arrive
     _watchRealtime(userId);
 
     return _fetchNotifications(userId);
@@ -26,7 +26,7 @@ class NotificationsNotifier extends AsyncNotifier<List<AppNotification>> {
   String? get _userId => ref.read(currentUserIdProvider);
 
   Future<List<AppNotification>> _fetchNotifications(String userId) async {
-    AppLogger.d('NotificationsNotifier: yuklanmoqda');
+    AppLogger.d('NotificationsNotifier: loading');
     final result = await ref
         .read(notificationRepositoryProvider)
         .getNotifications(userId: userId);
@@ -47,23 +47,23 @@ class NotificationsNotifier extends AsyncNotifier<List<AppNotification>> {
           if (current.any((n) => n.id == newNotif.id)) return;
           state = AsyncData([newNotif, ...current]);
           AppLogger.d(
-            'NotificationsNotifier: yangi bildirishnoma — ${newNotif.type}',
+            'NotificationsNotifier: new notification — ${newNotif.type}',
           );
         });
       },
-      // JWT eskirganda yoki ulanish uzilganda — silent log, crash bo'lmasin
+      // JWT expiry or connection drop — log silently to avoid crashing
       onError: (Object e) {
-        AppLogger.w('NotificationsNotifier: realtime xato — $e');
+        AppLogger.w('NotificationsNotifier: realtime error — $e');
       },
     );
 
-    // Auth token yangilanganda subscription'ni qayta ochamiz
+    // Re-subscribe when the auth token is refreshed
     ref.listen(authUserStreamProvider, (prev, next) {
       final prevUser = prev?.valueOrNull;
       final nextUser = next.valueOrNull;
-      // Token refresh: user bir xil lekin session yangilangan
+      // Token refresh: same user but session updated
       if (nextUser != null && prevUser?.id == nextUser.id) {
-        AppLogger.d('NotificationsNotifier: token yangilandi — realtime qayta ulanmoqda');
+        AppLogger.d('NotificationsNotifier: token refreshed — reconnecting realtime');
         subscription.cancel();
         subscription = ref
             .read(notificationRepositoryProvider)
@@ -76,7 +76,7 @@ class NotificationsNotifier extends AsyncNotifier<List<AppNotification>> {
             });
           },
           onError: (Object e) {
-            AppLogger.w('NotificationsNotifier: realtime xato (retry) — $e');
+            AppLogger.w('NotificationsNotifier: realtime error (retry) — $e');
           },
         );
       }
@@ -122,7 +122,7 @@ class NotificationsNotifier extends AsyncNotifier<List<AppNotification>> {
     }
   }
 
-  /// Follow so'rovini qabul qilish (notification ichidan)
+  /// Accepts a follow request triggered from within a notification.
   Future<void> acceptFollowRequest(String actorId) async {
     final userId = _userId;
     if (userId == null) return;
@@ -133,7 +133,7 @@ class NotificationsNotifier extends AsyncNotifier<List<AppNotification>> {
         );
 
     if (result.isOk) {
-      // Notification'ni follow'ga o'zgartiramiz
+      // Update the notification type from followRequest to follow
       state.whenData((notifications) {
         state = AsyncData(notifications.map((n) {
           if (n.actor.id != actorId ||

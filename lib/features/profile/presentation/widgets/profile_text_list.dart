@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/components/post_card.dart';
 import '../../../post/domain/entities/post.dart';
 
-/// Profil sahifasidagi text-only postlar ro'yxati.
-/// Har bir post uchun universal PostCard ishlatiladi.
+/// Sliver list of text-only posts shown on the profile page.
+/// Each post is rendered with the universal [PostCard] widget.
 class ProfileTextList extends StatelessWidget {
   const ProfileTextList({
     super.key,

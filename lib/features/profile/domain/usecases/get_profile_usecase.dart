@@ -2,8 +2,8 @@ import '../../../../core/errors/result.dart';
 import '../entities/profile.dart';
 import '../repositories/profile_repository.dart';
 
-/// Foydalanuvchi profilini yuklaydi.
-/// [userId] null bo'lsa joriy auth foydalanuvchisi profili qaytariladi.
+/// Loads a user profile by ID.
+/// Passes the [currentUserId] through so the repository can resolve the [isFollowing] flag.
 class GetProfileUseCase {
   const GetProfileUseCase(this._repository);
   final ProfileRepository _repository;

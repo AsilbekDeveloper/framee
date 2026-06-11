@@ -12,7 +12,7 @@ abstract class NotificationFailure extends Failure {
 final class NotificationLoadFailure extends NotificationFailure {
   const NotificationLoadFailure({super.originalError, super.stackTrace})
       : super(
-          message: 'Bildirishnomalar yuklanmadi.',
+          message: 'Failed to load notifications.',
           code: 'notification/load-failed',
         );
 }
@@ -20,7 +20,7 @@ final class NotificationLoadFailure extends NotificationFailure {
 final class NotificationMarkReadFailure extends NotificationFailure {
   const NotificationMarkReadFailure({super.originalError})
       : super(
-          message: 'Bildirishnoma o\'qilgan deb belgilanmadi.',
+          message: 'Failed to mark notification as read.',
           code: 'notification/mark-read-failed',
         );
 }

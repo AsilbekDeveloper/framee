@@ -1,5 +1,6 @@
-/// Domain entity — hech qanday framework yoki tashqi paket import yo'q.
-/// Supabase `User` modeli bu entity'ga `_toEntity()` orqali map qilinadi.
+/// Domain entity representing an authenticated user.
+/// Has no framework or external package imports.
+/// The Supabase `User` model is mapped to this entity via `_toEntity()`.
 class AuthUser {
   const AuthUser({
     required this.id,

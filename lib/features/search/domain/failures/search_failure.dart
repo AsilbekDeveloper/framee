@@ -12,7 +12,7 @@ abstract class SearchFailure extends Failure {
 final class SearchNetworkFailure extends SearchFailure {
   const SearchNetworkFailure({super.originalError, super.stackTrace})
       : super(
-          message: 'Tarmoq xatosi. Internet aloqasini tekshiring.',
+          message: 'Network error. Please check your internet connection.',
           code: 'search/network',
         );
 }
@@ -25,7 +25,7 @@ final class SearchServerFailure extends SearchFailure {
 final class EmptyQueryFailure extends SearchFailure {
   const EmptyQueryFailure()
       : super(
-          message: 'Qidiruv so\'zi bo\'sh bo\'lmasligi kerak.',
+          message: 'Search query must not be empty.',
           code: 'search/empty-query',
         );
 }

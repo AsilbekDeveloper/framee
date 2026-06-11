@@ -42,10 +42,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       context: ctx,
       barrierDismissible: false,
       builder: (_) => AlertDialog(
-        title: const Text('Emailingizni tasdiqlang'),
+        title: const Text('Confirm your email'),
         content: Text(
-          '${_emailController.text} manziliga tasdiqlash havolasi yuborildi. '
-          'Emailingizni tasdiqlang va qayta kiring.',
+          'A confirmation link has been sent to ${_emailController.text}. '
+          'Please verify your email and sign in.',
         ),
         actions: [
           TextButton(
@@ -53,7 +53,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
               ctx.pop();
               ctx.go(AppRoutes.login);
             },
-            child: const Text('Kirish sahifasiga o\'tish'),
+            child: const Text('Go to Sign In'),
           ),
         ],
       ),

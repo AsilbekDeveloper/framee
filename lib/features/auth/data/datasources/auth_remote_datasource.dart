@@ -6,6 +6,7 @@ import '../../../../core/errors/result.dart';
 import '../../domain/entities/auth_user.dart';
 import '../../domain/failures/auth_failure.dart';
 
+/// Contract for the auth remote data source.
 abstract interface class AuthRemoteDataSource {
   AuthUser? get currentUser;
   Stream<AuthUser?> get authStateChanges;
@@ -28,6 +29,7 @@ abstract interface class AuthRemoteDataSource {
   Future<Result<void>> deleteAccount();
 }
 
+/// Supabase-backed implementation of [AuthRemoteDataSource].
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   const AuthRemoteDataSourceImpl(this._client);
   final SupabaseClient _client;
@@ -59,15 +61,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       final user = res.user;
       if (user == null) {
         return const Err(
-          UnknownAuthFailure(message: 'Kirish muvaffaqiyatli, lekin user qaytmadi.'),
+          UnknownAuthFailure(message: 'Sign-in succeeded but no user was returned.'),
         );
       }
       return Ok(_toEntity(user));
     } on AuthException catch (e) {
-      AppLogger.w('AuthDS: signIn xatosi — ${e.message}');
+      AppLogger.w('AuthDS: signIn error — ${e.message}');
       return Err(_mapAuthException(e));
     } catch (e, st) {
-      AppLogger.e('AuthDS: signIn kutilmagan xato', error: e, stackTrace: st);
+      AppLogger.e('AuthDS: signIn unexpected error', error: e, stackTrace: st);
       return Err(NetworkFailure(originalError: e, stackTrace: st));
     }
   }
@@ -85,13 +87,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         data: {'full_name': fullName},
       );
       final user = res.user;
-      // user == null → email tasdiqlash kutilmoqda
+      // user == null means email confirmation is pending.
       return Ok(user == null ? null : _toEntity(user));
     } on AuthException catch (e) {
-      AppLogger.w('AuthDS: signUp xatosi — ${e.message}');
+      AppLogger.w('AuthDS: signUp error — ${e.message}');
       return Err(_mapAuthException(e));
     } catch (e, st) {
-      AppLogger.e('AuthDS: signUp kutilmagan xato', error: e, stackTrace: st);
+      AppLogger.e('AuthDS: signUp unexpected error', error: e, stackTrace: st);
       return Err(NetworkFailure(originalError: e, stackTrace: st));
     }
   }
@@ -102,10 +104,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       await _client.auth.signInWithOAuth(OAuthProvider.google);
       return const Ok(null);
     } on AuthException catch (e) {
-      AppLogger.w('AuthDS: Google sign-in xatosi — ${e.message}');
+      AppLogger.w('AuthDS: Google sign-in error — ${e.message}');
       return Err(_mapAuthException(e));
     } catch (e, st) {
-      AppLogger.e('AuthDS: Google sign-in kutilmagan xato', error: e, stackTrace: st);
+      AppLogger.e('AuthDS: Google sign-in unexpected error', error: e, stackTrace: st);
       return Err(NetworkFailure(originalError: e, stackTrace: st));
     }
   }
@@ -116,7 +118,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       await _client.auth.signOut();
       return const Ok(null);
     } catch (e, st) {
-      AppLogger.e('AuthDS: signOut xatosi', error: e, stackTrace: st);
+      AppLogger.e('AuthDS: signOut error', error: e, stackTrace: st);
       return Err(NetworkFailure(originalError: e, stackTrace: st));
     }
   }
@@ -127,10 +129,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       await _client.auth.resetPasswordForEmail(email);
       return const Ok(null);
     } on AuthException catch (e) {
-      AppLogger.w('AuthDS: password reset xatosi — ${e.message}');
+      AppLogger.w('AuthDS: password reset error — ${e.message}');
       return Err(_mapAuthException(e));
     } catch (e, st) {
-      AppLogger.e('AuthDS: password reset kutilmagan xato', error: e, stackTrace: st);
+      AppLogger.e('AuthDS: password reset unexpected error', error: e, stackTrace: st);
       return Err(NetworkFailure(originalError: e, stackTrace: st));
     }
   }
@@ -141,10 +143,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       await _client.auth.updateUser(UserAttributes(password: newPassword));
       return const Ok(null);
     } on AuthException catch (e) {
-      AppLogger.w('AuthDS: updatePassword xatosi — ${e.message}');
+      AppLogger.w('AuthDS: updatePassword error — ${e.message}');
       return Err(_mapAuthException(e));
     } catch (e, st) {
-      AppLogger.e('AuthDS: updatePassword kutilmagan xato', error: e, stackTrace: st);
+      AppLogger.e('AuthDS: updatePassword unexpected error', error: e, stackTrace: st);
       return Err(NetworkFailure(originalError: e, stackTrace: st));
     }
   }
@@ -152,27 +154,28 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<Result<void>> deleteAccount() async {
     try {
-      // Supabase Edge Function yoki RPC orqali o'chirish
-      // Hozircha: foydalanuvchi ma'lumotlarini o'chirish + sign out
+      // Delete via Supabase Edge Function or RPC.
+      // Currently: delete the profile row and sign out (cascade removes all data).
       final userId = _client.auth.currentUser?.id;
       if (userId == null) {
-        return const Err(UnknownAuthFailure(message: 'Foydalanuvchi topilmadi'));
+        return const Err(UnknownAuthFailure(message: 'User not found.'));
       }
-      // Profilni o'chirish (cascade orqali barcha ma'lumotlar o'chadi)
+      // Deleting the profile triggers a cascade that removes all user data.
       await _client.from('profiles').delete().eq('id', userId);
       await _client.auth.signOut();
       return const Ok(null);
     } on AuthException catch (e) {
-      AppLogger.w('AuthDS: deleteAccount xatosi — ${e.message}');
+      AppLogger.w('AuthDS: deleteAccount error — ${e.message}');
       return Err(_mapAuthException(e));
     } catch (e, st) {
-      AppLogger.e('AuthDS: deleteAccount kutilmagan xato', error: e, stackTrace: st);
+      AppLogger.e('AuthDS: deleteAccount unexpected error', error: e, stackTrace: st);
       return Err(NetworkFailure(originalError: e, stackTrace: st));
     }
   }
 
   // ── Private helpers ─────────────────────────────────────────────────────────
 
+  /// Maps a Supabase [User] to the domain [AuthUser] entity.
   AuthUser _toEntity(User user) {
     final meta = user.userMetadata ?? {};
     return AuthUser(
@@ -184,6 +187,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     );
   }
 
+  /// Converts a Supabase [AuthException] to a typed [AuthFailure].
   AuthFailure _mapAuthException(AuthException e) {
     final msg = e.message.toLowerCase();
     if (msg.contains('invalid login credentials') ||

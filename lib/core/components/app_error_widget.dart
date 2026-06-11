@@ -7,10 +7,9 @@ import '../constants/app_strings.dart';
 import '../constants/app_text_styles.dart';
 import 'app_button.dart';
 
-/// Umumiy xatolik holati widget'i.
+/// Generic error state widget.
 ///
-/// Xatolik sodir bo'lganda va qayta urinish tugmasi kerak bo'lganda
-/// barcha screen'larda shu widget'ni ishlatish tavsiya etiladi.
+/// Recommended for all screens when an error occurs and a retry button is needed.
 ///
 /// ```dart
 /// error: (e, _) => AppErrorWidget(onRetry: () => ref.invalidate(myProvider)),

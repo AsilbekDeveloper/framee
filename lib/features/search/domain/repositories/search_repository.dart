@@ -2,9 +2,9 @@ import '../../../../core/errors/result.dart';
 import '../../../post/domain/entities/post.dart';
 import '../entities/search_result.dart';
 
-/// Search domenining repository interfeysi.
+/// Repository interface for the search domain.
 abstract interface class SearchRepository {
-  /// Username / display_name bo'yicha foydalanuvchi qidiradi.
+  /// Searches for users by username or display name.
   Future<Result<List<SearchUser>>> searchUsers({
     required String query,
     required String currentUserId,
@@ -12,7 +12,7 @@ abstract interface class SearchRepository {
     int offset = 0,
   });
 
-  /// Explore sahifasi uchun public postlar (random/latest).
+  /// Returns public posts for the Explore screen (random / latest).
   Future<Result<List<Post>>> getExplorePosts({
     required String currentUserId,
     int limit = 30,

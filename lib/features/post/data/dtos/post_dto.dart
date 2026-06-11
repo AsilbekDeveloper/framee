@@ -1,8 +1,8 @@
 import '../../domain/entities/post.dart';
 
-/// Supabase `get_feed_posts` RPC va `posts` jadvalidan keladigan JSON → Post entity.
+/// Maps JSON from the `get_feed_posts` RPC and the `posts` table to a [Post] entity.
 ///
-/// RPC funksiya flat strukturada qaytaradi:
+/// The RPC returns a flat structure:
 /// { id, user_id, image_url, caption, likes_count, comments_count, created_at,
 ///   author_id, author_username, author_display_name, author_avatar_url,
 ///   author_is_verified, is_liked, is_saved }
@@ -37,7 +37,7 @@ class PostDto {
   final bool isLiked;
   final bool isSaved;
 
-  /// RPC funksiyasi qaytargan flat JSON → PostDto
+  /// Constructs a [PostDto] from the flat JSON returned by the RPC.
   factory PostDto.fromRpc(Map<String, dynamic> json) => PostDto(
         id: json['id'] as String,
         authorId: json['author_id'] as String,
@@ -54,7 +54,7 @@ class PostDto {
         isSaved: json['is_saved'] as bool? ?? false,
       );
 
-  /// posts jadvalidan join bilan keladigan nested JSON → PostDto
+  /// Constructs a [PostDto] from nested JSON returned by a join query on the posts table.
   factory PostDto.fromJoin(Map<String, dynamic> json) {
     final author = json['profiles'] as Map<String, dynamic>? ?? {};
     return PostDto(

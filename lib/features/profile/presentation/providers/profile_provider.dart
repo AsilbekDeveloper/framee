@@ -21,8 +21,8 @@ class ProfileNotifier extends FamilyAsyncNotifier<Profile, String?> {
   @override
   Future<Profile> build(String? userId) async {
     final targetId = userId ?? _currentUserId;
-    if (targetId == null) throw StateError('Foydalanuvchi tizimga kirmagan');
-    AppLogger.d('ProfileNotifier: profil yuklanmoqda — $targetId');
+    if (targetId == null) throw StateError('User is not authenticated.');
+    AppLogger.d('ProfileNotifier: loading profile — $targetId');
     return _fetchProfile(targetId);
   }
 
@@ -44,7 +44,7 @@ class ProfileNotifier extends FamilyAsyncNotifier<Profile, String?> {
     final targetId = arg ?? _currentUserId;
     if (targetId == null) {
       state = AsyncError(
-        StateError('Foydalanuvchi tizimga kirmagan'),
+        StateError('User is not authenticated.'),
         StackTrace.current,
       );
       return;
@@ -53,10 +53,10 @@ class ProfileNotifier extends FamilyAsyncNotifier<Profile, String?> {
     state = await AsyncValue.guard(() => _fetchProfile(targetId));
   }
 
-  // Double-tap himoyasi — async amal bajarilayotganda qayta chaqirishni bloklaydi
+  // Double-tap guard — prevents re-entry while an async follow/unfollow is in flight
   bool _isTogglingFollow = false;
 
-  /// Real Supabase follow/unfollow bilan bog'langan
+  /// Triggers a real Supabase follow or unfollow with optimistic UI.
   Future<void> toggleFollow() async {
     if (_isTogglingFollow) return; // double-tap guard
     _isTogglingFollow = true;
@@ -95,7 +95,7 @@ class ProfileNotifier extends FamilyAsyncNotifier<Profile, String?> {
         if (result.isErr) {
           // Rollback
           state = AsyncData(profile);
-          AppLogger.w('ProfileNotifier: unfollow xatosi');
+          AppLogger.w('ProfileNotifier: unfollow error — rolling back');
         }
       } else {
         final result = await ref.read(followUserUseCaseProvider).call(
@@ -111,7 +111,7 @@ class ProfileNotifier extends FamilyAsyncNotifier<Profile, String?> {
           case Err(:final failure):
             state = AsyncData(profile);
             AppLogger.w(
-              'ProfileNotifier: follow xatosi — ${failure.code}: ${failure.message}',
+              'ProfileNotifier: follow error — ${failure.code}: ${failure.message}',
             );
         }
       }
@@ -121,7 +121,7 @@ class ProfileNotifier extends FamilyAsyncNotifier<Profile, String?> {
   }
 
   void updateProfile(Profile updated) {
-    AppLogger.d('ProfileNotifier: profil yangilandi — ${updated.username}');
+    AppLogger.d('ProfileNotifier: profile updated — ${updated.username}');
     state = AsyncData(updated);
   }
 }

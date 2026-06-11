@@ -85,9 +85,9 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     int offset = 0,
   }) async {
     try {
-      AppLogger.d('PostDS: feed yuklanmoqda — limit:$limit offset:$offset');
+      AppLogger.d('PostDS: loading feed — limit:$limit offset:$offset');
 
-      // get_feed_posts RPC: author info + is_liked + is_saved bitta query'da
+      // get_feed_posts RPC: author info + is_liked + is_saved in a single query
       final data = await _client.rpc('get_feed_posts', params: {
         'p_user_id': currentUserId,
         'p_limit': limit,
@@ -99,13 +99,13 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
           .map(PostDto.fromRpc)
           .toList();
 
-      AppLogger.d('PostDS: ${posts.length} ta post yuklandi');
+      AppLogger.d('PostDS: ${posts.length} posts loaded');
       return Ok(posts);
     } on PostgrestException catch (e) {
-      AppLogger.e('PostDS: getFeed DB xatosi', error: e);
+      AppLogger.e('PostDS: getFeed DB error', error: e);
       return Err(ServerFailure(message: e.message, originalError: e));
     } catch (e, st) {
-      AppLogger.e('PostDS: getFeed kutilmagan xato', error: e, stackTrace: st);
+      AppLogger.e('PostDS: getFeed unexpected error', error: e, stackTrace: st);
       return Err(NetworkFailure(originalError: e, stackTrace: st));
     }
   }
@@ -129,7 +129,7 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
 
       return Ok(PostDto.fromRpc(data.first as Map<String, dynamic>));
     } on PostgrestException catch (e) {
-      AppLogger.e('PostDS: getPost DB xatosi', error: e);
+      AppLogger.e('PostDS: getPost DB error', error: e);
       if (e.code == 'PGRST116') return const Err(PostNotFoundFailure());
       return Err(ServerFailure(message: e.message, originalError: e));
     } catch (e, st) {
@@ -142,11 +142,11 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
   @override
   Future<Result<PostDto>> createPost(CreatePostParams params) async {
     try {
-      AppLogger.i('PostDS: post yaratilmoqda — ${params.userId}');
+      AppLogger.i('PostDS: creating post — ${params.userId}');
 
       String? imageUrl;
 
-      // 1. Rasm bor bo'lsa — Storage'ga yuklaymiz
+      // 1. Upload image to Storage if provided
       if (params.imageLocalPath != null) {
         final uploadResult = await _uploadPostImage(
           userId: params.userId,
@@ -156,14 +156,13 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
           case Ok(:final value):
             imageUrl = value;
           case Err(:final failure):
-            AppLogger.e('PostDS: rasm yuklanmadi', error: failure);
-            // Rasm yuklanmadi — profildagidan farqli, post uchun HARD fail:
-            // rasm postida rasm bo'lmasa foyda yo'q
+            AppLogger.e('PostDS: image upload failed', error: failure);
+            // Unlike avatar uploads, a missing image in an image post is a hard fail
             return Err(failure);
         }
       }
 
-      // 2. posts jadvaliga yozamiz
+      // 2. Insert row into posts table
       final insertData = <String, dynamic>{
         'user_id': params.userId,
         'image_url': ?imageUrl,
@@ -181,13 +180,13 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
           ''')
           .single();
 
-      AppLogger.i('PostDS: post yaratildi — ${data['id']}');
+      AppLogger.i('PostDS: post created — ${data['id']}');
       return Ok(PostDto.fromJoin(data));
     } on PostgrestException catch (e) {
-      AppLogger.e('PostDS: createPost DB xatosi', error: e);
+      AppLogger.e('PostDS: createPost DB error', error: e);
       return Err(PostCreateFailure(originalError: e));
     } catch (e, st) {
-      AppLogger.e('PostDS: createPost kutilmagan xato', error: e, stackTrace: st);
+      AppLogger.e('PostDS: createPost unexpected error', error: e, stackTrace: st);
       return Err(PostCreateFailure(originalError: e, stackTrace: st));
     }
   }
@@ -200,17 +199,17 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     required String currentUserId,
   }) async {
     try {
-      // RLS orqali himoyalangan — faqat egasi o'chira oladi
+      // Protected by RLS — only the owner can delete
       await _client
           .from(_postsTable)
           .delete()
           .eq('id', postId)
           .eq('user_id', currentUserId);
 
-      AppLogger.i('PostDS: post o\'chirildi — $postId');
+      AppLogger.i('PostDS: post deleted — $postId');
       return const Ok(true);
     } on PostgrestException catch (e) {
-      AppLogger.e('PostDS: deletePost xatosi', error: e);
+      AppLogger.e('PostDS: deletePost error', error: e);
       if (e.code == '42501') return const Err(PostUnauthorizedFailure());
       return Err(PostDeleteFailure(originalError: e));
     } catch (e, st) {
@@ -226,7 +225,7 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     required String currentUserId,
   }) async {
     try {
-      // Mavjudligini tekshiramiz
+      // Check whether a like record already exists
       final existing = await _client
           .from(_likesTable)
           .select()
@@ -235,21 +234,21 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
           .maybeSingle();
 
       if (existing != null) {
-        // Unlike: o'chiramiz
+        // Unlike: remove the record
         await _client
             .from(_likesTable)
             .delete()
             .eq('post_id', postId)
             .eq('user_id', currentUserId);
       } else {
-        // Like: qo'shamiz
+        // Like: insert a record
         await _client.from(_likesTable).insert({
           'post_id': postId,
           'user_id': currentUserId,
         });
       }
 
-      // Yangilangan likesCount ni olamiz
+      // Fetch the updated likes count
       final postData = await _client
           .from(_postsTable)
           .select('likes_count')
@@ -257,11 +256,11 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
           .single();
 
       final likesCount = postData['likes_count'] as int? ?? 0;
-      final isLiked = existing == null; // avval yo'q edi — endi like qilindi
+      final isLiked = existing == null; // was absent before — now liked
 
       return Ok((likesCount: likesCount, isLiked: isLiked));
     } on PostgrestException catch (e) {
-      AppLogger.e('PostDS: toggleLike xatosi', error: e);
+      AppLogger.e('PostDS: toggleLike error', error: e);
       return Err(PostInteractionFailure(originalError: e));
     } catch (e) {
       return Err(PostInteractionFailure(originalError: e));
@@ -289,16 +288,16 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
             .delete()
             .eq('post_id', postId)
             .eq('user_id', currentUserId);
-        return const Ok(false); // endi saqlanmagan
+        return const Ok(false); // now unsaved
       } else {
         await _client.from(_savedTable).insert({
           'post_id': postId,
           'user_id': currentUserId,
         });
-        return const Ok(true); // endi saqlangan
+        return const Ok(true); // now saved
       }
     } on PostgrestException catch (e) {
-      AppLogger.e('PostDS: toggleSave xatosi', error: e);
+      AppLogger.e('PostDS: toggleSave error', error: e);
       return Err(PostInteractionFailure(originalError: e));
     } catch (e) {
       return Err(PostInteractionFailure(originalError: e));
@@ -313,9 +312,9 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     required String currentUserId,
   }) async {
     try {
-      AppLogger.d('PostDS: izohlar yuklanmoqda — $postId');
+      AppLogger.d('PostDS: loading comments — $postId');
 
-      // Barcha izohlarni (replies bilan birga) bitta query'da olamiz
+      // Fetch all comments (including replies) in a single query
       final data = await _client
           .from(_commentsTable)
           .select('''
@@ -325,7 +324,7 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
           .eq('post_id', postId)
           .order('created_at');
 
-      // is_liked — alohida query (current user uchun)
+      // is_liked — separate query scoped to the current user
       final likedData = await _client
           .from(_commentLikesTable)
           .select('comment_id')
@@ -343,7 +342,7 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
 
       return Ok(dtos);
     } on PostgrestException catch (e) {
-      AppLogger.e('PostDS: getComments xatosi', error: e);
+      AppLogger.e('PostDS: getComments error', error: e);
       return Err(ServerFailure(message: e.message, originalError: e));
     } catch (e, st) {
       return Err(NetworkFailure(originalError: e, stackTrace: st));
@@ -371,10 +370,10 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
 
       final map = Map<String, dynamic>.from(data);
       map['is_liked'] = false;
-      AppLogger.d('PostDS: izoh qo\'shildi — ${data['id']}');
+      AppLogger.d('PostDS: comment added — ${data['id']}');
       return Ok(CommentDto.fromJson(map));
     } on PostgrestException catch (e) {
-      AppLogger.e('PostDS: addComment xatosi', error: e);
+      AppLogger.e('PostDS: addComment error', error: e);
       return Err(CommentFailure(originalError: e));
     } catch (e, st) {
       return Err(CommentFailure(originalError: e, stackTrace: st));
@@ -394,7 +393,7 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
           .eq('user_id', currentUserId);
       return const Ok(true);
     } on PostgrestException catch (e) {
-      AppLogger.e('PostDS: deleteComment xatosi', error: e);
+      AppLogger.e('PostDS: deleteComment error', error: e);
       if (e.code == '42501') return const Err(PostUnauthorizedFailure());
       return Err(PostDeleteFailure(originalError: e));
     } catch (e, st) {
@@ -412,7 +411,7 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     int offset = 0,
   }) async {
     try {
-      AppLogger.d('PostDS: foydalanuvchi postlari — $userId');
+      AppLogger.d('PostDS: loading user posts — $userId');
       final data = await _client
           .from(_postsTable)
           .select('''
@@ -424,7 +423,7 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
           .order('created_at', ascending: false)
           .range(offset, offset + limit - 1);
 
-      // is_liked va is_saved ni alohida yuklaymiz (joriy foydalanuvchi uchun)
+      // Fetch is_liked and is_saved separately, scoped to the current user
       final postIds = (data as List).map((e) => e['id'] as String).toList();
       final likedIds = await _getLikedPostIds(currentUserId, postIds);
       final savedIds = await _getSavedPostIds(currentUserId, postIds);
@@ -438,7 +437,7 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
 
       return Ok(dtos);
     } on PostgrestException catch (e) {
-      AppLogger.e('PostDS: getUserPosts xatosi', error: e);
+      AppLogger.e('PostDS: getUserPosts error', error: e);
       return Err(ServerFailure(message: e.message, originalError: e));
     } catch (e, st) {
       return Err(NetworkFailure(originalError: e, stackTrace: st));
@@ -452,7 +451,7 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     int offset = 0,
   }) async {
     try {
-      AppLogger.d('PostDS: saqlangan postlar — $userId');
+      AppLogger.d('PostDS: loading saved posts — $userId');
       final data = await _client
           .from(_savedTable)
           .select('''
@@ -469,14 +468,14 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
 
       final dtos = (data as List).map((row) {
         final postMap = Map<String, dynamic>.from(row['posts'] as Map);
-        postMap['is_liked'] = false; // saved posts uchun like alohida tekshirilmaydi
+        postMap['is_liked'] = false; // like status is not checked for saved posts
         postMap['is_saved'] = true;
         return PostDto.fromJoin(postMap);
       }).toList();
 
       return Ok(dtos);
     } on PostgrestException catch (e) {
-      AppLogger.e('PostDS: getSavedPosts xatosi', error: e);
+      AppLogger.e('PostDS: getSavedPosts error', error: e);
       return Err(ServerFailure(message: e.message, originalError: e));
     } catch (e, st) {
       return Err(NetworkFailure(originalError: e, stackTrace: st));
@@ -521,7 +520,7 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
   }) async {
     try {
       final bytes = await File(localPath).readAsBytes();
-      // Unique fayl nomi — bir foydalanuvchi bir nechta post yuklay oladi
+      // Unique filename — allows a single user to upload multiple posts
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final storagePath = '$userId/$timestamp.jpg';
 
@@ -538,10 +537,10 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
           .from(_postImagesBucket)
           .getPublicUrl(storagePath);
 
-      AppLogger.i('PostDS: rasm yuklandi — $url');
+      AppLogger.i('PostDS: image uploaded — $url');
       return Ok(url);
     } catch (e, st) {
-      AppLogger.e('PostDS: rasm yuklash xatosi', error: e, stackTrace: st);
+      AppLogger.e('PostDS: image upload error', error: e, stackTrace: st);
       return Err(PostImageUploadFailure(originalError: e, stackTrace: st));
     }
   }

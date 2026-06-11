@@ -28,8 +28,8 @@ final deleteAccountUseCaseProvider = Provider<DeleteAccountUseCase>(
   (ref) => DeleteAccountUseCase(ref.read(authRepositoryProvider)),
 );
 
-/// Auth holati oqimi — repository orqali, Supabase'ga to'g'ridan-to'g'ri
-/// murojaat qilinmaydi. Router va [AuthNotifier] shu provider'dan foydalanadi.
+/// Stream of the current authenticated user.
+/// Consumed by the router and [AuthNotifier] — never accesses Supabase directly.
 final authUserStreamProvider = StreamProvider<AuthUser?>(
   (ref) => ref.watch(authRepositoryProvider).authStateChanges,
 );

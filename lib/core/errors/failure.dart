@@ -1,10 +1,10 @@
-/// Ilovadagi barcha xatolar uchun asosiy sealed class.
+/// Base sealed class for all application errors.
 ///
-/// Har bir feature o'zining xato sinfini shu classdan kengaytiradi.
-/// [message]   — foydalanuvchiga ko'rsatiladigan matn
-/// [code]      — mashinaga tushunarli identifikator: 'auth/invalid-credentials'
-/// [originalError] — debug uchun asl exception
-/// [stackTrace]    — debug uchun stack trace
+/// Each feature extends this class with its own failure types.
+/// [message]        — human-readable text shown to the user
+/// [code]           — machine-readable identifier: 'auth/invalid-credentials'
+/// [originalError]  — original exception, used for debugging
+/// [stackTrace]     — stack trace, used for debugging
 abstract class Failure implements Exception {
   const Failure({
     required this.message,
@@ -22,53 +22,53 @@ abstract class Failure implements Exception {
   String toString() => 'Failure[$code]: $message';
 }
 
-// ── Umumiy xatolar — barcha featurelar ishlatishi mumkin ─────────────────────
+// ── Shared failures — usable across all features ──────────────────────────────
 
-/// Internet aloqasi yo'q yoki server bilan bog'lanib bo'lmadi
+/// No internet connection or server unreachable.
 final class NetworkFailure extends Failure {
   const NetworkFailure({
     String? message,
     super.originalError,
     super.stackTrace,
   }) : super(
-          message: message ?? 'Tarmoq xatosi. Internetingizni tekshiring.',
+          message: message ?? 'Network error. Please check your connection.',
           code: 'network/unavailable',
         );
 }
 
-/// Server 5xx xatosi
+/// Server returned a 5xx error.
 final class ServerFailure extends Failure {
   const ServerFailure({
     String? message,
     super.originalError,
     super.stackTrace,
   }) : super(
-          message: message ?? "Server xatosi. Keyinroq urinib ko'ring.",
+          message: message ?? 'Server error. Please try again later.',
           code: 'server/error',
         );
 }
 
-/// So'ralgan resurs topilmadi
+/// The requested resource was not found.
 final class NotFoundFailure extends Failure {
   const NotFoundFailure({
     String? message,
     super.originalError,
   }) : super(
-          message: message ?? "Ma'lumot topilmadi.",
+          message: message ?? 'Data not found.',
           code: 'not-found',
         );
 }
 
-/// Foydalanuvchi autentifikatsiya qilinmagan yoki sessiyasi tugagan
+/// User is not authenticated or the session has expired.
 final class UnauthorizedFailure extends Failure {
   const UnauthorizedFailure({super.stackTrace})
       : super(
-          message: "Ruxsat yo'q. Iltimos qayta kiring.",
+          message: 'Unauthorized. Please sign in again.',
           code: 'unauthorized',
         );
 }
 
-/// Kirish ma'lumotlari noto'g'ri (validatsiya)
+/// Input validation failed on the client side.
 final class ValidationFailure extends Failure {
   const ValidationFailure({
     required super.message,
@@ -78,26 +78,26 @@ final class ValidationFailure extends Failure {
         );
 }
 
-/// Fayl saqlash / o'qish xatosi (Storage)
+/// File upload or read error (Storage).
 final class StorageFailure extends Failure {
   const StorageFailure({
     String? message,
     super.originalError,
     super.stackTrace,
   }) : super(
-          message: message ?? 'Fayl saqlashda xato yuz berdi.',
+          message: message ?? 'File storage error.',
           code: 'storage/error',
         );
 }
 
-/// Kutilmagan, kategoriyalanmagan xato
+/// Unexpected, uncategorized error.
 final class UnexpectedFailure extends Failure {
   const UnexpectedFailure({
     String? message,
     super.originalError,
     super.stackTrace,
   }) : super(
-          message: message ?? 'Kutilmagan xato yuz berdi.',
+          message: message ?? 'An unexpected error occurred.',
           code: 'unexpected',
         );
 }

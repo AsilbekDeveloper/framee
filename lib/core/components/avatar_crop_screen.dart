@@ -8,10 +8,10 @@ import 'package:path_provider/path_provider.dart';
 
 import '../constants/app_colors.dart';
 
-/// Foydalanuvchi rasmini doira shaklida crop qilish uchun to'liq ekran.
-/// Rasmni suring va kattalashtiring, keyin "Saqlash" tugmasini bosing.
-/// [imagePath] — image_picker'dan kelgan lokal fayl yo'li.
-/// Navigator.pop orqali crop qilingan faylning yo'lini qaytaradi.
+/// Full-screen avatar crop editor — crops the image to a circle.
+/// Pan and pinch to adjust, then tap "Save" to confirm.
+/// [imagePath] — local file path from image_picker.
+/// Returns the cropped file path via Navigator.pop.
 class AvatarCropScreen extends StatefulWidget {
   const AvatarCropScreen({super.key, required this.imagePath});
 
@@ -32,7 +32,7 @@ class _AvatarCropScreenState extends State<AvatarCropScreen> {
     try {
       final boundary =
           _cropKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-      // 3x pixel ratio — 840x840 px chiqadi, avatar uchun yetarli
+      // 3× pixel ratio produces 840×840 px — sufficient for an avatar
       final image = await boundary.toImage(pixelRatio: 3.0);
       final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
 
@@ -61,7 +61,7 @@ class _AvatarCropScreenState extends State<AvatarCropScreen> {
           onPressed: () => context.pop(null),
         ),
         title: const Text(
-          'Rasmni kesish',
+          'Crop Image',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         ),
         actions: [
@@ -79,7 +79,7 @@ class _AvatarCropScreenState extends State<AvatarCropScreen> {
                       ),
                     )
                   : const Text(
-                      'Saqlash',
+                      'Save',
                       style: TextStyle(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w700,
@@ -97,10 +97,10 @@ class _AvatarCropScreenState extends State<AvatarCropScreen> {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // Tashqi qoraytirilgan fon
+                  // Dark overlay background
                   const SizedBox.expand(),
 
-                  // Crop hududi — faqat shu widget capture qilinadi
+                  // Crop area — only this widget is captured
                   RepaintBoundary(
                     key: _cropKey,
                     child: ClipOval(
@@ -121,7 +121,7 @@ class _AvatarCropScreenState extends State<AvatarCropScreen> {
                     ),
                   ),
 
-                  // Doira chegarasi (faqat ko'rsatish uchun, capture qilinmaydi)
+                  // Circle border overlay (visual only, not captured)
                   IgnorePointer(
                     child: CustomPaint(
                       size: const Size(_cropSize, _cropSize),
@@ -135,7 +135,7 @@ class _AvatarCropScreenState extends State<AvatarCropScreen> {
           const Padding(
             padding: EdgeInsets.only(bottom: 40),
             child: Text(
-              'Rasmni suring va kattalashtiring',
+              'Drag and pinch to adjust',
               style: TextStyle(color: Colors.white54, fontSize: 13),
             ),
           ),

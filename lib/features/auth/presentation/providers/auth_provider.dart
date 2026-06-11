@@ -30,6 +30,7 @@ final _sendPasswordResetUseCaseProvider = Provider<SendPasswordResetUseCase>(
 
 // ── Auth State ────────────────────────────────────────────────────────────────
 
+/// Immutable state for the authentication notifier.
 class AuthState {
   const AuthState({
     this.isLoading = false,
@@ -42,7 +43,7 @@ class AuthState {
   final String? errorMessage;
   final AuthUser? user;
 
-  /// `true` — Supabase email tasdiqini yubordi, kirish hali mumkin emas
+  /// `true` when Supabase sent a confirmation email and sign-in is pending.
   final bool awaitingEmailConfirmation;
 
   bool get isAuthenticated => user != null;
@@ -66,17 +67,19 @@ class AuthState {
 
 // ── Auth Notifier ─────────────────────────────────────────────────────────────
 
+/// Drives all authentication flows and keeps [AuthState] consistent.
 class AuthNotifier extends Notifier<AuthState> {
   @override
   AuthState build() {
-    // Auth stream'ini ting — OAuth, token refresh, boshqa tab'dan chiqish
+    // Listen to the auth stream for OAuth callbacks, token refreshes,
+    // and sign-outs triggered from other tabs/devices.
     ref.listen<AsyncValue<AuthUser?>>(authUserStreamProvider, (_, next) {
       final incoming = next.valueOrNull;
       if (incoming?.id != state.user?.id) {
         AppLogger.i(
           incoming == null
-              ? 'Auth: foydalanuvchi chiqdi'
-              : 'Auth: stream yangilandi — ${incoming.email}',
+              ? 'Auth: user signed out'
+              : 'Auth: stream updated — ${incoming.email}',
         );
         state = state.copyWith(
           user: incoming,
@@ -89,15 +92,16 @@ class AuthNotifier extends Notifier<AuthState> {
     });
 
     final current = ref.read(authRepositoryProvider).currentUser;
-    AppLogger.d('Auth: boshlandi — ${current?.email ?? "mehmon"}');
+    AppLogger.d('Auth: initialized — ${current?.email ?? "guest"}');
     return AuthState(user: current);
   }
 
+  /// Signs in with email and password.
   Future<void> signIn({
     required String email,
     required String password,
   }) async {
-    AppLogger.i('Auth: kirish — $email');
+    AppLogger.i('Auth: sign in — $email');
     state = state.copyWith(isLoading: true, clearError: true);
 
     final result = await ref
@@ -106,21 +110,22 @@ class AuthNotifier extends Notifier<AuthState> {
 
     switch (result) {
       case Ok(:final value):
-        AppLogger.i('Auth: muvaffaqiyatli kirdi — ${value.email}');
+        AppLogger.i('Auth: signed in — ${value.email}');
         state = state.copyWith(isLoading: false, user: value);
       case Err(:final failure):
-        AppLogger.w('Auth: kirish xatosi — ${failure.code}');
+        AppLogger.w('Auth: sign-in error — ${failure.code}');
         state = state.copyWith(isLoading: false, errorMessage: failure.message);
     }
   }
 
+  /// Registers a new account with email and password.
   Future<void> signUp({
     required String fullName,
     required String email,
     required String password,
     required String confirmPassword,
   }) async {
-    AppLogger.i("Auth: ro'yxatdan o'tish — $email");
+    AppLogger.i('Auth: sign up — $email');
     state = state.copyWith(isLoading: true, clearError: true);
 
     final result = await ref.read(_signUpUseCaseProvider).call(
@@ -132,35 +137,37 @@ class AuthNotifier extends Notifier<AuthState> {
 
     switch (result) {
       case Ok(:final value) when value == null:
-        // Email tasdiqlash kutilmoqda
-        AppLogger.i('Auth: email tasdiqlash kutilmoqda — $email');
+        // Supabase requires email confirmation before the session is created.
+        AppLogger.i('Auth: awaiting email confirmation — $email');
         state = state.copyWith(
           isLoading: false,
           awaitingEmailConfirmation: true,
         );
       case Ok(:final value):
-        AppLogger.i("Auth: ro'yxatdan o'tdi — ${value!.email}");
+        AppLogger.i('Auth: signed up — ${value!.email}');
         state = state.copyWith(isLoading: false, user: value);
       case Err(:final failure):
-        AppLogger.w("Auth: ro'yxatdan o'tish xatosi — ${failure.code}");
+        AppLogger.w('Auth: sign-up error — ${failure.code}');
         state = state.copyWith(isLoading: false, errorMessage: failure.message);
     }
   }
 
+  /// Initiates Google OAuth sign-in. The result arrives via the auth stream.
   Future<void> signInWithGoogle() async {
-    AppLogger.i('Auth: Google orqali kirish');
+    AppLogger.i('Auth: Google sign-in');
     state = state.copyWith(isLoading: true, clearError: true);
 
     final result = await ref.read(_signInWithGoogleUseCaseProvider).call();
-    // OAuth muvaffaqiyatli bo'lsa natija stream'dan keladi — bu yerda faqat xatoni qaytaramiz
+    // On success, the auth stream delivers the new user — only handle errors here.
     if (result case Err(:final failure)) {
-      AppLogger.w('Auth: Google xatosi — ${failure.code}');
+      AppLogger.w('Auth: Google sign-in error — ${failure.code}');
       state = state.copyWith(isLoading: false, errorMessage: failure.message);
     }
   }
 
+  /// Sends a password-reset email to the given address.
   Future<void> sendPasswordReset(String email) async {
-    AppLogger.i('Auth: parol tiklash — $email');
+    AppLogger.i('Auth: password reset — $email');
     state = state.copyWith(isLoading: true, clearError: true);
 
     final result =
@@ -168,21 +175,23 @@ class AuthNotifier extends Notifier<AuthState> {
 
     switch (result) {
       case Ok():
-        AppLogger.i('Auth: parol tiklash emaili yuborildi');
+        AppLogger.i('Auth: password reset email sent');
         state = state.copyWith(isLoading: false);
       case Err(:final failure):
-        AppLogger.w('Auth: parol tiklash xatosi — ${failure.code}');
+        AppLogger.w('Auth: password reset error — ${failure.code}');
         state = state.copyWith(isLoading: false, errorMessage: failure.message);
     }
   }
 
+  /// Signs out the current user.
+  /// Clears local state even if the network request fails.
   Future<void> signOut() async {
-    AppLogger.i('Auth: chiqish');
+    AppLogger.i('Auth: sign out');
     final result = await ref.read(_signOutUseCaseProvider).call();
     if (result case Err(:final failure)) {
-      AppLogger.e('Auth: chiqishda xato — ${failure.code}');
+      AppLogger.e('Auth: sign-out error — ${failure.code}');
     }
-    // Xato bo'lsa ham local state'ni tozalaymiz
+    // Always reset local state regardless of the result.
     state = const AuthState();
   }
 }

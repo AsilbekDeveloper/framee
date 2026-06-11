@@ -1,7 +1,7 @@
 import '../../domain/entities/profile.dart';
 
-/// Supabase `profiles` jadvalidagi JSON → domain [Profile] entity'ga mapping.
-/// Faqat data qatlamida ishlatiladi — domain qatlamiga chiqmaydi.
+/// Maps JSON from the Supabase `profiles` table to the domain [Profile] entity.
+/// Used only in the data layer — never exposed directly to the domain or UI.
 class ProfileDto {
   const ProfileDto({
     required this.id,
@@ -31,7 +31,7 @@ class ProfileDto {
   final int followingCount;
   final bool isPrivate;
   final bool isVerified;
-  /// Viewer tomonidan follow qilinganmi — `follows` jadvalidan keladigan derived field
+  /// Whether the viewing user follows this profile — derived from the `follows` table, not stored directly in `profiles`.
   final bool isFollowing;
   final DateTime createdAt;
   final DateTime? updatedAt;

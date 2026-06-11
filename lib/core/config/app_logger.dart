@@ -1,7 +1,7 @@
 import 'package:logger/logger.dart';
 
-/// Global logger — barcha joyda ishlatish uchun.
-/// Ishlatish: AppLogger.d('xabar'), AppLogger.e('xato', error: e)
+/// Global logger — use anywhere in the app.
+/// Usage: AppLogger.d('message'), AppLogger.e('error', error: e)
 final class AppLogger {
   AppLogger._();
 

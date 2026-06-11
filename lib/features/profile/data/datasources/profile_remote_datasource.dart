@@ -29,7 +29,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     String? currentUserId,
   }) async {
     try {
-      AppLogger.d('ProfileDS: profil yuklanmoqda — $userId');
+      AppLogger.d('ProfileDS: loading profile — $userId');
       final data = await _client
           .from(_table)
           .select()
@@ -37,11 +37,11 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
           .maybeSingle();
 
       if (data == null) {
-        AppLogger.w('ProfileDS: profil topilmadi — $userId');
+        AppLogger.w('ProfileDS: profile not found — $userId');
         return const Err(ProfileNotFoundFailure());
       }
 
-      // follows jadvalidan is_following holatini aniqlang
+      // Determine is_following from the follows table
       bool isFollowing = false;
       if (currentUserId != null && currentUserId != userId) {
         final followRow = await _client
@@ -53,20 +53,20 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         isFollowing = followRow != null &&
             followRow['status'] == 'accepted';
         AppLogger.d(
-          'ProfileDS: follow holati — $isFollowing (status: ${followRow?['status']})',
+          'ProfileDS: follow status — $isFollowing (status: ${followRow?['status']})',
         );
       }
 
       final dto = ProfileDto.fromJson(data, isFollowing: isFollowing);
 
-      // Avatar yo'q va bu joriy foydalanuvchi bo'lsa — auth metadata'dan fallback
-      // (faqat http URL, local fayl yo'llarini emas)
+      // No avatar stored, and this is the current user — fall back to auth metadata
+      // (only accept http URLs, not local file paths)
       if (dto.avatarUrl == null && _client.auth.currentUser?.id == userId) {
         final metaAvatar =
             _client.auth.currentUser?.userMetadata?['avatar_url'] as String?;
         if (metaAvatar != null && metaAvatar.startsWith('http')) {
-          AppLogger.d('ProfileDS: auth metadata\'dan avatar olindi');
-          // profiles jadvalini ham yangilaymiz — keyingi yuklamalarda tezroq bo'ladi
+          AppLogger.d('ProfileDS: avatar resolved from auth metadata');
+          // Also sync to the profiles table so future fetches are faster
           _syncAvatarToProfiles(userId: userId, avatarUrl: metaAvatar);
           return Ok(ProfileDto(
             id: dto.id,
@@ -89,13 +89,13 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
 
       return Ok(dto);
     } on PostgrestException catch (e) {
-      AppLogger.e('ProfileDS: getProfile DB xatosi', error: e);
+      AppLogger.e('ProfileDS: getProfile DB error', error: e);
       return Err(ServerFailure(
         message: e.message,
         originalError: e,
       ));
     } catch (e, st) {
-      AppLogger.e('ProfileDS: getProfile kutilmagan xato', error: e, stackTrace: st);
+      AppLogger.e('ProfileDS: getProfile unexpected error', error: e, stackTrace: st);
       return Err(NetworkFailure(originalError: e, stackTrace: st));
     }
   }
@@ -103,12 +103,12 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   @override
   Future<Result<ProfileDto>> updateProfile(UpdateProfileParams params) async {
     try {
-      AppLogger.i('ProfileDS: profil saqlanmoqda — ${params.userId}');
+      AppLogger.i('ProfileDS: saving profile — ${params.userId}');
 
       String? avatarUrl;
 
-      // 1. Avatar lokal fayl bo'lsa — Storage'ga yuklashga urinamiz
-      // Yuklash muvaffaqiyatsiz bo'lsa — profil ma'lumotlari baribir saqlanadi
+      // 1. If avatar is a local file path, upload it to Storage.
+      //    A failed upload is non-fatal — profile data is still saved.
       if (params.avatarLocalPath != null &&
           !params.avatarLocalPath!.startsWith('http')) {
         final uploadResult = await _uploadAvatar(
@@ -119,16 +119,16 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
           case Ok(:final value):
             avatarUrl = value;
           case Err(:final failure):
-            // Avatar yuklanmadi — faqat log, profil saqlanishda davom etadi
+            // Avatar upload failed — log only, continue saving profile
             AppLogger.w(
-              'ProfileDS: avatar yuklanmadi (profil baribir saqlanadi) — ${failure.code}',
+              'ProfileDS: avatar upload failed (profile will still be saved) — ${failure.code}',
             );
         }
       } else {
-        avatarUrl = params.avatarLocalPath; // allaqachon http URL yoki null
+        avatarUrl = params.avatarLocalPath; // already an http URL or null
       }
 
-      // 2. Profiles jadvalini yangilaymiz (upsert — yozuv yo'q bo'lsa yaratadi)
+      // 2. Upsert the profiles table (creates the row if it doesn't exist yet)
       final updateData = <String, dynamic>{
         'id': params.userId,
         if (params.username != null) 'username': params.username!.trim(),
@@ -148,17 +148,17 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
           .select()
           .single();
 
-      AppLogger.i('ProfileDS: profil saqlandi');
+      AppLogger.i('ProfileDS: profile saved');
       return Ok(ProfileDto.fromJson(data));
     } on PostgrestException catch (e) {
-      AppLogger.e('ProfileDS: updateProfile DB xatosi', error: e);
+      AppLogger.e('ProfileDS: updateProfile DB error', error: e);
       if (e.code == '23505') {
-        // unique_violation — username band
+        // unique_violation — username already taken
         return const Err(UsernameAlreadyTakenFailure());
       }
       return Err(ProfileUpdateFailure(originalError: e));
     } catch (e, st) {
-      AppLogger.e('ProfileDS: updateProfile kutilmagan xato', error: e, stackTrace: st);
+      AppLogger.e('ProfileDS: updateProfile unexpected error', error: e, stackTrace: st);
       return Err(ProfileUpdateFailure(originalError: e, stackTrace: st));
     }
   }
@@ -170,14 +170,14 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   }) async {
     try {
       var query = _client.from(_table).select('id').eq('username', username);
-      // O'z username'ini o'zgartirmasdan saqlasa — o'zini e'tiborsiz qoldirish
+      // Exclude the current user so they can save without changing their own username
       if (excludeUserId != null) {
         query = query.neq('id', excludeUserId);
       }
       final data = await query.maybeSingle();
-      return Ok(data == null); // null = boshqa user yo'q = username bo'sh
+      return Ok(data == null); // null = no other user has this username = available
     } on PostgrestException catch (e) {
-      AppLogger.e('ProfileDS: isUsernameAvailable xatosi', error: e);
+      AppLogger.e('ProfileDS: isUsernameAvailable error', error: e);
       return Err(ServerFailure(message: e.message, originalError: e));
     } catch (e, st) {
       return Err(NetworkFailure(originalError: e, stackTrace: st));
@@ -212,21 +212,21 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
             ),
           );
 
-      // Cache-bust uchun timestamp qo'shamiz
+      // Append a timestamp to bust CDN cache after re-upload
       final baseUrl =
           _client.storage.from(_avatarsBucket).getPublicUrl(storagePath);
       final cacheBustedUrl =
           '$baseUrl?t=${DateTime.now().millisecondsSinceEpoch}';
-      AppLogger.i('ProfileDS: avatar Storage\'ga yuklandi');
+      AppLogger.i('ProfileDS: avatar uploaded to Storage');
       return Ok(cacheBustedUrl);
     } catch (e, st) {
-      AppLogger.e('ProfileDS: avatar yuklash xatosi', error: e, stackTrace: st);
+      AppLogger.e('ProfileDS: avatar upload error', error: e, stackTrace: st);
       return Err(AvatarUploadFailure(originalError: e, stackTrace: st));
     }
   }
 
-  /// Auth metadata'dagi avatarni profiles jadvaliga background'da sinxronlaydi.
-  /// Xato bo'lsa — e'tiborsiz qoldiriladi (critical emas).
+  /// Syncs the avatar URL from auth metadata into the profiles table in the background.
+  /// Errors are silently ignored — this is a best-effort optimisation, not critical.
   void _syncAvatarToProfiles({
     required String userId,
     required String avatarUrl,
@@ -235,7 +235,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         .from(_table)
         .update({'avatar_url': avatarUrl, 'updated_at': DateTime.now().toIso8601String()})
         .eq('id', userId)
-        .then((_) => AppLogger.d('ProfileDS: avatar sinxronlandi → profiles'))
-        .catchError((e) => AppLogger.w('ProfileDS: avatar sinxronlashda xato: $e'));
+        .then((_) => AppLogger.d('ProfileDS: avatar synced → profiles'))
+        .catchError((e) => AppLogger.w('ProfileDS: avatar sync error: $e'));
   }
 }

@@ -3,6 +3,7 @@ import '../entities/auth_user.dart';
 import '../failures/auth_failure.dart';
 import '../repositories/auth_repository.dart';
 
+/// Validates credentials client-side, then delegates to the repository.
 class SignInUseCase {
   const SignInUseCase(this._repository);
   final AuthRepository _repository;

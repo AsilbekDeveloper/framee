@@ -8,7 +8,7 @@ import '../../../../core/errors/result.dart';
 import '../../domain/failures/notification_failure.dart';
 import '../dtos/notification_dto.dart';
 
-// Notification query — actor + post ma'lumotlari bilan
+// Notification query — includes actor and post data
 const _kNotifSelect =
     'id, type, is_read, created_at, actor_id, post_id, '
     'actor:profiles!actor_id(username, display_name, avatar_url), '
@@ -37,7 +37,7 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
     int offset = 0,
   }) async {
     try {
-      AppLogger.d('NotificationDS: yuklanmoqda — $userId');
+      AppLogger.d('NotificationDS: loading — $userId');
       final data = await _client
           .from('notifications')
           .select(_kNotifSelect)
@@ -51,10 +51,10 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
           .map(NotificationDto.fromJson)
           .toList();
 
-      AppLogger.d('NotificationDS: ${dtos.length} ta bildirishnoma');
+      AppLogger.d('NotificationDS: ${dtos.length} notifications loaded');
       return Ok(dtos);
     } on PostgrestException catch (e) {
-      AppLogger.e('NotificationDS: getNotifications xatosi', error: e);
+      AppLogger.e('NotificationDS: getNotifications error', error: e);
       return Err(ServerFailure(message: e.message, originalError: e));
     } catch (e, st) {
       return Err(NotificationLoadFailure(originalError: e, stackTrace: st));
@@ -83,7 +83,7 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
           .update({'is_read': true})
           .eq('user_id', userId)
           .eq('is_read', false);
-      AppLogger.i('NotificationDS: barchasi o\'qilgan belgilandi');
+      AppLogger.i('NotificationDS: all marked as read');
       return const Ok(true);
     } on PostgrestException catch (e) {
       return Err(NotificationMarkReadFailure(originalError: e));
@@ -111,7 +111,7 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
             final id = payload.newRecord['id'] as String?;
             if (id == null) return;
             try {
-              // Yangi bildirishnomani actor ma'lumotlari bilan yuklaymiz
+              // Fetch the new notification with its actor details
               final row = await _client
                   .from('notifications')
                   .select(_kNotifSelect)
@@ -119,14 +119,14 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
                   .single();
               controller.add(NotificationDto.fromJson(row));
             } catch (e) {
-              AppLogger.w('NotificationDS: realtime notif yuklab bo\'lmadi — $e');
+              AppLogger.w('NotificationDS: could not load realtime notification — $e');
             }
           },
         )
         .subscribe((status, [error]) {
           AppLogger.d('NotificationDS: realtime status — $status');
           if (error != null) {
-            AppLogger.w('NotificationDS: realtime xato — $error');
+            AppLogger.w('NotificationDS: realtime error — $error');
           }
         });
 

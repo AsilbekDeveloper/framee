@@ -1,16 +1,15 @@
 import '../../../../core/errors/result.dart';
 import '../entities/post.dart';
 
-/// Post domenining repository interfeysi.
+/// Repository interface for the post domain.
 ///
-/// Data qatlami bu interfeysi implement qiladi.
-/// Domain qatlami faqat shu abstraksiya bilan ishlaydi — Supabase yoki
-/// boshqa backend haqida bilmaydi.
+/// The data layer implements this interface.
+/// The domain layer only depends on this abstraction — it has no knowledge of Supabase or any backend.
 abstract interface class PostRepository {
   // ── Feed ───────────────────────────────────────────────────────────────────
 
-  /// Hozirgi foydalanuvchining feed postlarini qaytaradi
-  /// (kelajakda: faqat following bo'lganlarniki; hozircha barcha public postlar)
+  /// Returns feed posts for the current user.
+  /// (Future: only from followed users; currently all public posts.)
   Future<Result<List<Post>>> getFeed({
     required String currentUserId,
     int limit = 20,
@@ -19,16 +18,16 @@ abstract interface class PostRepository {
 
   // ── Post CRUD ──────────────────────────────────────────────────────────────
 
-  /// ID bo'yicha bitta postni yuklaydi
+  /// Loads a single post by ID.
   Future<Result<Post>> getPost({
     required String postId,
     required String currentUserId,
   });
 
-  /// Yangi post yaratadi (rasm yuklanishi + DB yozuvi)
+  /// Creates a new post (image upload + DB insert).
   Future<Result<Post>> createPost(CreatePostParams params);
 
-  /// Postni o'chiradi (faqat egasi)
+  /// Deletes a post (owner only).
   Future<Result<bool>> deletePost({
     required String postId,
     required String currentUserId,
@@ -36,13 +35,13 @@ abstract interface class PostRepository {
 
   // ── Like / Save ────────────────────────────────────────────────────────────
 
-  /// Like qo'yish / olib tashlash. Yangilangan [likesCount] + [isLiked] qaytaradi.
+  /// Toggles a like. Returns the updated [likesCount] and [isLiked] from the server.
   Future<Result<({int likesCount, bool isLiked})>> toggleLike({
     required String postId,
     required String currentUserId,
   });
 
-  /// Saqlab qo'yish / olib tashlash
+  /// Toggles the saved state of a post for the current user. Returns the new saved state.
   Future<Result<bool>> toggleSave({
     required String postId,
     required String currentUserId,
@@ -50,16 +49,16 @@ abstract interface class PostRepository {
 
   // ── Comments ───────────────────────────────────────────────────────────────
 
-  /// Post uchun izohlar ro'yxatini yuklaydi
+  /// Loads the comment list for a post, including nested replies.
   Future<Result<List<Comment>>> getComments({
     required String postId,
     required String currentUserId,
   });
 
-  /// Yangi izoh qo'shadi
+  /// Adds a new comment (or reply) to a post.
   Future<Result<Comment>> addComment(AddCommentParams params);
 
-  /// Izoh o'chiradi (faqat izoh egasi yoki post egasi)
+  /// Deletes a comment (comment owner or post owner only).
   Future<Result<bool>> deleteComment({
     required String commentId,
     required String currentUserId,
@@ -67,7 +66,7 @@ abstract interface class PostRepository {
 
   // ── User / Saved Posts ─────────────────────────────────────────────────────
 
-  /// Biror foydalanuvchining postlari
+  /// Returns posts created by a specific user.
   Future<Result<List<Post>>> getUserPosts({
     required String userId,
     required String currentUserId,
@@ -75,7 +74,7 @@ abstract interface class PostRepository {
     int offset = 0,
   });
 
-  /// Joriy foydalanuvchining saqlangan postlari
+  /// Returns posts saved (bookmarked) by the current user.
   Future<Result<List<Post>>> getSavedPosts({
     required String userId,
     int limit = 30,

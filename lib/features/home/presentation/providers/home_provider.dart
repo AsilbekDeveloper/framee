@@ -9,20 +9,20 @@ import '../../../post/domain/entities/post.dart';
 
 // ── Home Notifier ─────────────────────────────────────────────────────────────
 
-/// Feed postlarini boshqaradi.
+/// Manages the home feed posts.
 ///
-/// [build()] Supabase'dan postlarni yuklaydi.
-/// Optimistic like/save — server javobidan oldin UI'ni yangilaydi.
+/// [build()] loads posts from Supabase.
+/// Like and save operations use optimistic updates — the UI updates before the server responds.
 class HomeNotifier extends AsyncNotifier<List<Post>> {
   @override
   Future<List<Post>> build() async {
     final cached = await ref.read(postCacheServiceProvider).loadFeed();
     if (cached.isNotEmpty) {
-      // Cache bor — darhol ko'rsatamiz, background'da yangilaymiz
+      // Cache hit — show immediately and refresh in the background
       Future.microtask(_backgroundRefresh);
       return cached;
     }
-    // Cache yo'q — networkdan yuklaymiz
+    // No cache — fetch from network
     return _fetchAndSave();
   }
 
@@ -41,18 +41,18 @@ class HomeNotifier extends AsyncNotifier<List<Post>> {
       state = AsyncData(posts);
       ref.read(postCacheServiceProvider).saveFeed(posts);
     } catch (_) {
-      // Offline yoki xato — cache ko'rsatilgan holda qolamiz
+      // Offline or error — keep showing cached data
     }
   }
 
   Future<List<Post>> _fetchPosts({int offset = 0}) async {
     final userId = _currentUserId;
     if (userId == null) {
-      AppLogger.w('HomeNotifier: foydalanuvchi kirmagan');
+      AppLogger.w('HomeNotifier: user not authenticated');
       return const [];
     }
 
-    AppLogger.d('HomeNotifier: feed yuklanmoqda — offset:$offset');
+    AppLogger.d('HomeNotifier: loading feed — offset:$offset');
     final result = await ref.read(getFeedUseCaseProvider).call(
           currentUserId: userId,
           limit: 20,
@@ -71,7 +71,7 @@ class HomeNotifier extends AsyncNotifier<List<Post>> {
       state = AsyncData(posts);
       ref.read(postCacheServiceProvider).saveFeed(posts);
     } catch (e, st) {
-      // Data bor bo'lsa — offline bannerga ishonib, stateni o'zgartirmaymiz
+      // If we already have data, rely on the offline banner and keep the current state
       if (!state.hasValue) state = AsyncError(e, st);
     }
   }
@@ -101,7 +101,7 @@ class HomeNotifier extends AsyncNotifier<List<Post>> {
 
     switch (result) {
       case Ok(:final value):
-        // Server'dan haqiqiy count bilan yangilaymiz
+        // Sync with the actual count returned by the server
         state = AsyncData(state.valueOrNull!
             .map((p) => p.id != postId
                 ? p
@@ -137,7 +137,7 @@ class HomeNotifier extends AsyncNotifier<List<Post>> {
 
     switch (result) {
       case Ok():
-        break; // optimistic update to'g'ri edi
+        break; // optimistic update was correct
       case Err(:final failure):
         // Rollback
         AppLogger.w('HomeNotifier: toggleSave rollback — ${failure.code}');
@@ -149,7 +149,7 @@ class HomeNotifier extends AsyncNotifier<List<Post>> {
     await refresh();
   }
 
-  /// Feed'dan postni olib tashlaydi (o'chirilganda)
+  /// Removes a post from the feed after it has been deleted.
   void removePost(String postId) {
     state.whenData((posts) {
       state = AsyncData(posts.where((p) => p.id != postId).toList());

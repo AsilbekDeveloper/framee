@@ -59,7 +59,7 @@ class CreatePostState {
   bool get hasError => errorMessage != null;
   bool get isPublished => publishedPost != null;
 
-  /// Foydalanuvchi yozgan narsa bormi (close tugmasida ogohlantirish uchun)
+  /// True when the user has entered content — used to show a discard confirmation on close.
   bool get hasUnsavedContent => hasImage || hasCaption;
 
   CreatePostState copyWith({
@@ -96,7 +96,7 @@ class CreatePostNotifier extends Notifier<CreatePostState> {
   }
 
   void setPostType(PostTypeSelection type) {
-    // textOnly → rasmni tozalaymiz (foydalanuvchi rasm istemaydi)
+    // textOnly → clear any selected image since the user switched to text-only mode
     final shouldClearImage = type == PostTypeSelection.textOnly;
     state = state.copyWith(postType: type, clearImage: shouldClearImage);
   }
@@ -114,7 +114,7 @@ class CreatePostNotifier extends Notifier<CreatePostState> {
     );
     if (file == null) return;
 
-    AppLogger.d('CreatePost: rasm tanlandi — ${file.path}');
+    AppLogger.d('CreatePost: image selected — ${file.path}');
 
     final cropped = await ImageCropper().cropImage(
       sourcePath: file.path,
@@ -149,13 +149,13 @@ class CreatePostNotifier extends Notifier<CreatePostState> {
       ],
     );
 
-    // Foydalanuvchi crop ni bekor qildi
+    // User cancelled the crop dialog
     if (cropped == null) {
-      AppLogger.d('CreatePost: crop bekor qilindi');
+      AppLogger.d('CreatePost: crop cancelled');
       return;
     }
 
-    AppLogger.d('CreatePost: rasm crop qilindi — ${cropped.path}');
+    AppLogger.d('CreatePost: image cropped — ${cropped.path}');
     state = state.copyWith(selectedImagePath: cropped.path);
   }
 
@@ -180,7 +180,7 @@ class CreatePostNotifier extends Notifier<CreatePostState> {
       return;
     }
 
-    AppLogger.i('CreatePost: post yuklanmoqda — $userId');
+    AppLogger.i('CreatePost: submitting post — $userId');
     state = state.copyWith(isLoading: true, clearError: true);
 
     final params = CreatePostParams(
@@ -195,13 +195,13 @@ class CreatePostNotifier extends Notifier<CreatePostState> {
 
     switch (result) {
       case Ok(:final value):
-        AppLogger.i('CreatePost: post yaratildi — ${value.id}');
-        // Feed'ni invalidate qilamiz — yangi post ko'rinsin
+        AppLogger.i('CreatePost: post created — ${value.id}');
+        // Invalidate the feed so the new post appears immediately
         ref.invalidate(homeProvider);
         state = state.copyWith(isLoading: false, publishedPost: value);
 
       case Err(:final failure):
-        AppLogger.w('CreatePost: xato — ${failure.code}');
+        AppLogger.w('CreatePost: error — ${failure.code}');
         state = state.copyWith(
           isLoading: false,
           errorMessage: failure.message,

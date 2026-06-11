@@ -12,10 +12,8 @@ import '../extensions/extensions.dart';
 import 'app_avatar.dart';
 import '../../features/post/domain/entities/post.dart';
 
-/// Ilovadagi universal post card.
-/// Home feed, post detail, profile list, search — hamma joyda ishlatiladi.
-/// Barcha callbacklar optional: null bo'lsa, tegishli element ko'rinmaydi yoki
-/// tap'ga javob bermaydi.
+/// Universal post card used across home feed, post detail, profile list, and search.
+/// All callbacks are optional: when null the corresponding element is hidden or non-interactive.
 class PostCard extends StatelessWidget {
   const PostCard({
     super.key,
@@ -361,7 +359,7 @@ class _PostCaptionState extends State<_PostCaption> {
       padding: EdgeInsets.fromLTRB(
           AppDimens.lg, 6.h, AppDimens.lg, AppDimens.vlg),
       child: LayoutBuilder(builder: (_, constraints) {
-        // Username + caption birga o'lchaymiz
+        // Measure username + caption together to detect overflow
         final overflows = _doesOverflow(
           constraints.maxWidth,
           usernameStyle,

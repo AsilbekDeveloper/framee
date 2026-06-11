@@ -1,7 +1,7 @@
 import '../../../../core/errors/failure.dart';
 
-/// Profile feature'ga xos failure'lar ierarxiyasi.
-/// Barcha subclass'lar [Failure] base class'ini [ProfileFailure] orqali meros oladi.
+/// Failure hierarchy for the profile feature.
+/// All subclasses inherit [Failure] through [ProfileFailure].
 abstract class ProfileFailure extends Failure {
   const ProfileFailure({
     required super.message,
@@ -11,56 +11,56 @@ abstract class ProfileFailure extends Failure {
   });
 }
 
-/// Profil topilmadi — `profiles` jadvalida yozuv yo'q
+/// Profile not found — no row in the `profiles` table for the given ID.
 final class ProfileNotFoundFailure extends ProfileFailure {
   const ProfileNotFoundFailure({String? userId})
       : super(
-          message: 'Profil topilmadi',
+          message: 'Profile not found.',
           code: 'profile/not-found',
         );
 }
 
-/// Username allaqachon band — unikal bo'lishi shart
+/// Username is already taken — must be unique across all profiles.
 final class UsernameAlreadyTakenFailure extends ProfileFailure {
   const UsernameAlreadyTakenFailure()
       : super(
-          message: 'Bu username allaqachon band',
+          message: 'This username is already taken.',
           code: 'profile/username-taken',
         );
 }
 
-/// Username noto'g'ri format — faqat harf, raqam, _ va . bo'lishi kerak
+/// Username has an invalid format — only letters, digits, underscores, and dots are allowed.
 final class InvalidUsernameFailure extends ProfileFailure {
   const InvalidUsernameFailure()
       : super(
-          message: "Username faqat harf, raqam, '_' va '.' dan iborat bo'lishi kerak",
+          message: "Username may only contain letters, digits, '_', and '.'.",
           code: 'profile/invalid-username',
         );
 }
 
-/// Avatar yuklashda xato — Storage muammo
+/// Avatar upload failed — Storage error.
 final class AvatarUploadFailure extends ProfileFailure {
   const AvatarUploadFailure({super.originalError, super.stackTrace})
       : super(
-          message: 'Rasm yuklanmadi, qayta urinib ko\'ring',
+          message: 'Image upload failed. Please try again.',
           code: 'profile/avatar-upload-failed',
         );
 }
 
-/// Profil yangilashda xato — server yoki RLS muammosi
+/// Profile update failed — server error or RLS policy rejection.
 final class ProfileUpdateFailure extends ProfileFailure {
   const ProfileUpdateFailure({super.originalError, super.stackTrace})
       : super(
-          message: 'Profil saqlanmadi, qayta urinib ko\'ring',
+          message: 'Profile could not be saved. Please try again.',
           code: 'profile/update-failed',
         );
 }
 
-/// Ruxsatsiz amal — o'zganing profilini tahrirlashga urinish
+/// Unauthorized action — attempted to edit another user's profile.
 final class ProfileUnauthorizedFailure extends ProfileFailure {
   const ProfileUnauthorizedFailure()
       : super(
-          message: 'Bu amalni bajarish uchun ruxsat yo\'q',
+          message: 'You are not authorized to perform this action.',
           code: 'profile/unauthorized',
         );
 }

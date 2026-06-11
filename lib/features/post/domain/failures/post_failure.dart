@@ -1,6 +1,6 @@
 import '../../../../core/errors/failure.dart';
 
-/// Post domeniga tegishli barcha xatolar uchun asosiy class.
+/// Base class for all post-domain failures.
 abstract class PostFailure extends Failure {
   const PostFailure({
     required super.message,
@@ -10,71 +10,71 @@ abstract class PostFailure extends Failure {
   });
 }
 
-/// Post topilmadi (o'chirilgan yoki mavjud emas)
+/// Post not found — deleted or never existed.
 final class PostNotFoundFailure extends PostFailure {
   const PostNotFoundFailure()
       : super(
-          message: 'Post topilmadi yoki o\'chirilgan.',
+          message: 'Post not found or has been deleted.',
           code: 'post/not-found',
         );
 }
 
-/// Post yaratishda rasm yuklanmadi (profil saqlash analogiyasi bo'yicha — soft fail ham qo'llanilishi mumkin)
+/// Image upload failed during post creation — treated as a hard failure for image posts.
 final class PostImageUploadFailure extends PostFailure {
   const PostImageUploadFailure({super.originalError, super.stackTrace})
       : super(
-          message: 'Rasm yuklanmadi. Iltimos qayta urinib ko\'ring.',
+          message: 'Image upload failed. Please try again.',
           code: 'post/image-upload-failed',
         );
 }
 
-/// Post yaratishda DB xatosi
+/// Database error while creating a post.
 final class PostCreateFailure extends PostFailure {
   const PostCreateFailure({super.originalError, super.stackTrace})
       : super(
-          message: 'Post saqlanmadi. Keyinroq urinib ko\'ring.',
+          message: 'Post could not be saved. Please try later.',
           code: 'post/create-failed',
         );
 }
 
-/// Post o'chirishda xato
+/// Error while deleting a post.
 final class PostDeleteFailure extends PostFailure {
   const PostDeleteFailure({super.originalError, super.stackTrace})
       : super(
-          message: 'Postni o\'chirib bo\'lmadi.',
+          message: 'Could not delete the post.',
           code: 'post/delete-failed',
         );
 }
 
-/// Izoh qo'shishda xato
+/// Error while adding a comment.
 final class CommentFailure extends PostFailure {
   const CommentFailure({super.originalError, super.stackTrace})
       : super(
-          message: 'Izoh saqlanmadi. Keyinroq urinib ko\'ring.',
+          message: 'Comment could not be saved. Please try later.',
           code: 'post/comment-failed',
         );
 }
 
-/// Validatsiya xatosi (bo'sh matn va h.k.)
+/// Validation error (empty text, etc.).
 final class PostValidationFailure extends PostFailure {
   const PostValidationFailure({required super.message})
       : super(code: 'post/validation');
 }
 
-/// Like/save operatsiyasida xato
+/// Error during a like or save interaction.
 final class PostInteractionFailure extends PostFailure {
   const PostInteractionFailure({super.originalError})
       : super(
-          message: 'Amal bajarilmadi. Qayta urinib ko\'ring.',
+          message: 'Action failed. Please try again.',
           code: 'post/interaction-failed',
         );
 }
 
-/// Ruxsat yo'q (boshqa birovning postini o'chirishga urinish)
+/// Unauthorized — attempted to delete someone else's post.
 final class PostUnauthorizedFailure extends PostFailure {
   const PostUnauthorizedFailure()
       : super(
-          message: 'Bu amalni bajarishga ruxsatingiz yo\'q.',
+          message: 'You are not authorized to perform this action.',
           code: 'post/unauthorized',
         );
 }

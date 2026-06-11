@@ -12,7 +12,7 @@ abstract class FollowFailure extends Failure {
 final class FollowNotFoundFailure extends FollowFailure {
   const FollowNotFoundFailure()
       : super(
-          message: 'Foydalanuvchi topilmadi.',
+          message: 'User not found.',
           code: 'follow/not-found',
         );
 }
@@ -20,7 +20,7 @@ final class FollowNotFoundFailure extends FollowFailure {
 final class AlreadyFollowingFailure extends FollowFailure {
   const AlreadyFollowingFailure()
       : super(
-          message: 'Siz allaqachon bu foydalanuvchini follow qilgansiz.',
+          message: 'You are already following this user.',
           code: 'follow/already-following',
         );
 }
@@ -28,7 +28,7 @@ final class AlreadyFollowingFailure extends FollowFailure {
 final class FollowRequestSentFailure extends FollowFailure {
   const FollowRequestSentFailure()
       : super(
-          message: 'Follow so\'rovi allaqachon yuborilgan.',
+          message: 'A follow request has already been sent.',
           code: 'follow/request-sent',
         );
 }
@@ -36,7 +36,7 @@ final class FollowRequestSentFailure extends FollowFailure {
 final class CannotFollowSelfFailure extends FollowFailure {
   const CannotFollowSelfFailure()
       : super(
-          message: 'O\'zingizni follow qilib bo\'lmaydi.',
+          message: 'You cannot follow yourself.',
           code: 'follow/self-follow',
         );
 }
@@ -44,7 +44,7 @@ final class CannotFollowSelfFailure extends FollowFailure {
 final class FollowOperationFailure extends FollowFailure {
   const FollowOperationFailure({super.originalError, super.stackTrace})
       : super(
-          message: 'Follow amali muvaffaqiyatsiz tugadi.',
+          message: 'Follow operation failed.',
           code: 'follow/operation-failed',
         );
 }

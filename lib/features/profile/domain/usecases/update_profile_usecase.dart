@@ -4,23 +4,23 @@ import '../entities/profile.dart';
 import '../failures/profile_failure.dart';
 import '../repositories/profile_repository.dart';
 
-/// Foydalanuvchi profilini yangilaydi — validatsiya + repository chaqiruvi.
+/// Validates inputs and updates the user profile via the repository.
 class UpdateProfileUseCase {
   const UpdateProfileUseCase(this._repository);
   final ProfileRepository _repository;
 
-  // Username regex: 3-30 ta belgi, faqat harf/raqam/._
+  // Username regex: 3–30 characters, letters/digits/._  only
   static final _usernameRegex = RegExp(r'^[a-zA-Z0-9._]{3,30}$');
 
   Future<Result<Profile>> call(UpdateProfileParams params) async {
-    // ── Client-side validatsiya ───────────────────────────────────────────────
+    // ── Client-side validation ───────────────────────────────────────────────
     final username = params.username?.trim() ?? '';
     final displayName = params.displayName?.trim() ?? '';
 
     if (username.isEmpty || displayName.isEmpty) {
       return const Err(
         ValidationFailure(
-          message: "Username va ism bo'sh bo'lmasligi kerak",
+          message: 'Username and display name must not be empty.',
           field: 'required-fields',
         ),
       );
@@ -30,8 +30,8 @@ class UpdateProfileUseCase {
       return const Err(InvalidUsernameFailure());
     }
 
-    // ── Username mavjudligini tekshiruv ──────────────────────────────────────
-    // O'z username'ini o'zgartirmasdan saqlasa — "band" xatosi chiqmasligi kerak
+    // ── Username availability check ──────────────────────────────────────────
+    // Exclude the current user so re-saving the same username does not fail
     final availResult = await _repository.isUsernameAvailable(
       username,
       excludeUserId: params.userId,
@@ -40,7 +40,7 @@ class UpdateProfileUseCase {
       case Ok(:final value) when !value:
         return const Err(UsernameAlreadyTakenFailure());
       case Err():
-        // Tarmoq xatosi — tekshiruvni o'tkazib yubormiz, server xatosi qaytaradi
+        // Network error — skip the check and let the server return its own error
         break;
       case Ok():
         break;

@@ -26,7 +26,7 @@ class ProfileSetupState {
   final bool? isUsernameAvailable;
   final int bioLength;
   final bool isSaving;
-  /// true bo'lsa — sahifa o'tishi triggeri
+  /// When true, triggers navigation to the next screen.
   final bool isSaved;
   final String? errorMessage;
 
@@ -58,7 +58,7 @@ class ProfileSetupNotifier extends Notifier<ProfileSetupState> {
   ProfileSetupState build() => const ProfileSetupState();
 
   void onUsernameChanged(String value) {
-    // Minimal UI feedback — haqiqiy validatsiya UpdateProfileUseCase ichida
+    // Minimal UI feedback — full validation happens inside UpdateProfileUseCase
     state = state.copyWith(isUsernameAvailable: null);
   }
 
@@ -72,12 +72,12 @@ class ProfileSetupNotifier extends Notifier<ProfileSetupState> {
 
     if (!context.mounted) return;
 
-    // go_router orqali avatar crop ekranini ochib, natijani kutamiz
+    // Open the avatar crop screen via go_router and wait for the result
     final croppedPath =
         await context.push<String>(AppRoutes.avatarCrop, extra: file.path);
 
     if (croppedPath != null) {
-      AppLogger.d('ProfileSetup: avatar crop qilindi — $croppedPath');
+      AppLogger.d('ProfileSetup: avatar cropped — $croppedPath');
       state = state.copyWith(avatarLocalPath: croppedPath);
     }
   }
@@ -90,14 +90,14 @@ class ProfileSetupNotifier extends Notifier<ProfileSetupState> {
   }) async {
     final userId = ref.read(currentUserIdProvider);
     if (userId == null) {
-      state = state.copyWith(errorMessage: 'Tizimga kirmagan foydalanuvchi');
+      state = state.copyWith(errorMessage: 'User is not authenticated.');
       return;
     }
 
     state = state.copyWith(isSaving: true, clearError: true);
-    AppLogger.i('ProfileSetup: saqlash boshlandi — $username');
+    AppLogger.i('ProfileSetup: save started — $username');
 
-    // Validatsiya UpdateProfileUseCase ichida — bu yerda takrorlanmaydi
+    // Validation is handled inside UpdateProfileUseCase — no duplication here
     final params = UpdateProfileParams(
       userId: userId,
       username: username.trim(),
@@ -111,10 +111,10 @@ class ProfileSetupNotifier extends Notifier<ProfileSetupState> {
 
     switch (result) {
       case Ok():
-        AppLogger.i('ProfileSetup: muvaffaqiyatli saqlandi');
+        AppLogger.i('ProfileSetup: saved successfully');
         state = state.copyWith(isSaving: false, isSaved: true);
       case Err(:final failure):
-        AppLogger.e('ProfileSetup: saqlashda xato — ${failure.message}');
+        AppLogger.e('ProfileSetup: save error — ${failure.message}');
         state = state.copyWith(
           isSaving: false,
           errorMessage: failure.message,

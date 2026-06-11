@@ -7,19 +7,19 @@ import '../../../../core/services/post_cache_service.dart';
 import '../../../post/data/providers/post_data_providers.dart';
 import '../../../post/domain/entities/post.dart';
 
-/// Biror foydalanuvchining postlarini yuklovchi provider.
-/// [String] = targetUserId
+/// Loads posts for a specific user.
+/// The family argument [String] is the target user ID.
 class UserPostsNotifier extends FamilyAsyncNotifier<List<Post>, String> {
   @override
   Future<List<Post>> build(String userId) async {
     final cached =
         await ref.read(postCacheServiceProvider).loadUserPosts(userId);
     if (cached.isNotEmpty) {
-      AppLogger.d('UserPostsNotifier: $userId cache\'dan yuklandi');
+      AppLogger.d('UserPostsNotifier: $userId loaded from cache');
       Future.microtask(() => _backgroundRefresh(userId));
       return cached;
     }
-    AppLogger.d('UserPostsNotifier: $userId postlari yuklanmoqda');
+    AppLogger.d('UserPostsNotifier: loading posts for $userId');
     return _fetchAndSave(userId);
   }
 

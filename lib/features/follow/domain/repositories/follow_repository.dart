@@ -2,37 +2,37 @@ import '../../../../core/errors/result.dart';
 import '../entities/follow.dart';
 
 abstract interface class FollowRepository {
-  /// [targetUserId] foydalanuvchini follow qilish yoki private bo'lsa so'rov yuborish
+  /// Follows [targetUserId], or sends a follow request if the account is private.
   Future<Result<FollowStatus>> followUser({
     required String currentUserId,
     required String targetUserId,
   });
 
-  /// Unfollow yoki so'rovni bekor qilish
+  /// Unfollows the target or cancels a pending follow request.
   Future<Result<bool>> unfollowUser({
     required String currentUserId,
     required String targetUserId,
   });
 
-  /// Follow so'rovini qabul qilish (private account egasi uchun)
+  /// Accepts a follow request (called by the private-account owner).
   Future<Result<bool>> acceptFollowRequest({
     required String currentUserId,
     required String requesterId,
   });
 
-  /// Follow so'rovini rad etish
+  /// Declines a pending follow request.
   Future<Result<bool>> declineFollowRequest({
     required String currentUserId,
     required String requesterId,
   });
 
-  /// Ikki foydalanuvchi o'rtasidagi follow holatini tekshirish
+  /// Returns the follow status between two users.
   Future<Result<FollowStatus>> getFollowStatus({
     required String currentUserId,
     required String targetUserId,
   });
 
-  /// Foydalanuvchining follower'larini yuklash
+  /// Loads the followers of a user.
   Future<Result<List<FollowUser>>> getFollowers({
     required String userId,
     required String currentUserId,
@@ -40,7 +40,7 @@ abstract interface class FollowRepository {
     int offset = 0,
   });
 
-  /// Foydalanuvchi kimlarni follow qilayotgani
+  /// Returns the list of users that a user is following.
   Future<Result<List<FollowUser>>> getFollowing({
     required String userId,
     required String currentUserId,

@@ -5,8 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../features/post/domain/entities/post.dart';
 
-/// Post ma'lumotlarini SharedPreferences'ga JSON sifatida saqlaydi.
-/// Xatolik bo'lsa ilovani to'xtatmaydi — try/catch bilan himoyalangan.
+/// Persists post lists to SharedPreferences as JSON for offline-first UX.
+/// Errors are silently swallowed — a cache miss is never fatal.
 class PostCacheService {
   static const _feedKey = 'post_cache_feed';
   static const _exploreKey = 'post_cache_explore';

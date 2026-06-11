@@ -1,44 +1,43 @@
-/// App-wide sabit qiymatlar — magic number'larni yo'q qiladi.
+/// App-wide constant values — eliminates magic numbers.
 ///
-/// Barcha limit, uzunlik, sahifa o'lchami va timeout
-/// qiymatlari shu faylda saqlansin.
+/// All limits, lengths, page sizes, and timeouts should be defined here.
 abstract final class AppConfig {
   // ── Feed / Pagination ────────────────────────────────────────────────────────
-  /// Bir sahifada nechta post yuklanadi
+  /// Number of posts loaded per page in the home feed.
   static const int feedPageSize = 20;
-  /// Explore grid'da nechta post yuklanadi
+  /// Number of posts loaded per page in the explore grid.
   static const int explorePageSize = 30;
-  /// Profile grid'da nechta post yuklanadi
+  /// Number of posts loaded per page on a user profile.
   static const int profilePostPageSize = 18;
-  /// Qidiruvda nechta foydalanuvchi ko'rsatiladi
+  /// Maximum number of users returned in a search query.
   static const int searchResultLimit = 20;
 
   // ── Post ─────────────────────────────────────────────────────────────────────
-  /// Post caption maksimal uzunligi (Instagram'ga o'xshash)
+  /// Maximum caption length (similar to Instagram).
   static const int maxCaptionLength = 2200;
-  /// Avatar rasm maksimal o'lchami (MB)
+  /// Maximum avatar image size in megabytes.
   static const double maxAvatarSizeMb = 5.0;
-  /// Post rasm maksimal o'lchami (MB)
+  /// Maximum post image size in megabytes.
   static const double maxPostImageSizeMb = 10.0;
 
   // ── Profile ──────────────────────────────────────────────────────────────────
-  /// Bio maksimal uzunligi
+  /// Maximum bio length in characters.
   static const int maxBioLength = 150;
-  /// Username minimal uzunligi
+  /// Minimum allowed username length.
   static const int minUsernameLength = 3;
-  /// Username maksimal uzunligi
+  /// Maximum allowed username length.
   static const int maxUsernameLength = 30;
-  /// Display name maksimal uzunligi
+  /// Maximum display name length.
   static const int maxDisplayNameLength = 50;
-  /// Website URL maksimal uzunligi
+  /// Maximum website URL length.
   static const int maxWebsiteLength = 100;
 
   // ── Auth ─────────────────────────────────────────────────────────────────────
-  /// Parol minimal uzunligi
+  /// Minimum password length required for sign-up.
   static const int minPasswordLength = 6;
 
   // ── Debounce ─────────────────────────────────────────────────────────────────
-  /// Search input debounce (millisekund)
+  /// Search input debounce delay in milliseconds.
   static const int searchDebounceMsec = 400;
 
   // ── Supabase storage ─────────────────────────────────────────────────────────

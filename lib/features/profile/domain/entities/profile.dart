@@ -1,5 +1,5 @@
-/// `profiles` Supabase jadvalidagi foydalanuvchi profilini ifodalovchi domain entity.
-/// UI modellardan mustaqil — faqat biznes mantiq uchun.
+/// Domain entity representing a user profile from the Supabase `profiles` table.
+/// Independent of UI models — used only for business logic.
 class Profile {
   const Profile({
     required this.id,
@@ -30,7 +30,7 @@ class Profile {
   final bool isPrivate;
   final bool isVerified;
 
-  /// Joriy foydalanuvchi bu profilni follow qilganmi (boshqa profil uchun)
+  /// Whether the current viewer follows this profile (always false for own profile).
   final bool isFollowing;
 
   final DateTime createdAt;
@@ -44,7 +44,7 @@ class Profile {
 
   bool get hasAvatar => avatarUrl != null && avatarUrl!.isNotEmpty;
 
-  // Sentinel pattern — nullable field'larni copyWith'da aniq null'ga o'rnatish uchun
+  // Sentinel pattern — allows copyWith to explicitly set nullable fields to null
   static const _unset = Object();
 
   Profile copyWith({
@@ -92,7 +92,7 @@ class Profile {
   String toString() => 'Profile(id: $id, username: $username)';
 }
 
-/// Profil yangilash uchun parametrlar — faqat o'zgartirilgan maydonlarni o'z ichiga oladi.
+/// Input parameters for updating a profile — only include fields the user has changed.
 class UpdateProfileParams {
   const UpdateProfileParams({
     required this.userId,
@@ -110,7 +110,7 @@ class UpdateProfileParams {
   final String? bio;
   final String? website;
 
-  /// Lokal fayl yo'li — Storage'ga yuklash uchun
+  /// Local file path to upload to Storage, or an existing http URL, or null to keep unchanged.
   final String? avatarLocalPath;
   final bool? isPrivate;
 }

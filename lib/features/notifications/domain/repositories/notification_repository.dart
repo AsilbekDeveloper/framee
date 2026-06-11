@@ -12,6 +12,6 @@ abstract interface class NotificationRepository {
 
   Future<Result<bool>> markAllRead(String userId);
 
-  /// Supabase Realtime orqali yangi bildirishnomalar stream'i
+  /// Stream of new notifications delivered via Supabase Realtime.
   Stream<AppNotification> watchNewNotifications(String userId);
 }

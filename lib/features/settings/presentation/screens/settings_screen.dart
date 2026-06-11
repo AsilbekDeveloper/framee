@@ -188,7 +188,7 @@ class SettingsScreen extends ConsumerWidget {
       builder: (ctx) => AlertDialog(
         title: Text(AppStrings.deleteAccount),
         content: const Text(
-          'Hisobingizni o\'chirishni xohlaysizmi? Bu amalni qaytarib bo\'lmaydi.',
+          'Are you sure you want to delete your account? This action cannot be undone.',
         ),
         actions: [
           TextButton(
@@ -202,7 +202,7 @@ class SettingsScreen extends ConsumerWidget {
                   await ref.read(deleteAccountUseCaseProvider).call();
               if (result.isErr && context.mounted) {
                 context.showSnackBar(
-                    'Xatolik yuz berdi. Qayta urinib ko\'ring.');
+                    'Something went wrong. Please try again.');
               }
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
@@ -218,7 +218,7 @@ class SettingsScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(AppStrings.logOut),
-        content: const Text('Tizimdan chiqmoqchimisiz?'),
+        content: const Text('Are you sure you want to sign out?'),
         actions: [
           TextButton(
             onPressed: () => ctx.pop(),

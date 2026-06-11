@@ -69,7 +69,7 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
     final userId = _currentUserId;
     if (userId == null) return const PostDetailState();
 
-    AppLogger.d('PostDetailNotifier: yuklanmoqda — $postId');
+    AppLogger.d('PostDetailNotifier: loading — $postId');
 
     final results = await Future.wait([
       ref.read(getPostUseCaseProvider).call(
@@ -145,7 +145,7 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
             )),
       ));
     });
-    // TODO: server'ga comment like yuborish (comment_likes jadvaliga)
+    // TODO: persist comment like to the server (comment_likes table)
   }
 
   // ── Reply ───────────────────────────────────────────────────────────────────
@@ -192,10 +192,10 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
 
     switch (result) {
       case Ok(:final value):
-        AppLogger.d('PostDetail: izoh qo\'shildi — parentId:${value.parentId}');
+        AppLogger.d('PostDetail: comment added — parentId:${value.parentId}');
         List<Comment> updatedComments;
         if (value.parentId != null) {
-          // Reply → parentning replies listiga qo'shamiz
+          // Reply → nest inside the parent comment's replies list
           updatedComments = _nestReply(current.comments, value);
         } else {
           // Top-level comment → listning oxiriga
@@ -210,7 +210,7 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
           clearReply: true,
         ));
       case Err(:final failure):
-        AppLogger.w('PostDetail: izoh xatosi — ${failure.code}');
+        AppLogger.w('PostDetail: comment error — ${failure.code}');
         state = AsyncData(current.copyWith(errorMessage: failure.message));
     }
   }
@@ -224,7 +224,7 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
     final current = state.valueOrNull;
     if (current == null) return;
 
-    // Optimistic: listdan o'chiramiz
+    // Optimistic: remove from list immediately before server round-trip
     final updatedComments = _removeComment(current.comments, commentId);
     final removedCount = _countRemoved(current.comments, updatedComments);
     state = AsyncData(current.copyWith(
@@ -290,13 +290,13 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
 
   // ── Private helpers ─────────────────────────────────────────────────────────
 
-  /// Reply'ni to'g'ri parent comment'ning replies listiga joylashtiradi
+  /// Inserts a reply into the correct parent comment's replies list (recursive, 1 level deep).
   List<Comment> _nestReply(List<Comment> comments, Comment reply) {
     return comments.map((c) {
       if (c.id == reply.parentId) {
         return c.copyWith(replies: [...c.replies, reply]);
       }
-      // Nested replies ichida ham qidiramiz (1 daraja chuqur)
+      // Also search inside nested replies (1 level deep)
       if (c.replies.isNotEmpty) {
         return c.copyWith(replies: _nestReply(c.replies, reply));
       }
@@ -304,7 +304,7 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
     }).toList();
   }
 
-  /// commentId bo'yicha kommentni yoki uning reply'ini o'chiradi
+  /// Removes a comment or its reply by ID.
   List<Comment> _removeComment(List<Comment> comments, String commentId) {
     return comments
         .where((c) => c.id != commentId)
@@ -324,7 +324,7 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
     return count(before) - count(after);
   }
 
-  /// Topilgan comment (yoki uning reply'ini) `transform` bilan yangilaydi
+  /// Applies [transform] to the comment matching [commentId], including replies.
   List<Comment> _mapComments(
     List<Comment> comments,
     String commentId,

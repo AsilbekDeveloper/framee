@@ -52,13 +52,13 @@ class SearchState {
 
 // ── Search Notifier ───────────────────────────────────────────────────────────
 
-/// [Notifier<SearchState>] — barcha loading holatlari SearchState ichida.
-/// AsyncNotifier ishlatilmaydi chunki isSearching/isLoadingExplore allaqachon
-/// state ichida bor — ikki xil loading mexanizmi aralashib ketmasin.
+/// Synchronous [Notifier] — all loading flags live inside [SearchState].
+/// [AsyncNotifier] is intentionally avoided to prevent two loading mechanisms
+/// (isSearching vs AsyncLoading) from conflicting.
 class SearchNotifier extends Notifier<SearchState> {
   @override
   SearchState build() {
-    // Explore'ni async yuklash — state sync boshlaydi, loading flag bilan
+    // Kick off Explore load asynchronously — state starts synchronously with the loading flag
     Future.microtask(_loadExplore);
     return const SearchState(isLoadingExplore: true);
   }
@@ -74,16 +74,16 @@ class SearchNotifier extends Notifier<SearchState> {
 
     final cache = ref.read(postCacheServiceProvider);
 
-    // Cache bor — darhol ko'rsatamiz
+    // Show cache immediately, then refresh in the background
     final cached = await cache.loadExplore();
     if (cached.isNotEmpty) {
       state = state.copyWith(isLoadingExplore: false, explorePosts: cached);
-      // Background yangilash
+      // Background refresh to keep the Explore feed up to date
       _backgroundRefreshExplore(userId);
       return;
     }
 
-    AppLogger.d('SearchNotifier: explore yuklanmoqda');
+    AppLogger.d('SearchNotifier: loading explore posts');
     final result = await ref
         .read(getExplorePostsUseCaseProvider)
         .call(currentUserId: userId, limit: 30);
@@ -121,7 +121,7 @@ class SearchNotifier extends Notifier<SearchState> {
 
     state = state.copyWith(query: trimmed, isSearching: true, clearError: true);
 
-    AppLogger.d('SearchNotifier: "$trimmed" qidirish');
+    AppLogger.d('SearchNotifier: searching "$trimmed"');
     final result = await ref.read(searchUsersUseCaseProvider).call(
           query: trimmed,
           currentUserId: userId,

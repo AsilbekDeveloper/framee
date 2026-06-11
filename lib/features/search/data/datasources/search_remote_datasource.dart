@@ -9,7 +9,7 @@ import '../../domain/entities/search_result.dart';
 import '../dtos/search_user_dto.dart';
 
 abstract interface class SearchRemoteDataSource {
-  /// `search_users` RPC → `SearchUser` entity listini qaytaradi
+  /// Calls the `search_users` RPC and returns a list of [SearchUser] entities.
   Future<Result<List<SearchUser>>> searchUsers({
     required String query,
     required String currentUserId,
@@ -17,7 +17,7 @@ abstract interface class SearchRemoteDataSource {
     int offset = 0,
   });
 
-  /// `get_feed_posts` RPC → `Post` entity listini qaytaradi (explore uchun)
+  /// Calls the `get_feed_posts` RPC and returns a list of [Post] entities for the Explore screen.
   Future<Result<List<Post>>> getExplorePosts({
     required String currentUserId,
     int limit = 30,
@@ -37,7 +37,7 @@ class SearchRemoteDataSourceImpl implements SearchRemoteDataSource {
     int offset = 0,
   }) async {
     try {
-      AppLogger.d('SearchDS: qidirish — "$query"');
+      AppLogger.d('SearchDS: searching — "$query"');
       final data = await _client.rpc('search_users', params: {
         'p_query': query.trim(),
         'p_current_id': currentUserId,
@@ -51,10 +51,10 @@ class SearchRemoteDataSourceImpl implements SearchRemoteDataSource {
           .map((dto) => dto.toEntity())
           .toList();
 
-      AppLogger.d('SearchDS: ${users.length} ta natija');
+      AppLogger.d('SearchDS: ${users.length} result(s)');
       return Ok(users);
     } on PostgrestException catch (e) {
-      AppLogger.e('SearchDS: searchUsers xatosi', error: e);
+      AppLogger.e('SearchDS: searchUsers error', error: e);
       return Err(ServerFailure(message: e.message, originalError: e));
     } catch (e, st) {
       return Err(NetworkFailure(originalError: e, stackTrace: st));
@@ -83,7 +83,7 @@ class SearchRemoteDataSourceImpl implements SearchRemoteDataSource {
 
       return Ok(posts);
     } on PostgrestException catch (e) {
-      AppLogger.e('SearchDS: getExplorePosts xatosi', error: e);
+      AppLogger.e('SearchDS: getExplorePosts error', error: e);
       return Err(ServerFailure(message: e.message, originalError: e));
     } catch (e, st) {
       return Err(NetworkFailure(originalError: e, stackTrace: st));
