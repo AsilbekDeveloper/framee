@@ -77,8 +77,10 @@ class ProfileScreen extends ConsumerWidget {
                     '${AppRoutes.followersPath(profile.id)}?tab=following',
                   ),
                   onEditTap: () => context.push(AppRoutes.editProfile),
-                  onShareTap: () =>
-                      ShareUtils.shareProfile(profile.username),
+                  onShareTap: () => ShareUtils.shareProfile(
+                    userId: profile.id,
+                    username: profile.username,
+                  ),
                   onFollowTap: () =>
                       ref.read(profileProvider(userId).notifier).toggleFollow(),
                 ),

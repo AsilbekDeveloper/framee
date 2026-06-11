@@ -21,9 +21,9 @@ abstract final class ShareUtils {
     Share.share(text);
   }
 
-  /// Shares a user profile — username + deep link.
-  static void shareProfile(String username) {
-    final url = '$_baseUrl/@$username';
+  /// Shares a user profile — username + deep link using userId route.
+  static void shareProfile({required String userId, required String username}) {
+    final url = '$_baseUrl/user/$userId';
     Share.share('Follow @$username on Framee!\n\n$url');
   }
 
@@ -31,5 +31,5 @@ abstract final class ShareUtils {
   static String postUrl(String postId) => '$_baseUrl/posts/$postId';
 
   /// Returns the profile deep link URL (for clipboard copy).
-  static String profileUrl(String username) => '$_baseUrl/@$username';
+  static String profileUrl(String userId) => '$_baseUrl/user/$userId';
 }
