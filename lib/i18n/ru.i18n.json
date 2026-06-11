@@ -1,7 +1,6 @@
 {
   "appName": "Framee",
   "appTagline": "Запечатлейте свои моменты.\nПоделитесь своей жизнью.",
-
   "auth": {
     "signIn": "Войти",
     "signUp": "Регистрация",
@@ -27,7 +26,6 @@
     "terms": "Условия",
     "privacyPolicy": "Политика конфиденциальности"
   },
-
   "setup": {
     "setUpProfile": "Настройте профиль",
     "setUpProfileSub": "Расскажите миру немного о себе",
@@ -47,13 +45,11 @@
     "saveAndContinue": "Сохранить и продолжить",
     "skipForNow": "Пропустить"
   },
-
   "home": {
     "title": "Главная",
     "newPost": "Новый пост",
     "pullToRefresh": "Потяните для обновления"
   },
-
   "post": {
     "post": "Пост",
     "createPost": "Новый пост",
@@ -85,9 +81,13 @@
     "postSaved": "Пост сохранён!",
     "postDeleted": "Пост удалён",
     "postPublished": "Пост опубликован!",
-    "postReported": "Жалоба отправлена"
+    "postReported": "Жалоба отправлена",
+    "noCommentsYet": "Пока нет комментариев",
+    "replyingTo": "Ответить",
+    "deleteComment": "Удалить комментарий",
+    "deleteCommentConfirm": "Этот комментарий будет удалён навсегда.",
+    "deletePostConfirm": "Этот пост будет удалён навсегда."
   },
-
   "search": {
     "search": "Поиск",
     "discover": "Открытия",
@@ -98,7 +98,6 @@
     "followers": "подписчиков",
     "mutual": "общих"
   },
-
   "profile": {
     "profile": "Профиль",
     "posts": "Публикации",
@@ -110,14 +109,12 @@
     "noTaggedPosts": "Нет отмеченных постов",
     "noTaggedPostsSub": "Когда вас отметят в постах, они появятся здесь."
   },
-
   "follow": {
     "follow": "Подписаться",
     "following": "Вы подписаны",
     "followSuccess": "Подписались!",
     "unfollowConfirm": "Отписаться"
   },
-
   "notifications": {
     "notifications": "Уведомления",
     "markAllRead": "Отметить все как прочитанные",
@@ -129,7 +126,6 @@
     "startedFollowingYou": "подписался на вас",
     "commented": "прокомментировал:"
   },
-
   "settings": {
     "settings": "Настройки",
     "appearance": "Внешний вид",
@@ -158,7 +154,6 @@
     "loggedOut": "Вы вышли!",
     "accountDeletionRequested": "Запрос на удаление аккаунта отправлен"
   },
-
   "editProfile": {
     "save": "Сохранить",
     "profileUpdated": "Профиль обновлён!",
@@ -168,11 +163,9 @@
     "showActivityStatusSub": "Позволить другим видеть время вашей последней активности",
     "accountSettings": "Настройки аккаунта"
   },
-
   "followers": {
     "searchPlaceholder": "Поиск..."
   },
-
   "errors": {
     "somethingWentWrong": "Что-то пошло не так",
     "noInternetConnection": "Нет подключения к интернету",
@@ -180,7 +173,6 @@
     "retry": "Повторить",
     "sessionExpired": "Сессия истекла. Войдите снова."
   },
-
   "empty": {
     "noPostsYet": "Пока нет постов",
     "noPostsYetSub": "Когда вы что-то опубликуете, это появится здесь.",
@@ -189,7 +181,6 @@
     "noResults": "Ничего не найдено",
     "noResultsSub": "Попробуйте другой запрос."
   },
-
   "misc": {
     "more": "ещё",
     "cancel": "Отмена",

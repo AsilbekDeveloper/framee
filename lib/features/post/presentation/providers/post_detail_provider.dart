@@ -15,6 +15,7 @@ class PostDetailState {
     this.comments = const [],
     this.isLoadingComments = false,
     this.replyToId,
+    this.replyToUsername,
     this.errorMessage,
   });
 
@@ -22,6 +23,7 @@ class PostDetailState {
   final List<Comment> comments;
   final bool isLoadingComments;
   final String? replyToId;
+  final String? replyToUsername;
   final String? errorMessage;
 
   bool get hasError => errorMessage != null;
@@ -31,6 +33,7 @@ class PostDetailState {
     List<Comment>? comments,
     bool? isLoadingComments,
     String? replyToId,
+    String? replyToUsername,
     String? errorMessage,
     bool clearError = false,
     bool clearReply = false,
@@ -40,6 +43,8 @@ class PostDetailState {
         comments: comments ?? this.comments,
         isLoadingComments: isLoadingComments ?? this.isLoadingComments,
         replyToId: clearReply ? null : (replyToId ?? this.replyToId),
+        replyToUsername:
+            clearReply ? null : (replyToUsername ?? this.replyToUsername),
         errorMessage:
             clearError ? null : (errorMessage ?? this.errorMessage),
       );
@@ -49,32 +54,32 @@ class PostDetailState {
 
 class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
   final commentController = TextEditingController();
+  final commentFocusNode = FocusNode();
 
   String get _postId => arg;
-  String? get _currentUserId =>
-      ref.read(currentUserIdProvider);
+  String? get _currentUserId => ref.read(currentUserIdProvider);
 
   @override
   Future<PostDetailState> build(String postId) async {
-    ref.onDispose(commentController.dispose);
+    ref.onDispose(() {
+      commentController.dispose();
+      commentFocusNode.dispose();
+    });
 
     final userId = _currentUserId;
-    if (userId == null) {
-      return const PostDetailState();
-    }
+    if (userId == null) return const PostDetailState();
 
     AppLogger.d('PostDetailNotifier: yuklanmoqda — $postId');
 
-    // Post va comments'ni parallel yuklaymiz
     final results = await Future.wait([
       ref.read(getPostUseCaseProvider).call(
-        postId: postId,
-        currentUserId: userId,
-      ),
+            postId: postId,
+            currentUserId: userId,
+          ),
       ref.read(getCommentsUseCaseProvider).call(
-        postId: postId,
-        currentUserId: userId,
-      ),
+            postId: postId,
+            currentUserId: userId,
+          ),
     ]);
 
     final postResult = results[0] as Result<Post>;
@@ -87,7 +92,7 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
 
     final comments = switch (commentsResult) {
       Ok(:final value) => value,
-      Err() => const <Comment>[], // izohlar yuklanmasa ham post ko'rinsin
+      Err() => const <Comment>[],
     };
 
     return PostDetailState(post: post, comments: comments);
@@ -103,7 +108,6 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
     final userId = _currentUserId;
     if (userId == null) return;
 
-    // Optimistic update
     final optimistic = post.copyWith(
       isLiked: !post.isLiked,
       likesCount: post.isLiked ? post.likesCount - 1 : post.likesCount + 1,
@@ -117,7 +121,6 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
 
     switch (result) {
       case Ok(:final value):
-        // Server'dan haqiqiy count
         state = AsyncData(current.copyWith(
           post: post.copyWith(
             isLiked: value.isLiked,
@@ -125,7 +128,6 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
           ),
         ));
       case Err(:final failure):
-        // Rollback
         AppLogger.w('PostDetail: toggleLike rollback — ${failure.code}');
         state = AsyncData(current.copyWith(post: post));
     }
@@ -133,28 +135,30 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
 
   // ── Comment Like ────────────────────────────────────────────────────────────
 
-  void toggleCommentLike(String commentId) {
+  Future<void> toggleCommentLike(String commentId) async {
+    // Optimistic update
     state.whenData((data) {
       state = AsyncData(data.copyWith(
-        comments: data.comments.map((c) {
-          if (c.id != commentId) return c;
-          return c.copyWith(
-            isLiked: !c.isLiked,
-            likesCount: c.isLiked ? c.likesCount - 1 : c.likesCount + 1,
-          );
-        }).toList(),
+        comments: _mapComments(data.comments, commentId, (c) => c.copyWith(
+              isLiked: !c.isLiked,
+              likesCount: c.isLiked ? c.likesCount - 1 : c.likesCount + 1,
+            )),
       ));
     });
-    // TODO: server'ga comment like yuborish
+    // TODO: server'ga comment like yuborish (comment_likes jadvaliga)
   }
 
   // ── Reply ───────────────────────────────────────────────────────────────────
 
-  void setReplyTo(String commentId) {
+  void setReplyTo(String commentId, String username) {
     state.whenData((data) {
-      state = AsyncData(data.copyWith(replyToId: commentId));
+      state = AsyncData(data.copyWith(
+        replyToId: commentId,
+        replyToUsername: username,
+      ));
     });
-    commentController.text = '';
+    commentController.clear();
+    commentFocusNode.requestFocus();
   }
 
   void clearReply() {
@@ -188,10 +192,15 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
 
     switch (result) {
       case Ok(:final value):
-        AppLogger.d('PostDetail: izoh qo\'shildi');
-        // Yangi izohni listga qo'shamiz
-        final updatedComments = [...current.comments, value];
-        // Post commentsCount'ni ham yangilaymiz
+        AppLogger.d('PostDetail: izoh qo\'shildi — parentId:${value.parentId}');
+        List<Comment> updatedComments;
+        if (value.parentId != null) {
+          // Reply → parentning replies listiga qo'shamiz
+          updatedComments = _nestReply(current.comments, value);
+        } else {
+          // Top-level comment → listning oxiriga
+          updatedComments = [...current.comments, value];
+        }
         final updatedPost = current.post?.copyWith(
           commentsCount: (current.post?.commentsCount ?? 0) + 1,
         );
@@ -206,6 +215,37 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
     }
   }
 
+  // ── Delete Comment ──────────────────────────────────────────────────────────
+
+  Future<void> deleteComment(String commentId) async {
+    final userId = _currentUserId;
+    if (userId == null) return;
+
+    final current = state.valueOrNull;
+    if (current == null) return;
+
+    // Optimistic: listdan o'chiramiz
+    final updatedComments = _removeComment(current.comments, commentId);
+    final removedCount = _countRemoved(current.comments, updatedComments);
+    state = AsyncData(current.copyWith(
+      comments: updatedComments,
+      post: current.post?.copyWith(
+        commentsCount: (current.post?.commentsCount ?? 1) - removedCount,
+      ),
+    ));
+
+    final result = await ref.read(deleteCommentUseCaseProvider).call(
+          commentId: commentId,
+          currentUserId: userId,
+        );
+
+    if (result is Err) {
+      // Rollback
+      AppLogger.w('PostDetail: deleteComment rollback');
+      state = AsyncData(current);
+    }
+  }
+
   // ── Save ────────────────────────────────────────────────────────────────────
 
   Future<void> toggleSave() async {
@@ -216,7 +256,6 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
     final userId = _currentUserId;
     if (userId == null) return;
 
-    // Optimistic update
     state = AsyncData(current!.copyWith(
       post: post.copyWith(isSaved: !post.isSaved),
     ));
@@ -227,7 +266,6 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
         );
 
     if (result is Err) {
-      // Rollback
       state = AsyncData(current.copyWith(post: post));
     }
   }
@@ -248,6 +286,60 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
       Ok() => true,
       Err(:final failure) => throw failure,
     };
+  }
+
+  // ── Private helpers ─────────────────────────────────────────────────────────
+
+  /// Reply'ni to'g'ri parent comment'ning replies listiga joylashtiradi
+  List<Comment> _nestReply(List<Comment> comments, Comment reply) {
+    return comments.map((c) {
+      if (c.id == reply.parentId) {
+        return c.copyWith(replies: [...c.replies, reply]);
+      }
+      // Nested replies ichida ham qidiramiz (1 daraja chuqur)
+      if (c.replies.isNotEmpty) {
+        return c.copyWith(replies: _nestReply(c.replies, reply));
+      }
+      return c;
+    }).toList();
+  }
+
+  /// commentId bo'yicha kommentni yoki uning reply'ini o'chiradi
+  List<Comment> _removeComment(List<Comment> comments, String commentId) {
+    return comments
+        .where((c) => c.id != commentId)
+        .map((c) => c.replies.isEmpty
+            ? c
+            : c.copyWith(
+                replies: c.replies
+                    .where((r) => r.id != commentId)
+                    .toList(),
+              ))
+        .toList();
+  }
+
+  int _countRemoved(List<Comment> before, List<Comment> after) {
+    int count(List<Comment> list) =>
+        list.fold(0, (sum, c) => sum + 1 + c.replies.length);
+    return count(before) - count(after);
+  }
+
+  /// Topilgan comment (yoki uning reply'ini) `transform` bilan yangilaydi
+  List<Comment> _mapComments(
+    List<Comment> comments,
+    String commentId,
+    Comment Function(Comment) transform,
+  ) {
+    return comments.map((c) {
+      if (c.id == commentId) return transform(c);
+      if (c.replies.isEmpty) return c;
+      return c.copyWith(
+        replies: c.replies.map((r) {
+          if (r.id == commentId) return transform(r);
+          return r;
+        }).toList(),
+      );
+    }).toList();
   }
 }
 

@@ -1,7 +1,6 @@
 {
   "appName": "Framee",
   "appTagline": "Capture your moments.\nShare your frame of life.",
-
   "auth": {
     "signIn": "Sign In",
     "signUp": "Sign Up",
@@ -27,7 +26,6 @@
     "terms": "Terms",
     "privacyPolicy": "Privacy Policy"
   },
-
   "setup": {
     "setUpProfile": "Set up your profile",
     "setUpProfileSub": "Tell the world a bit about yourself",
@@ -47,13 +45,11 @@
     "saveAndContinue": "Save & Continue",
     "skipForNow": "Skip for now"
   },
-
   "home": {
     "title": "Home",
     "newPost": "New Post",
     "pullToRefresh": "Pull to refresh"
   },
-
   "post": {
     "post": "Post",
     "createPost": "New Post",
@@ -85,9 +81,13 @@
     "postSaved": "Post saved!",
     "postDeleted": "Post deleted",
     "postPublished": "Post published!",
-    "postReported": "Post reported"
+    "postReported": "Post reported",
+    "noCommentsYet": "No comments yet",
+    "replyingTo": "Replying to",
+    "deleteComment": "Delete Comment",
+    "deleteCommentConfirm": "This comment will be permanently deleted.",
+    "deletePostConfirm": "This post will be permanently deleted."
   },
-
   "search": {
     "search": "Search",
     "discover": "Discover",
@@ -98,7 +98,6 @@
     "followers": "followers",
     "mutual": "mutual"
   },
-
   "profile": {
     "profile": "Profile",
     "posts": "Posts",
@@ -110,14 +109,12 @@
     "noTaggedPosts": "No tagged posts",
     "noTaggedPostsSub": "When people tag you in posts, they'll appear here."
   },
-
   "follow": {
     "follow": "Follow",
     "following": "Following",
     "followSuccess": "Following!",
     "unfollowConfirm": "Unfollow"
   },
-
   "notifications": {
     "notifications": "Notifications",
     "markAllRead": "Mark all read",
@@ -129,7 +126,6 @@
     "startedFollowingYou": "started following you",
     "commented": "commented:"
   },
-
   "settings": {
     "settings": "Settings",
     "appearance": "Appearance",
@@ -158,7 +154,6 @@
     "loggedOut": "Logged out!",
     "accountDeletionRequested": "Account deletion requested"
   },
-
   "editProfile": {
     "save": "Save",
     "profileUpdated": "Profile updated!",
@@ -168,11 +163,9 @@
     "showActivityStatusSub": "Let others see when you were last active",
     "accountSettings": "Account settings"
   },
-
   "followers": {
     "searchPlaceholder": "Search..."
   },
-
   "errors": {
     "somethingWentWrong": "Something went wrong",
     "noInternetConnection": "No internet connection",
@@ -180,7 +173,6 @@
     "retry": "Retry",
     "sessionExpired": "Session expired. Please sign in again."
   },
-
   "empty": {
     "noPostsYet": "No posts yet",
     "noPostsYetSub": "When you post something, it will appear here.",
@@ -189,7 +181,6 @@
     "noResults": "No results found",
     "noResultsSub": "Try a different search term."
   },
-
   "misc": {
     "more": "more",
     "cancel": "Cancel",

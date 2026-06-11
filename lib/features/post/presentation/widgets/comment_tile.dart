@@ -17,13 +17,16 @@ class CommentTile extends StatelessWidget {
     required this.onLikeTap,
     required this.onReplyTap,
     this.onDeleteTap,
+    this.currentUserId,
     this.isReply = false,
   });
 
   final Comment comment;
   final VoidCallback onLikeTap;
-  final VoidCallback onReplyTap;
+  /// Called with the author's username so the banner can show "@username"
+  final void Function() onReplyTap;
   final VoidCallback? onDeleteTap;
+  final String? currentUserId;
   final bool isReply;
 
   @override
@@ -54,21 +57,33 @@ class CommentTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Text
-                RichText(
-                  text: TextSpan(
-                    children: [
-                      TextSpan(
-                        text: '${comment.author.username} ',
-                        style: AppTextStyles.labelSmall
-                            .copyWith(color: textColor),
-                      ),
-                      TextSpan(
-                        text: comment.text,
-                        style: AppTextStyles.bodySmall
-                            .copyWith(color: textColor, height: 1.45),
-                      ),
-                    ],
+                // Comment bubble
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 8.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? AppColors.darkElevated
+                        : AppColors.lightElevated,
+                    borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+                  ),
+                  child: RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: '${comment.author.username} ',
+                          style: AppTextStyles.labelSmall
+                              .copyWith(color: textColor),
+                        ),
+                        TextSpan(
+                          text: comment.text,
+                          style: AppTextStyles.bodySmall
+                              .copyWith(color: textColor, height: 1.45),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 Gap(AppDimens.vxs),
@@ -77,19 +92,29 @@ class CommentTile extends StatelessWidget {
                   children: [
                     Text(
                       comment.createdAt.timeAgo,
-                      style: AppTextStyles.caption.copyWith(color: mutedColor),
+                      style:
+                          AppTextStyles.caption.copyWith(color: mutedColor),
                     ),
                     Gap(AppDimens.lg),
-                    GestureDetector(
-                      onTap: onReplyTap,
-                      child: Text(
-                        AppStrings.reply,
-                        style: AppTextStyles.caption.copyWith(
-                          color: mutedColor,
-                          fontWeight: FontWeight.w700,
+                    if (comment.likesCount > 0) ...[
+                      Text(
+                        '${comment.likesCount.compact} ${AppStrings.likes}',
+                        style: AppTextStyles.caption
+                            .copyWith(color: mutedColor),
+                      ),
+                      Gap(AppDimens.lg),
+                    ],
+                    if (!isReply)
+                      GestureDetector(
+                        onTap: onReplyTap,
+                        child: Text(
+                          AppStrings.reply,
+                          style: AppTextStyles.caption.copyWith(
+                            color: mutedColor,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
-                    ),
                     if (onDeleteTap != null) ...[
                       Gap(AppDimens.lg),
                       GestureDetector(
@@ -111,8 +136,12 @@ class CommentTile extends StatelessWidget {
                   ...comment.replies.map(
                     (reply) => CommentTile(
                       comment: reply,
+                      currentUserId: currentUserId,
                       onLikeTap: () {},
                       onReplyTap: onReplyTap,
+                      onDeleteTap: reply.author.id == currentUserId
+                          ? onDeleteTap
+                          : null,
                       isReply: true,
                     ),
                   ),
@@ -133,13 +162,6 @@ class CommentTile extends StatelessWidget {
                   size: 14.w,
                   color: comment.isLiked ? AppColors.like : mutedColor,
                 ),
-                if (comment.likesCount > 0) ...[
-                  Gap(2.h),
-                  Text(
-                    comment.likesCount.compact,
-                    style: AppTextStyles.overline.copyWith(color: mutedColor),
-                  ),
-                ],
               ],
             ),
           ),

@@ -10,8 +10,8 @@ import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/extensions/extensions.dart';
-import '../../../../core/router/app_router.dart';
 import '../../../../core/providers/current_user_provider.dart';
+import '../../../../core/router/app_router.dart';
 import '../providers/post_detail_provider.dart';
 import '../widgets/comment_input_bar.dart';
 import '../widgets/comment_tile.dart';
@@ -50,8 +50,7 @@ class PostDetailScreen extends ConsumerWidget {
         final post = data.post;
         if (post == null) {
           return Scaffold(
-            appBar:
-                AppBar(leading: BackButton(onPressed: () => context.pop())),
+            appBar: AppBar(leading: BackButton(onPressed: () => context.pop())),
             body: const Center(child: Text('Post topilmadi')),
           );
         }
@@ -72,7 +71,7 @@ class PostDetailScreen extends ConsumerWidget {
               if (isOwnPost)
                 AppIconButton(
                   icon: Icons.delete_outline_rounded,
-                  onTap: () => _confirmDelete(context, ref),
+                  onTap: () => _confirmDeletePost(context, ref),
                 ),
             ],
           ),
@@ -109,6 +108,25 @@ class PostDetailScreen extends ConsumerWidget {
                           ),
                         ),
                       )
+                    else if (data.comments.isEmpty)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            vertical: AppDimens.vxxxl,
+                          ),
+                          child: Center(
+                            child: Text(
+                              AppStrings.noCommentsYet,
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? AppColors.darkTextMuted
+                                    : AppColors.lightTextMuted,
+                              ),
+                            ),
+                          ),
+                        ),
+                      )
                     else
                       SliverList.builder(
                         itemCount: data.comments.length,
@@ -116,13 +134,16 @@ class PostDetailScreen extends ConsumerWidget {
                           final comment = data.comments[index];
                           return CommentTile(
                             comment: comment,
+                            currentUserId: currentUserId,
                             onLikeTap: () =>
                                 notifier.toggleCommentLike(comment.id),
-                            onReplyTap: () =>
-                                notifier.setReplyTo(comment.id),
+                            onReplyTap: () => notifier.setReplyTo(
+                              comment.id,
+                              comment.author.username,
+                            ),
                             onDeleteTap: comment.author.id == currentUserId
-                                ? () =>
-                                    _deleteComment(context, ref, comment.id)
+                                ? () => _confirmDeleteComment(
+                                      context, ref, comment.id)
                                 : null,
                           );
                         },
@@ -139,14 +160,19 @@ class PostDetailScreen extends ConsumerWidget {
                   padding: const EdgeInsets.all(8),
                   child: Text(
                     data.errorMessage!,
-                    style: AppTextStyles.caption.copyWith(color: AppColors.error),
+                    style: AppTextStyles.caption
+                        .copyWith(color: AppColors.error),
                     textAlign: TextAlign.center,
                   ),
                 ),
               if (data.replyToId != null)
-                ReplyBanner(onClear: notifier.clearReply),
+                ReplyBanner(
+                  username: data.replyToUsername ?? '',
+                  onClear: notifier.clearReply,
+                ),
               CommentInputBar(
                 controller: notifier.commentController,
+                focusNode: notifier.commentFocusNode,
                 onSend: notifier.addComment,
               ),
             ],
@@ -156,12 +182,12 @@ class PostDetailScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+  Future<void> _confirmDeletePost(BuildContext context, WidgetRef ref) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Postni o\'chirish'),
-        content: const Text('Bu post butunlay o\'chiriladi. Davom etasizmi?'),
+        title: Text(AppStrings.deletePost),
+        content: Text(AppStrings.deletePostConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -170,7 +196,7 @@ class PostDetailScreen extends ConsumerWidget {
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             child: Text(AppStrings.delete,
-                style: TextStyle(color: AppColors.error)),
+                style: const TextStyle(color: AppColors.error)),
           ),
         ],
       ),
@@ -190,8 +216,33 @@ class PostDetailScreen extends ConsumerWidget {
     }
   }
 
-  Future<void> _deleteComment(
-      BuildContext context, WidgetRef ref, String commentId) async {
-    // TODO: deleteComment use case
+  Future<void> _confirmDeleteComment(
+    BuildContext context,
+    WidgetRef ref,
+    String commentId,
+  ) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(AppStrings.deleteComment),
+        content: Text(AppStrings.deleteCommentConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(AppStrings.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(AppStrings.delete,
+                style: const TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true && context.mounted) {
+      await ref
+          .read(postDetailProvider(postId).notifier)
+          .deleteComment(commentId);
+    }
   }
 }

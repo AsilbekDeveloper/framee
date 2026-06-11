@@ -83,6 +83,11 @@ abstract final class AppStrings {
   static String get reply => _t.post.reply;
   static String get viewAllComments => _t.post.viewAllComments;
   static String get deletePost => _t.post.deletePost;
+  static String get deletePostConfirm => _t.post.deletePostConfirm;
+  static String get deleteComment => _t.post.deleteComment;
+  static String get deleteCommentConfirm => _t.post.deleteCommentConfirm;
+  static String get noCommentsYet => _t.post.noCommentsYet;
+  static String get replyingTo => _t.post.replyingTo;
   static String get reportPost => _t.post.reportPost;
   static String get savePost => _t.post.savePost;
   static String get copyLink => _t.post.copyLink;

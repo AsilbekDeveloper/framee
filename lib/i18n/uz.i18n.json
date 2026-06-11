@@ -1,7 +1,6 @@
 {
   "appName": "Framee",
   "appTagline": "Lahzalaringizni abadiylashtiring.\nHayotingizning ramkasini ulashing.",
-
   "auth": {
     "signIn": "Kirish",
     "signUp": "Ro'yxatdan o'tish",
@@ -27,7 +26,6 @@
     "terms": "Shartlar",
     "privacyPolicy": "Maxfiylik siyosati"
   },
-
   "setup": {
     "setUpProfile": "Profilingizni sozlang",
     "setUpProfileSub": "Dunyo bilan o'zingiz haqingizda biroz ma'lumot ulashing",
@@ -47,13 +45,11 @@
     "saveAndContinue": "Saqlash va davom etish",
     "skipForNow": "Hozircha o'tkazib yuborish"
   },
-
   "home": {
     "title": "Bosh sahifa",
     "newPost": "Yangi post",
     "pullToRefresh": "Yangilash uchun torting"
   },
-
   "post": {
     "post": "Post",
     "createPost": "Yangi post",
@@ -85,9 +81,13 @@
     "postSaved": "Post saqlandi!",
     "postDeleted": "Post o'chirildi",
     "postPublished": "Post chop etildi!",
-    "postReported": "Post shikoyat qilindi"
+    "postReported": "Post shikoyat qilindi",
+    "noCommentsYet": "Hali izohlar yoq",
+    "replyingTo": "Javob yozilmoqda",
+    "deleteComment": "Izohni ochirish",
+    "deleteCommentConfirm": "Bu izoh butunlay ochiriladi.",
+    "deletePostConfirm": "Bu post butunlay ochiriladi."
   },
-
   "search": {
     "search": "Qidirish",
     "discover": "Kashf etish",
@@ -98,7 +98,6 @@
     "followers": "ta kuzatuvchi",
     "mutual": "umumiy"
   },
-
   "profile": {
     "profile": "Profil",
     "posts": "Postlar",
@@ -110,14 +109,12 @@
     "noTaggedPosts": "Teglanmagan postlar yo'q",
     "noTaggedPostsSub": "Odamlar sizni postlarda teglashsa, ular bu yerda ko'rinadi."
   },
-
   "follow": {
     "follow": "Kuzatish",
     "following": "Kuzatilmoqda",
     "followSuccess": "Kuzatilmoqda!",
     "unfollowConfirm": "Kuzatishni to'xtatish"
   },
-
   "notifications": {
     "notifications": "Bildirishnomalar",
     "markAllRead": "Barchasini o'qilgan deb belgilash",
@@ -129,7 +126,6 @@
     "startedFollowingYou": "sizni kuzata boshladi",
     "commented": "izoh qoldirdi:"
   },
-
   "settings": {
     "settings": "Sozlamalar",
     "appearance": "Ko'rinish",
@@ -158,7 +154,6 @@
     "loggedOut": "Tizimdan chiqildi!",
     "accountDeletionRequested": "Hisob o'chirish so'rovi yuborildi"
   },
-
   "editProfile": {
     "save": "Saqlash",
     "profileUpdated": "Profil yangilandi!",
@@ -168,11 +163,9 @@
     "showActivityStatusSub": "Boshqalar qachon faol bo'lganingizni ko'rishi mumkin",
     "accountSettings": "Hisob sozlamalari"
   },
-
   "followers": {
     "searchPlaceholder": "Qidirish..."
   },
-
   "errors": {
     "somethingWentWrong": "Xatolik yuz berdi",
     "noInternetConnection": "Internet aloqasi yo'q",
@@ -180,7 +173,6 @@
     "retry": "Qaytadan",
     "sessionExpired": "Sessiya muddati tugadi. Qayta kiring."
   },
-
   "empty": {
     "noPostsYet": "Hali postlar yo'q",
     "noPostsYetSub": "Biror narsa postlaganingizda, bu yerda ko'rinadi.",
@@ -189,7 +181,6 @@
     "noResults": "Natija topilmadi",
     "noResultsSub": "Boshqa qidiruv so'zini sinab ko'ring."
   },
-
   "misc": {
     "more": "ko'proq",
     "cancel": "Bekor qilish",

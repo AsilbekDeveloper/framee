@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/repositories/post_repository.dart';
 import '../../domain/usecases/add_comment_usecase.dart';
 import '../../domain/usecases/create_post_usecase.dart';
+import '../../domain/usecases/delete_comment_usecase.dart';
 import '../../domain/usecases/delete_post_usecase.dart';
 import '../../domain/usecases/get_comments_usecase.dart';
 import '../../domain/usecases/get_feed_usecase.dart';
@@ -64,6 +65,10 @@ final addCommentUseCaseProvider = Provider<AddCommentUseCase>(
 
 final deletePostUseCaseProvider = Provider<DeletePostUseCase>(
   (ref) => DeletePostUseCase(ref.read(postRepositoryProvider)),
+);
+
+final deleteCommentUseCaseProvider = Provider<DeleteCommentUseCase>(
+  (ref) => DeleteCommentUseCase(ref.read(postRepositoryProvider)),
 );
 
 final getUserPostsUseCaseProvider = Provider<GetUserPostsUseCase>(
