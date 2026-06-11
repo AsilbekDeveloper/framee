@@ -7,6 +7,7 @@ import '../../../../core/components/app_button.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/utils/share_utils.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/extensions/extensions.dart';
 import '../../../../core/providers/current_user_provider.dart';
@@ -77,7 +78,7 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   onEditTap: () => context.push(AppRoutes.editProfile),
                   onShareTap: () =>
-                      context.showSnackBar(AppStrings.profileLinkCopied),
+                      ShareUtils.shareProfile(profile.username),
                   onFollowTap: () =>
                       ref.read(profileProvider(userId).notifier).toggleFollow(),
                 ),

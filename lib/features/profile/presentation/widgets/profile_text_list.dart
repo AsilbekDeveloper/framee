@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/components/post_card.dart';
+import '../../../../core/utils/share_utils.dart';
 import '../../../post/domain/entities/post.dart';
 
 /// Sliver list of text-only posts shown on the profile page.
@@ -32,7 +33,7 @@ class ProfileTextList extends StatelessWidget {
           onCommentTap: () => onPostTap(post.id),
           onUserTap: () => onUserTap(post.author.id),
           onMoreTap: null,
-          onShareTap: null,
+          onShareTap: () => ShareUtils.sharePost(post),
           onSaveTap: null,
         );
       },

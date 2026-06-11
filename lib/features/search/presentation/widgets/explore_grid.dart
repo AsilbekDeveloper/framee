@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 
 import '../../../../../core/components/post_card.dart';
+import '../../../../../core/utils/share_utils.dart';
 import '../../../../../core/components/shared_widgets.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_dimens.dart';
@@ -195,7 +196,7 @@ class ExploreTextTab extends StatelessWidget {
             onCommentTap: () => onPostTap(post.id),
             onUserTap: () => onUserTap(post.author.id),
             onMoreTap: null,
-            onShareTap: null,
+            onShareTap: () => ShareUtils.sharePost(post),
             onSaveTap: null,
           );
         },

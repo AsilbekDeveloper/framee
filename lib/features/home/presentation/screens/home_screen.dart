@@ -7,6 +7,7 @@ import '../../../../core/components/shared_widgets.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/utils/share_utils.dart';
 import '../../../../core/router/app_router.dart';
 import '../providers/home_provider.dart';
 import '../widgets/home_app_bar.dart';
@@ -52,7 +53,7 @@ class HomeScreen extends ConsumerWidget {
                         onCommentTap: () => context.push(
                           AppRoutes.postDetailPath(posts[index].id),
                         ),
-                        onShareTap: () {},
+                        onShareTap: () => ShareUtils.sharePost(posts[index]),
                         onSaveTap: () =>
                             ref.read(homeProvider.notifier).toggleSave(
                                   posts[index].id,

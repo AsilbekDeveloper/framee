@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
-import 'package:share_plus/share_plus.dart';
+import '../../../../core/utils/share_utils.dart';
 
 import '../../../../core/components/post_card.dart';
 import '../../../../core/components/shared_widgets.dart';
@@ -68,7 +68,7 @@ class PostDetailScreen extends ConsumerWidget {
             actions: [
               AppIconButton(
                 icon: Icons.share_outlined,
-                onTap: () => _sharePost(context, post.id),
+                onTap: () => _sharePost(context, post),
               ),
               if (isOwnPost)
                 AppIconButton(
@@ -249,14 +249,12 @@ class PostDetailScreen extends ConsumerWidget {
     }
   }
 
-  void _sharePost(BuildContext context, String postId) {
-    final url = 'https://framee.app/posts/$postId';
-    Share.share(url);
+  void _sharePost(BuildContext context, Post post) {
+    ShareUtils.sharePost(post);
   }
 
   void _copyLink(BuildContext context, String postId) {
-    final url = 'https://framee.app/posts/$postId';
-    Clipboard.setData(ClipboardData(text: url));
+    Clipboard.setData(ClipboardData(text: ShareUtils.postUrl(postId)));
     if (context.mounted) {
       context.showSnackBar(AppStrings.linkCopied);
     }

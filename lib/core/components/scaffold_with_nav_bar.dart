@@ -245,30 +245,37 @@ class _CreateButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Label area height matches _NavItem: SizedBox(3.h) + Text(10.sp, height:1.2).
+    // Using this offset shifts the box center to the same Y as nav item icons.
+    final labelAreaH = 3.h + 10.sp * 1.2;
+
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 46.w,
-              height: 46.w,
-              decoration: BoxDecoration(
-                gradient: AppColors.primaryGradient,
-                borderRadius: BorderRadius.circular(15.r),
-                boxShadow: AppColors.primaryShadow,
+        child: LayoutBuilder(
+          builder: (_, constraints) {
+            // Alignment.y = -1 → top, 0 → center, 1 → bottom.
+            // Shifting up by labelAreaH/2 aligns box center with nav icon centers.
+            final alignY = -labelAreaH / constraints.maxHeight;
+            return Align(
+              alignment: Alignment(0, alignY),
+              child: Container(
+                width: 46.w,
+                height: 46.w,
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  borderRadius: BorderRadius.circular(15.r),
+                  boxShadow: AppColors.primaryShadow,
+                ),
+                child: Icon(
+                  Icons.add_rounded,
+                  color: Colors.white,
+                  size: 24.w,
+                ),
               ),
-              child: Icon(
-                Icons.add_rounded,
-                color: Colors.white,
-                size: 24.w,
-              ),
-            ),
-            // Simulate label height to vertically align the create icon with nav items
-            SizedBox(height: 3.h + 13.h),
-          ],
+            );
+          },
         ),
       ),
     );

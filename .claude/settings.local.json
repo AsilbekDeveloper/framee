@@ -52,7 +52,14 @@
       "Bash(git commit -m ' *)",
       "Bash(dart run *)",
       "Bash(git push *)",
-      "Bash(flutter build *)"
+      "Bash(flutter build *)",
+      "Bash(sed -n '106,112p' lib/i18n/en.i18n.json)",
+      "Bash(sed -n '106,112p' lib/i18n/uz.i18n.json)",
+      "Bash(sed -n '106,112p' lib/i18n/ru.i18n.json)",
+      "Bash(sed -n '1,10p' lib/features/home/presentation/screens/home_screen.dart)",
+      "Bash(sed -n '50,60p' lib/features/home/presentation/screens/home_screen.dart)",
+      "Bash(sed -n '1,10p' lib/features/profile/presentation/screens/profile_screen.dart)",
+      "Bash(sed -n '75,90p' lib/features/profile/presentation/screens/profile_screen.dart)"
     ]
   }
 }
