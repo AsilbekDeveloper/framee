@@ -13,6 +13,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
 import '../providers/profile_setup_provider.dart';
+import '../widgets/setup_header.dart';
 
 class ProfileSetupScreen extends ConsumerStatefulWidget {
   const ProfileSetupScreen({super.key});
@@ -22,7 +23,6 @@ class ProfileSetupScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
-  // 1. Controllers live safely in the UI state
   final _usernameController = TextEditingController();
   final _displayNameController = TextEditingController();
   final _bioController = TextEditingController();
@@ -30,7 +30,6 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
 
   @override
   void dispose() {
-    // 2. Dispose of controllers to prevent memory leaks
     _usernameController.dispose();
     _displayNameController.dispose();
     _bioController.dispose();
@@ -44,11 +43,8 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     final notifier = ref.read(profileSetupProvider.notifier);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // isSaved → home sahifasiga yo'naltirish
     ref.listen<ProfileSetupState>(profileSetupProvider, (_, next) {
-      if (next.isSaved) {
-        context.go(AppRoutes.home);
-      }
+      if (next.isSaved) context.go(AppRoutes.home);
     });
 
     return Scaffold(
@@ -56,9 +52,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header with progress
-            _SetupHeader(step: state.step),
-            // Form
+            SetupHeader(step: state.step),
             Expanded(
               child: SingleChildScrollView(
                 padding: EdgeInsets.symmetric(
@@ -68,7 +62,6 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Avatar upload
                     Center(
                       child: AvatarUpload(
                         imageUrl: state.avatarLocalPath,
@@ -79,9 +72,8 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                     ),
                     Gap(AppDimens.vxxxl),
 
-                    // Username
                     AppTextField(
-                      controller: _usernameController, // Bound to local controller
+                      controller: _usernameController,
                       label: AppStrings.username,
                       hint: AppStrings.usernamePlaceholder,
                       prefixIcon: Icon(
@@ -92,42 +84,31 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                             : AppColors.lightTextMuted,
                       ),
                       suffixIcon: state.isUsernameAvailable == true
-                          ? Icon(
-                        Icons.check_circle_rounded,
-                        color: AppColors.success,
-                        size: AppDimens.iconSm,
-                      )
+                          ? Icon(Icons.check_circle_rounded,
+                              color: AppColors.success, size: AppDimens.iconSm)
                           : state.isUsernameAvailable == false
-                          ? Icon(
-                        Icons.cancel_rounded,
-                        color: AppColors.error,
-                        size: AppDimens.iconSm,
-                      )
-                          : null,
+                              ? Icon(Icons.cancel_rounded,
+                                  color: AppColors.error, size: AppDimens.iconSm)
+                              : null,
                       onChanged: notifier.onUsernameChanged,
                       textInputAction: TextInputAction.next,
                     ),
                     if (state.isUsernameAvailable == true) ...[
                       Gap(AppDimens.vxs),
-                      Text(
-                        AppStrings.usernameAvailable,
-                        style: AppTextStyles.caption
-                            .copyWith(color: AppColors.success),
-                      ),
+                      Text(AppStrings.usernameAvailable,
+                          style: AppTextStyles.caption
+                              .copyWith(color: AppColors.success)),
                     ],
                     if (state.isUsernameAvailable == false) ...[
                       Gap(AppDimens.vxs),
-                      Text(
-                        AppStrings.usernameTaken,
-                        style: AppTextStyles.caption
-                            .copyWith(color: AppColors.error),
-                      ),
+                      Text(AppStrings.usernameTaken,
+                          style: AppTextStyles.caption
+                              .copyWith(color: AppColors.error)),
                     ],
                     Gap(AppDimens.vlg),
 
-                    // Display Name
                     AppTextField(
-                      controller: _displayNameController, // Bound to local controller
+                      controller: _displayNameController,
                       label: AppStrings.displayName,
                       hint: AppStrings.displayNamePlaceholder,
                       prefixIcon: Icon(
@@ -141,7 +122,6 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                     ),
                     Gap(AppDimens.vlg),
 
-                    // Bio
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -168,11 +148,10 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                         ),
                         Gap(6.h),
                         AppTextField(
-                          controller: _bioController, // Bound to local controller
+                          controller: _bioController,
                           hint: AppStrings.bioPlaceholder,
                           maxLines: 3,
                           maxLength: 150,
-                          // Pass the string value directly to the notifier
                           onChanged: notifier.onBioChanged,
                           textInputAction: TextInputAction.next,
                         ),
@@ -192,7 +171,6 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                     ),
                     Gap(AppDimens.vlg),
 
-                    // Website
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -219,7 +197,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                         ),
                         Gap(6.h),
                         AppTextField(
-                          controller: _websiteController, // Bound to local controller
+                          controller: _websiteController,
                           hint: AppStrings.websitePlaceholder,
                           prefixIcon: Icon(
                             Icons.link_rounded,
@@ -238,17 +216,13 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                     AppButton(
                       label: AppStrings.saveAndContinue,
                       onPressed: () async {
-                        // 3. Pass values to the notifier's save method
                         await notifier.save(
                           username: _usernameController.text,
                           displayName: _displayNameController.text,
                           bio: _bioController.text,
                           website: _websiteController.text,
                         );
-
-                        if (context.mounted) {
-                          context.go(AppRoutes.home);
-                        }
+                        if (context.mounted) context.go(AppRoutes.home);
                       },
                       isLoading: state.isSaving,
                     ),
@@ -264,59 +238,6 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _SetupHeader extends StatelessWidget {
-  const _SetupHeader({required this.step});
-  final int step;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-        AppDimens.screenPadding,
-        AppDimens.vxl,
-        AppDimens.screenPadding,
-        0,
-      ),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-        border: Border(
-          bottom: BorderSide(
-            color: isDark
-                ? AppColors.darkBorderSubtle
-                : AppColors.lightBorderSubtle,
-          ),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(AppStrings.setUpProfile, style: AppTextStyles.h2),
-          Gap(4.h),
-          Text(
-            AppStrings.setUpProfileSub,
-            style: AppTextStyles.bodySmall.copyWith(
-              color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-            ),
-          ),
-          Gap(AppDimens.vlg),
-          // Progress bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(2.r),
-            child: LinearProgressIndicator(
-              value: step / 3,
-              backgroundColor:
-              isDark ? AppColors.darkElevated : AppColors.lightElevated,
-              color: AppColors.primary,
-              minHeight: 3.h,
-            ),
-          ),
-        ],
       ),
     );
   }

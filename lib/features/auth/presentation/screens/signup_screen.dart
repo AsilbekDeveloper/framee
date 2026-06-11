@@ -13,6 +13,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/signup_header.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});
@@ -22,7 +23,6 @@ class SignUpScreen extends ConsumerStatefulWidget {
 }
 
 class _SignUpScreenState extends ConsumerState<SignUpScreen> {
-  // 1. UI controllers live safely in the state
   final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -30,7 +30,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
   @override
   void dispose() {
-    // 2. Dispose to prevent memory leaks
     _fullNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -63,21 +62,19 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
   void _submit() {
     ref.read(authProvider.notifier).signUp(
-      fullName: _fullNameController.text,
-      email: _emailController.text,
-      password: _passwordController.text,
-      confirmPassword: _confirmPasswordController.text,
-    );
+          fullName: _fullNameController.text,
+          email: _emailController.text,
+          password: _passwordController.text,
+          confirmPassword: _confirmPasswordController.text,
+        );
   }
 
   @override
   Widget build(BuildContext context) {
     ref.listen<AuthState>(authProvider, (previous, next) {
-      // Muvaffaqiyatli ro'yxatdan o'tish — profile setup sahifasiga
       if (next.isAuthenticated && !(previous?.isAuthenticated ?? false)) {
         context.go(AppRoutes.profileSetup);
       }
-      // Email tasdiqlash kutilmoqda — dialog ko'rsatamiz
       if (next.awaitingEmailConfirmation &&
           !(previous?.awaitingEmailConfirmation ?? false)) {
         _showEmailConfirmationDialog(context);
@@ -93,9 +90,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         child: MaxWidthBox(
           child: Column(
             children: [
-              // Header
-              _SignUpHeader(),
-              // Form
+              const SignUpHeader(),
               Expanded(
                 child: SingleChildScrollView(
                   padding: EdgeInsets.symmetric(
@@ -104,9 +99,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                   ),
                   child: Column(
                     children: [
-                      // Full Name
                       AppTextField(
-                        controller: _fullNameController, // Use local controller
+                        controller: _fullNameController,
                         label: AppStrings.fullName,
                         hint: AppStrings.fullNamePlaceholder,
                         prefixIcon: Icon(
@@ -120,9 +114,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                       ),
                       Gap(AppDimens.vlg),
 
-                      // Email
                       AppTextField(
-                        controller: _emailController, // Use local controller
+                        controller: _emailController,
                         label: AppStrings.email,
                         hint: AppStrings.emailPlaceholder,
                         prefixIcon: Icon(
@@ -137,9 +130,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                       ),
                       Gap(AppDimens.vlg),
 
-                      // Password
                       AppTextField(
-                        controller: _passwordController, // Use local controller
+                        controller: _passwordController,
                         label: AppStrings.password,
                         hint: AppStrings.minPasswordPlaceholder,
                         prefixIcon: Icon(
@@ -155,9 +147,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                       ),
                       Gap(AppDimens.vlg),
 
-                      // Confirm Password
                       AppTextField(
-                        controller: _confirmPasswordController, // Use local controller
+                        controller: _confirmPasswordController,
                         label: AppStrings.confirmPassword,
                         hint: AppStrings.repeatPasswordPlaceholder,
                         prefixIcon: Icon(
@@ -183,8 +174,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                       ],
 
                       Gap(AppDimens.vxl),
-
-                      // Terms
                       Text(
                         AppStrings.bySigningUp,
                         style: AppTextStyles.caption.copyWith(
@@ -198,12 +187,11 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
                       AppButton(
                         label: AppStrings.createAccount,
-                        onPressed: _submit, // Call local submit method
+                        onPressed: _submit,
                         isLoading: state.isLoading,
                       ),
                       Gap(AppDimens.vxxxl),
 
-                      // Footer
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -233,59 +221,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _SignUpHeader extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-        AppDimens.screenPadding,
-        AppDimens.vxl,
-        AppDimens.screenPadding,
-        AppDimens.vxl,
-      ),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-        border: Border(
-          bottom: BorderSide(
-            color: isDark
-                ? AppColors.darkBorderSubtle
-                : AppColors.lightBorderSubtle,
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => context.pop(),
-            child: Icon(
-              Icons.arrow_back_ios_new_rounded,
-              size: AppDimens.iconMd,
-              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-            ),
-          ),
-          Gap(AppDimens.md),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(AppStrings.createAccount, style: AppTextStyles.h3),
-              Gap(2.h),
-              Text(
-                AppStrings.joinFramee,
-                style: AppTextStyles.caption.copyWith(
-                  color: isDark
-                      ? AppColors.darkTextMuted
-                      : AppColors.lightTextMuted,
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }

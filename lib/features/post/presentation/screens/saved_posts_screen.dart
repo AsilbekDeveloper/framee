@@ -123,10 +123,11 @@ class _SavedPostsScreenState extends ConsumerState<SavedPostsScreen> {
           onCommentTap: () =>
               context.push(AppRoutes.postDetailPath(posts[i].id)),
           onSaveTap: () async {
+            final userId = ref.read(currentUserIdProvider);
+            if (userId == null) return;
             await ref.read(toggleSaveUseCaseProvider).call(
                   postId: posts[i].id,
-                  currentUserId:
-                      ref.read(currentUserIdProvider) ?? '',
+                  currentUserId: userId,
                 );
             await _load();
           },

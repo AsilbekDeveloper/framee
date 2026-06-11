@@ -12,6 +12,7 @@ import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../providers/edit_profile_provider.dart';
+import '../widgets/toggle_row.dart';
 
 class EditProfileScreen extends ConsumerWidget {
   const EditProfileScreen({super.key});
@@ -228,14 +229,14 @@ class EditProfileScreen extends ConsumerWidget {
               ),
               child: Column(
                 children: [
-                  _ToggleRow(
+                  ToggleRow(
                     title: AppStrings.privateAccount,
                     subtitle: AppStrings.privateAccountSub,
                     value: state.isPrivate,
                     onChanged: notifier.setPrivate,
                   ),
                   const AppDivider(),
-                  _ToggleRow(
+                  ToggleRow(
                     title: AppStrings.showActivityStatus,
                     subtitle: AppStrings.showActivityStatusSub,
                     value: state.showActivityStatus,
@@ -251,66 +252,3 @@ class EditProfileScreen extends ConsumerWidget {
     );
   }
 }
-
-// â”€â”€â”€ Toggle Row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-class _ToggleRow extends StatelessWidget {
-  const _ToggleRow({
-    required this.title,
-    required this.subtitle,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final String title;
-  final String subtitle;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: AppDimens.lg,
-        vertical: AppDimens.vmd,
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w500,
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
-                  ),
-                ),
-                Gap(3.h),
-                Text(
-                  subtitle,
-                  style: AppTextStyles.caption.copyWith(
-                    color: isDark
-                        ? AppColors.darkTextMuted
-                        : AppColors.lightTextMuted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeThumbColor: AppColors.primary,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-

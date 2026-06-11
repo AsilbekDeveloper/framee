@@ -1,11 +1,8 @@
-﻿import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/components/app_avatar.dart';
 import '../../../../core/components/post_card.dart';
 import '../../../../core/components/shared_widgets.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -16,6 +13,7 @@ import '../../../../core/extensions/extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/providers/current_user_provider.dart';
 import '../providers/post_detail_provider.dart';
+import '../widgets/comment_input_bar.dart';
 import '../widgets/comment_tile.dart';
 
 class PostDetailScreen extends ConsumerWidget {
@@ -38,12 +36,10 @@ class PostDetailScreen extends ConsumerWidget {
             children: [
               const Icon(Icons.error_outline, size: 48, color: AppColors.error),
               const Gap(12),
-              Text(AppStrings.errorOccurred,
-                  style: AppTextStyles.bodyMedium),
+              Text(AppStrings.errorOccurred, style: AppTextStyles.bodyMedium),
               const Gap(8),
               TextButton(
-                onPressed: () =>
-                    ref.invalidate(postDetailProvider(postId)),
+                onPressed: () => ref.invalidate(postDetailProvider(postId)),
                 child: Text(AppStrings.retry),
               ),
             ],
@@ -54,14 +50,14 @@ class PostDetailScreen extends ConsumerWidget {
         final post = data.post;
         if (post == null) {
           return Scaffold(
-            appBar: AppBar(leading: BackButton(onPressed: () => context.pop())),
+            appBar:
+                AppBar(leading: BackButton(onPressed: () => context.pop())),
             body: const Center(child: Text('Post topilmadi')),
           );
         }
 
         final notifier = ref.read(postDetailProvider(postId).notifier);
-        final currentUserId =
-            ref.read(currentUserIdProvider);
+        final currentUserId = ref.read(currentUserIdProvider);
         final isOwnPost = post.author.id == currentUserId;
 
         return Scaffold(
@@ -101,7 +97,7 @@ class PostDetailScreen extends ConsumerWidget {
                     ),
                     SliverToBoxAdapter(
                       child: SectionLabel(
-                        '${AppStrings.comments} Â· ${post.commentsCount}',
+                        '${AppStrings.comments} · ${post.commentsCount}',
                       ),
                     ),
                     if (data.isLoadingComments)
@@ -122,10 +118,11 @@ class PostDetailScreen extends ConsumerWidget {
                             comment: comment,
                             onLikeTap: () =>
                                 notifier.toggleCommentLike(comment.id),
-                            onReplyTap: () => notifier.setReplyTo(comment.id),
+                            onReplyTap: () =>
+                                notifier.setReplyTo(comment.id),
                             onDeleteTap: comment.author.id == currentUserId
-                                ? () => _deleteComment(
-                                      context, ref, comment.id)
+                                ? () =>
+                                    _deleteComment(context, ref, comment.id)
                                 : null,
                           );
                         },
@@ -136,23 +133,19 @@ class PostDetailScreen extends ConsumerWidget {
                   ],
                 ),
               ),
-              // Error message
               if (data.hasError)
                 Container(
                   color: AppColors.error.withValues(alpha: 0.1),
                   padding: const EdgeInsets.all(8),
                   child: Text(
                     data.errorMessage!,
-                    style: AppTextStyles.caption
-                        .copyWith(color: AppColors.error),
+                    style: AppTextStyles.caption.copyWith(color: AppColors.error),
                     textAlign: TextAlign.center,
                   ),
                 ),
-              // Reply banner
               if (data.replyToId != null)
-                _ReplyBanner(onClear: notifier.clearReply),
-              // Comment input
-              _CommentInputBar(
+                ReplyBanner(onClear: notifier.clearReply),
+              CommentInputBar(
                 controller: notifier.commentController,
                 onSend: notifier.addComment,
               ),
@@ -199,129 +192,6 @@ class PostDetailScreen extends ConsumerWidget {
 
   Future<void> _deleteComment(
       BuildContext context, WidgetRef ref, String commentId) async {
-    // TODO: deleteComment use case â€” qo'shiladi
+    // TODO: deleteComment use case
   }
 }
-
-// â”€â”€â”€ Reply Banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-class _ReplyBanner extends StatelessWidget {
-  const _ReplyBanner({required this.onClear});
-  final VoidCallback onClear;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: AppDimens.lg,
-        vertical: AppDimens.vsm,
-      ),
-      color: isDark ? AppColors.darkElevated : AppColors.lightElevated,
-      child: Row(
-        children: [
-          Text(
-            'Javob yozilmoqda...',
-            style: AppTextStyles.caption.copyWith(color: AppColors.primary),
-          ),
-          const Spacer(),
-          GestureDetector(
-            onTap: onClear,
-            child: Icon(Icons.close_rounded,
-                size: 16.w,
-                color: isDark
-                    ? AppColors.darkTextMuted
-                    : AppColors.lightTextMuted),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// â”€â”€â”€ Comment Input Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-class _CommentInputBar extends StatelessWidget {
-  const _CommentInputBar({
-    required this.controller,
-    required this.onSend,
-  });
-
-  final TextEditingController controller;
-  final AsyncCallback onSend;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-        AppDimens.lg,
-        AppDimens.vmd,
-        AppDimens.lg,
-        AppDimens.vmd + MediaQuery.paddingOf(context).bottom,
-      ),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-        border: Border(
-          top: BorderSide(
-            color: isDark
-                ? AppColors.darkBorderSubtle
-                : AppColors.lightBorderSubtle,
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          const AppAvatar(initials: 'A', size: AvatarSize.xs),
-          Gap(AppDimens.md),
-          Expanded(
-            child: Container(
-              height: 40.h,
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.darkInput : AppColors.lightInput,
-                borderRadius: BorderRadius.circular(AppDimens.radiusFull),
-              ),
-              child: TextField(
-                controller: controller,
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.lightTextPrimary,
-                ),
-                decoration: InputDecoration(
-                  hintText: AppStrings.addCommentPlaceholder,
-                  hintStyle: AppTextStyles.caption.copyWith(
-                    color: isDark
-                        ? AppColors.darkTextMuted
-                        : AppColors.lightTextMuted,
-                  ),
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 16.w,
-                    vertical: 10.h,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Gap(AppDimens.md),
-          GestureDetector(
-            onTap: onSend,
-            child: Container(
-              width: 40.w,
-              height: 40.w,
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                shape: BoxShape.circle,
-                boxShadow: AppColors.primaryShadow,
-              ),
-              child: Icon(Icons.send_rounded, size: 18.w, color: Colors.white),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-

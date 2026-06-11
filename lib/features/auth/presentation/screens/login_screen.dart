@@ -13,6 +13,8 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/forgot_password_dialog.dart';
+import '../widgets/google_icon.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -33,15 +35,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _showForgotPasswordDialog(BuildContext ctx) {
-    // Controller dialog ichida boshqariladi — StatefulBuilder orqali dispose qilinadi
-    final emailCtrl = TextEditingController(text: _emailController.text);
     showDialog<void>(
       context: ctx,
-      builder: (_) => _ForgotPasswordDialog(
+      builder: (_) => ForgotPasswordDialog(
         initialEmail: _emailController.text,
         onSend: (email) {
-          emailCtrl.dispose();
-          // TODO: Supabase resetPasswordForEmail(email) integratsiyasi
           ScaffoldMessenger.of(ctx).showSnackBar(
             const SnackBar(
               content: Text('Parol tiklash havolasi emailingizga yuborildi'),
@@ -54,16 +52,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   void _submit() {
     ref.read(authProvider.notifier).signIn(
-      email: _emailController.text,
-      password: _passwordController.text,
-    );
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
   }
 
   @override
   Widget build(BuildContext context) {
     ref.listen<AuthState>(authProvider, (previous, next) {
-      // Faqat muvaffaqiyatli login bo'lgandagina navigate qilamiz.
-      // Xato holati alohida UI'da ko'rsatiladi.
       if (next.isAuthenticated && !(previous?.isAuthenticated ?? false)) {
         context.go(AppRoutes.home);
       }
@@ -84,14 +80,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Logo
                 Center(
                   child: Column(
                     children: [
-                      Text(
-                        AppStrings.appName,
-                        style: AppTextStyles.displayMedium,
-                      ),
+                      Text(AppStrings.appName,
+                          style: AppTextStyles.displayMedium),
                       Gap(AppDimens.vsm),
                       Text(
                         AppStrings.welcomeBack,
@@ -106,7 +99,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 Gap(AppDimens.vmassive),
 
-                // Email
                 AppTextField(
                   controller: _emailController,
                   label: AppStrings.email,
@@ -123,7 +115,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 Gap(AppDimens.vlg),
 
-                // Password
                 AppTextField(
                   controller: _passwordController,
                   label: AppStrings.password,
@@ -141,13 +132,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   onSubmitted: (_) => _submit(),
                 ),
 
-                // Error message
                 if (state.errorMessage != null) ...[
                   Gap(AppDimens.vsm),
                   Text(
                     state.errorMessage!,
-                    style: AppTextStyles.caption
-                        .copyWith(color: AppColors.error),
+                    style: AppTextStyles.caption.copyWith(color: AppColors.error),
                   ),
                 ],
 
@@ -172,7 +161,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 Gap(AppDimens.vxl),
 
-                // Divider
                 Row(
                   children: [
                     Expanded(
@@ -204,16 +192,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 Gap(AppDimens.vxl),
 
-                // Google
                 AppButton(
                   label: AppStrings.continueWithGoogle,
                   variant: AppButtonVariant.secondary,
                   onPressed: ref.read(authProvider.notifier).signInWithGoogle,
-                  leadingIcon: _GoogleIcon(),
+                  leadingIcon: const GoogleIcon(),
                 ),
                 Gap(AppDimens.vxxxl),
 
-                // Footer
                 Center(
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -245,123 +231,4 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ),
     );
   }
-}
-
-// ── Forgot Password Dialog ────────────────────────────────────────────────────
-
-class _ForgotPasswordDialog extends StatefulWidget {
-  const _ForgotPasswordDialog({
-    required this.initialEmail,
-    required this.onSend,
-  });
-
-  final String initialEmail;
-  final ValueChanged<String> onSend;
-
-  @override
-  State<_ForgotPasswordDialog> createState() => _ForgotPasswordDialogState();
-}
-
-class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
-  late final TextEditingController _emailCtrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _emailCtrl = TextEditingController(text: widget.initialEmail);
-  }
-
-  @override
-  void dispose() {
-    _emailCtrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Parolni tiklash'),
-      content: TextField(
-        controller: _emailCtrl,
-        keyboardType: TextInputType.emailAddress,
-        autofocus: true,
-        decoration: const InputDecoration(
-          labelText: 'Email manzilingiz',
-          hintText: 'example@mail.com',
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => context.pop(),
-          child: const Text('Bekor qilish'),
-        ),
-        TextButton(
-          onPressed: () {
-            final email = _emailCtrl.text.trim();
-            context.pop();
-            widget.onSend(email);
-          },
-          child: const Text('Yuborish'),
-        ),
-      ],
-    );
-  }
-}
-
-// ── Google Icon ───────────────────────────────────────────────────────────────
-
-class _GoogleIcon extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 20.w,
-      height: 20.w,
-      child: const _GooglePainter(),
-    );
-  }
-}
-
-class _GooglePainter extends StatelessWidget {
-  const _GooglePainter();
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(painter: _GoogleLogoPainter());
-  }
-}
-
-class _GoogleLogoPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..style = PaintingStyle.fill;
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2;
-
-    paint.color = const Color(0xFF4285F4);
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      -1.5708,
-      3.1416,
-      true,
-      paint,
-    );
-    paint.color = const Color(0xFFEA4335);
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius),
-      -1.5708,
-      -3.1416,
-      true,
-      paint,
-    );
-    paint.color = Colors.white;
-    canvas.drawCircle(center, radius * 0.65, paint);
-    paint.color = const Color(0xFF4285F4);
-    canvas.drawRect(
-      Rect.fromLTWH(center.dx, center.dy - radius * 0.15, radius, radius * 0.3),
-      paint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

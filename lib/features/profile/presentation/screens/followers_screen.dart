@@ -1,20 +1,18 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/components/app_avatar.dart';
 import '../../../../core/components/app_button.dart';
 import '../../../../core/components/app_text_field.dart';
-import '../../../../core/components/shared_widgets.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
-import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../follow/domain/entities/follow.dart';
 import '../providers/followers_provider.dart';
+import '../widgets/followers_list.dart';
 
 class FollowersScreen extends ConsumerStatefulWidget {
   const FollowersScreen({
@@ -75,7 +73,7 @@ class _FollowersScreenState extends ConsumerState<FollowersScreen>
                     children: [
                       Text(AppStrings.followersLabel),
                       Gap(6.w),
-                      _CountBadge(
+                      CountBadge(
                         count: followersCount.toString(),
                         isActive: _tabController.index == 0,
                       ),
@@ -88,7 +86,7 @@ class _FollowersScreenState extends ConsumerState<FollowersScreen>
                     children: [
                       Text(AppStrings.followingLabel),
                       Gap(6.w),
-                      _CountBadge(
+                      CountBadge(
                         count: followingCount.toString(),
                         isActive: _tabController.index == 1,
                       ),
@@ -127,7 +125,6 @@ class _FollowersScreenState extends ConsumerState<FollowersScreen>
         ),
         data: (state) => Column(
           children: [
-            // Search
             Padding(
               padding: EdgeInsets.fromLTRB(
                 AppDimens.lg,
@@ -138,24 +135,23 @@ class _FollowersScreenState extends ConsumerState<FollowersScreen>
               child: AppSearchBar(
                 controller: _searchController,
                 hint: AppStrings.searchPlaceholder,
-                onChanged: (v) => setState(() => _searchQuery = v.toLowerCase()),
+                onChanged: (v) =>
+                    setState(() => _searchQuery = v.toLowerCase()),
                 onClear: () => setState(() => _searchQuery = ''),
               ),
             ),
-
-            // Lists
             Expanded(
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _UserList(
+                  FollowerUserList(
                     users: _filter(state.followers),
                     onUserTap: (id) =>
                         context.push(AppRoutes.userProfilePath(id)),
                     onFollowToggle: (id) =>
                         notifier.toggleFollow(id, isFollowers: true),
                   ),
-                  _UserList(
+                  FollowerUserList(
                     users: _filter(state.following),
                     onUserTap: (id) =>
                         context.push(AppRoutes.userProfilePath(id)),
@@ -182,152 +178,3 @@ class _FollowersScreenState extends ConsumerState<FollowersScreen>
         .toList();
   }
 }
-
-// â”€â”€â”€ Count Badge â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-class _CountBadge extends StatelessWidget {
-  const _CountBadge({required this.count, required this.isActive});
-  final String count;
-  final bool isActive;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
-      decoration: BoxDecoration(
-        color: isActive
-            ? AppColors.primaryMuted
-            : (isDark ? AppColors.darkElevated : AppColors.lightElevated),
-        borderRadius: BorderRadius.circular(20.r),
-      ),
-      child: Text(
-        count,
-        style: AppTextStyles.overlineBold.copyWith(
-          color: isActive
-              ? AppColors.primary
-              : (isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted),
-        ),
-      ),
-    );
-  }
-}
-
-// â”€â”€â”€ User List â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-class _UserList extends StatelessWidget {
-  const _UserList({
-    required this.users,
-    required this.onUserTap,
-    required this.onFollowToggle,
-  });
-
-  final List<FollowUser> users;
-  final ValueChanged<String> onUserTap;
-  final ValueChanged<String> onFollowToggle;
-
-  @override
-  Widget build(BuildContext context) {
-    if (users.isEmpty) {
-      return EmptyState(
-        icon: Icons.group_outlined,
-        title: AppStrings.noResults,
-      );
-    }
-    return ListView.separated(
-      itemCount: users.length,
-      separatorBuilder: (_, _) => const AppDivider(),
-      itemBuilder: (context, i) => _FollowerRow(
-        user: users[i],
-        onTap: () => onUserTap(users[i].id),
-        onFollowToggle: () => onFollowToggle(users[i].id),
-      ),
-    );
-  }
-}
-
-// â”€â”€â”€ Follower Row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-class _FollowerRow extends StatelessWidget {
-  const _FollowerRow({
-    required this.user,
-    required this.onTap,
-    required this.onFollowToggle,
-  });
-
-  final FollowUser user;
-  final VoidCallback onTap;
-  final VoidCallback onFollowToggle;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: AppDimens.lg,
-          vertical: AppDimens.vmd,
-        ),
-        child: Row(
-          children: [
-            AppAvatar(
-              imageUrl: user.avatarUrl,
-              initials: user.initials,
-              size: AvatarSize.md,
-            ),
-            Gap(AppDimens.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          user.displayName,
-                          style: AppTextStyles.username.copyWith(
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.lightTextPrimary,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (user.isVerified) ...[
-                        Gap(4.w),
-                        Icon(
-                          Icons.verified_rounded,
-                          size: 14.w,
-                          color: AppColors.primary,
-                        ),
-                      ],
-                    ],
-                  ),
-                  Gap(2.h),
-                  Text(
-                    '@${user.username}',
-                    style: AppTextStyles.caption.copyWith(
-                      color: isDark
-                          ? AppColors.darkTextMuted
-                          : AppColors.lightTextMuted,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Gap(AppDimens.sm),
-            FollowButton(
-              isFollowing: user.isFollowing || user.isRequested,
-              label: user.isRequested ? 'Requested' : null,
-              onTap: onFollowToggle,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-
