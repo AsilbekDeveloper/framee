@@ -2,6 +2,20 @@
 
 A full-featured social media mobile app built with Flutter and Supabase. Users can create posts with images and captions, follow others, explore content, interact via likes and nested comments, and share posts or profiles via deep links.
 
+## Screenshots
+
+| Home | Profile | Search |
+|------|---------|--------|
+| ![Home](assets/screenshots/home.jpg) | ![Profile](assets/screenshots/profile.jpg) | ![Search](assets/screenshots/search.jpg) |
+
+| Create Post | Notifications | Settings |
+|-------------|---------------|----------|
+| ![Create Post](assets/screenshots/create_post.jpg) | ![Notifications](assets/screenshots/notification.jpg) | ![Settings](assets/screenshots/settings.jpg) |
+
+| Edit Profile |
+|-------------|
+| ![Edit Profile](assets/screenshots/edit_profile.jpg) |
+
 ---
 
 ## Features

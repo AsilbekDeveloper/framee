@@ -14,6 +14,7 @@ import '../../../../core/extensions/extensions.dart';
 import '../../../../core/providers/current_user_provider.dart';
 import '../../../../core/router/app_router.dart';
 import '../providers/profile_provider.dart';
+import '../providers/user_posts_provider.dart';
 import '../widgets/profile_app_bar.dart';
 import '../widgets/profile_info.dart';
 import '../widgets/profile_tabs.dart';
@@ -63,8 +64,10 @@ class ProfileScreen extends ConsumerWidget {
         ),
         body: RefreshIndicator(
           color: AppColors.primary,
-          onRefresh: () =>
-              ref.read(profileProvider(userId).notifier).refresh(),
+          onRefresh: () => Future.wait([
+                ref.read(profileProvider(userId).notifier).refresh(),
+                ref.read(userPostsProvider(profile.id).notifier).refresh(),
+              ]),
           child: CustomScrollView(
             slivers: [
               SliverToBoxAdapter(

@@ -41,23 +41,34 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         return const Err(ProfileNotFoundFailure());
       }
 
-      // Determine is_following from the follows table
+      // Determine follow status from the follows table
       bool isFollowing = false;
+      bool isFollowingMe = false;
       if (currentUserId != null && currentUserId != userId) {
-        final followRow = await _client
+        final followRows = await _client
             .from('follows')
-            .select('status')
-            .eq('follower_id', currentUserId)
-            .eq('following_id', userId)
-            .maybeSingle();
-        isFollowing = followRow != null &&
-            followRow['status'] == 'accepted';
+            .select('follower_id, status')
+            .or('and(follower_id.eq.$currentUserId,following_id.eq.$userId),and(follower_id.eq.$userId,following_id.eq.$currentUserId)');
+
+        for (final row in followRows) {
+          if (row['follower_id'] == currentUserId &&
+              row['status'] == 'accepted') {
+            isFollowing = true;
+          }
+          if (row['follower_id'] == userId && row['status'] == 'accepted') {
+            isFollowingMe = true;
+          }
+        }
         AppLogger.d(
-          'ProfileDS: follow status — $isFollowing (status: ${followRow?['status']})',
+          'ProfileDS: follow status — isFollowing:$isFollowing isFollowingMe:$isFollowingMe',
         );
       }
 
-      final dto = ProfileDto.fromJson(data, isFollowing: isFollowing);
+      final dto = ProfileDto.fromJson(
+        data,
+        isFollowing: isFollowing,
+        isFollowingMe: isFollowingMe,
+      );
 
       // No avatar stored, and this is the current user — fall back to auth metadata
       // (only accept http URLs, not local file paths)
@@ -81,6 +92,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
             isPrivate: dto.isPrivate,
             isVerified: dto.isVerified,
             isFollowing: isFollowing,
+            isFollowingMe: isFollowingMe,
             createdAt: dto.createdAt,
             updatedAt: dto.updatedAt,
           ));

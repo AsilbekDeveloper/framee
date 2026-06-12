@@ -353,12 +353,14 @@ class FollowButton extends StatelessWidget {
     super.key,
     required this.isFollowing,
     required this.onTap,
+    this.isFollowBack = false,
     this.isLoading = false,
     this.label,
   });
 
   final bool isFollowing;
   final VoidCallback onTap;
+  final bool isFollowBack;
   final bool isLoading;
   /// Optional override label (e.g. 'Requested')
   final String? label;
@@ -404,7 +406,7 @@ class FollowButton extends StatelessWidget {
                   ),
                 )
               : Text(
-                  label ?? (isFollowing ? AppStrings.following : AppStrings.follow),
+                  label ?? (isFollowing ? AppStrings.following : isFollowBack ? AppStrings.followBack : AppStrings.follow),
                   style: AppTextStyles.buttonSmall.copyWith(
                     color: isFollowing
                         ? (isDark

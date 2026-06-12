@@ -150,6 +150,7 @@ class ProfileInfo extends StatelessWidget {
                 Expanded(
                   child: FollowButton(
                     isFollowing: profile.isFollowing,
+                    isFollowBack: profile.isFollowingMe && !profile.isFollowing,
                     onTap: onFollowTap,
                   ),
                 ),

@@ -121,6 +121,7 @@ abstract final class AppStrings {
 
   // ─── Follow ───────────────────────────────────────────────
   static String get follow => _t.follow.follow;
+  static String get followBack => 'Follow Back';
   static String get following => _t.follow.following;
   static String get followSuccess => _t.follow.followSuccess;
   static String get unfollowConfirm => _t.follow.unfollowConfirm;

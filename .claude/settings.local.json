@@ -59,7 +59,10 @@
       "Bash(sed -n '1,10p' lib/features/home/presentation/screens/home_screen.dart)",
       "Bash(sed -n '50,60p' lib/features/home/presentation/screens/home_screen.dart)",
       "Bash(sed -n '1,10p' lib/features/profile/presentation/screens/profile_screen.dart)",
-      "Bash(sed -n '75,90p' lib/features/profile/presentation/screens/profile_screen.dart)"
+      "Bash(sed -n '75,90p' lib/features/profile/presentation/screens/profile_screen.dart)",
+      "Bash(xargs grep -l \"follow\")",
+      "Bash(flutter run *)",
+      "Bash(dir \"C:\\\\FlutterProjects\\\\framee\\\\assets\\\\screenshots\")"
     ]
   }
 }

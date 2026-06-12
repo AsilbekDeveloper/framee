@@ -7,6 +7,8 @@ import '../../../../core/providers/current_user_provider.dart';
 import '../../../home/presentation/providers/home_provider.dart';
 import '../../../post/data/providers/post_data_providers.dart';
 import '../../../post/domain/entities/post.dart';
+import '../../../profile/presentation/providers/profile_provider.dart';
+import '../../../profile/presentation/providers/user_posts_provider.dart';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -300,6 +302,12 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
     switch (result) {
       case Ok():
         ref.invalidate(homeProvider);
+        final userId = _currentUserId;
+        if (userId != null) {
+          ref.invalidate(userPostsProvider(userId));
+          ref.invalidate(profileProvider(userId));
+          ref.invalidate(profileProvider(null));
+        }
       case Err(:final failure):
         throw failure;
     }

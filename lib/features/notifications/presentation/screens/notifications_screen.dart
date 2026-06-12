@@ -11,6 +11,7 @@ import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../follow/domain/entities/follow.dart';
 import '../../domain/entities/notification.dart';
 import '../providers/notifications_provider.dart';
 import '../widgets/notif_tile.dart';
@@ -92,8 +93,7 @@ class NotificationsScreen extends ConsumerWidget {
                       notifier.markRead(unread[i].id);
                       _navigate(context, unread[i]);
                     },
-                    onFollowTap: () =>
-                        notifier.acceptFollowRequest(unread[i].actor.id),
+                    onFollowTap: () => _onFollowTap(notifier, unread[i]),
                   ),
                 ),
               ],
@@ -106,8 +106,7 @@ class NotificationsScreen extends ConsumerWidget {
                   itemBuilder: (context, i) => NotifTile(
                     notif: read[i],
                     onTap: () => _navigate(context, read[i]),
-                    onFollowTap: () =>
-                        notifier.acceptFollowRequest(read[i].actor.id),
+                    onFollowTap: () => _onFollowTap(notifier, read[i]),
                   ),
                 ),
               ],
@@ -117,6 +116,15 @@ class NotificationsScreen extends ConsumerWidget {
         },
       ),
     );
+  }
+
+  void _onFollowTap(NotificationsNotifier notifier, AppNotification notif) {
+    if (notif.type == NotificationType.followRequest) {
+      notifier.acceptFollowRequest(notif.actor.id);
+    } else {
+      final isFollowing = notif.actor.followStatus == FollowStatus.following;
+      notifier.toggleFollow(notif.actor.id, isFollowing);
+    }
   }
 
   void _navigate(BuildContext context, AppNotification notif) {

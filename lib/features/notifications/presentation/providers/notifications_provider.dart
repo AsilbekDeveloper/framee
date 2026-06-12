@@ -122,6 +122,40 @@ class NotificationsNotifier extends AsyncNotifier<List<AppNotification>> {
     }
   }
 
+  /// Toggles follow/unfollow for a `follow`-type notification.
+  Future<void> toggleFollow(String actorId, bool isCurrentlyFollowing) async {
+    final userId = _userId;
+    if (userId == null) return;
+
+    if (isCurrentlyFollowing) {
+      await ref.read(unfollowUserUseCaseProvider).call(
+            currentUserId: userId,
+            targetUserId: actorId,
+          );
+      state.whenData((notifications) {
+        state = AsyncData(notifications.map((n) {
+          if (n.actor.id != actorId) return n;
+          return n.copyWith(
+            actor: n.actor.copyWith(followStatus: FollowStatus.none),
+          );
+        }).toList());
+      });
+    } else {
+      await ref.read(followUserUseCaseProvider).call(
+            currentUserId: userId,
+            targetUserId: actorId,
+          );
+      state.whenData((notifications) {
+        state = AsyncData(notifications.map((n) {
+          if (n.actor.id != actorId) return n;
+          return n.copyWith(
+            actor: n.actor.copyWith(followStatus: FollowStatus.following),
+          );
+        }).toList());
+      });
+    }
+  }
+
   /// Accepts a follow request triggered from within a notification.
   Future<void> acceptFollowRequest(String actorId) async {
     final userId = _userId;
