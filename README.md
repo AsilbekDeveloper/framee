@@ -2,6 +2,8 @@
 
 A full-featured social media mobile app built with Flutter and Supabase. Users can create posts with images and captions, follow others, explore content, interact via likes and nested comments, and share posts or profiles via deep links.
 
+---
+
 ## Screenshots
 
 | Home | Profile | Search |
@@ -35,7 +37,7 @@ A full-featured social media mobile app built with Flutter and Supabase. Users c
 ## Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
+|-------|------------|
 | UI | Flutter 3.x / Dart 3.x |
 | State Management | Riverpod 2 (`AsyncNotifier`, `FamilyAsyncNotifier`) |
 | Navigation | go_router 14 (Navigator 2.0) |
@@ -85,28 +87,22 @@ lib/
 ## Setup
 
 ### 1. Clone and install dependencies
+
 ```bash
-git clone https://github.com/your-username/framee.git
+git clone https://github.com/AsilbekDeveloper/framee.git
 cd framee
 flutter pub get
 ```
 
-### 2. Configure Supabase
+### 2. Configure Firebase (for push notifications)
 
-Create a `.env` or update `lib/core/config/supabase_config.dart` with your project credentials:
-
-```dart
-static const supabaseUrl = 'https://your-project.supabase.co';
-static const supabaseAnonKey = 'your-anon-key';
-```
-
-### 3. Configure Firebase (for push notifications)
 ```bash
 dart pub global activate flutterfire_cli
 flutterfire configure
 ```
 
-### 4. Run
+### 3. Run
+
 ```bash
 # Debug
 flutter run
