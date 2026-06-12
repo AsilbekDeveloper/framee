@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:framee/features/post/domain/entities/post.dart';
 import 'package:gap/gap.dart';
@@ -88,7 +87,6 @@ class PostDetailScreen extends ConsumerWidget {
                         post: post,
                         onLikeTap: () => notifier.toggleLike(),
                         onCommentTap: null,
-                        onShareTap: () => _copyLink(context, post.id),
                         onSaveTap: () => notifier.toggleSave(),
                         onMoreTap: null,
                         onUserTap: () => context.push(
@@ -149,6 +147,8 @@ class PostDetailScreen extends ConsumerWidget {
                                 ? () => _confirmDeleteComment(
                                       context, ref, comment.id)
                                 : null,
+                            onReplyDeleteTap: (replyId) =>
+                                _confirmDeleteComment(context, ref, replyId),
                           );
                         },
                       ),
@@ -189,16 +189,16 @@ class PostDetailScreen extends ConsumerWidget {
   Future<void> _confirmDeletePost(BuildContext context, WidgetRef ref) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Text(AppStrings.deletePost),
         content: Text(AppStrings.deletePostConfirm),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
             child: Text(AppStrings.cancel),
           ),
           TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
             child: Text(AppStrings.delete,
                 style: const TextStyle(color: AppColors.error)),
           ),
@@ -227,16 +227,16 @@ class PostDetailScreen extends ConsumerWidget {
   ) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Text(AppStrings.deleteComment),
         content: Text(AppStrings.deleteCommentConfirm),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
+            onPressed: () => Navigator.of(dialogContext).pop(false),
             child: Text(AppStrings.cancel),
           ),
           TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
             child: Text(AppStrings.delete,
                 style: const TextStyle(color: AppColors.error)),
           ),
@@ -254,10 +254,4 @@ class PostDetailScreen extends ConsumerWidget {
     ShareUtils.sharePost(post);
   }
 
-  void _copyLink(BuildContext context, String postId) {
-    Clipboard.setData(ClipboardData(text: ShareUtils.postUrl(postId)));
-    if (context.mounted) {
-      context.showSnackBar(AppStrings.linkCopied);
-    }
-  }
 }

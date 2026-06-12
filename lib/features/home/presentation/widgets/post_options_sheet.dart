@@ -15,11 +15,13 @@ class PostOptionsSheet extends StatelessWidget {
     required this.postId,
     required this.isSaved,
     required this.onToggleSave,
+    this.onDelete,
   });
 
   final String postId;
   final bool isSaved;
   final VoidCallback onToggleSave;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -77,13 +79,18 @@ class PostOptionsSheet extends StatelessWidget {
             label: AppStrings.reportPost,
             onTap: () => context.pop(),
           ),
-          const AppDivider(),
-          SheetOption(
-            icon: Icons.delete_outline_rounded,
-            label: AppStrings.deletePost,
-            color: AppColors.error,
-            onTap: () => context.pop(),
-          ),
+          if (onDelete != null) ...[
+            const AppDivider(),
+            SheetOption(
+              icon: Icons.delete_outline_rounded,
+              label: AppStrings.deletePost,
+              color: AppColors.error,
+              onTap: () {
+                context.pop();
+                onDelete!();
+              },
+            ),
+          ],
           Gap(AppDimens.vlg + MediaQuery.paddingOf(context).bottom),
         ],
       ),

@@ -20,6 +20,7 @@ class ProfileInfo extends StatelessWidget {
     required this.onFollowingTap,
     required this.onEditTap,
     required this.onShareTap,
+    required this.onCopyLinkTap,
     required this.onFollowTap,
   });
 
@@ -29,6 +30,7 @@ class ProfileInfo extends StatelessWidget {
   final VoidCallback onFollowingTap;
   final VoidCallback onEditTap;
   final VoidCallback onShareTap;
+  final VoidCallback onCopyLinkTap;
   final VoidCallback onFollowTap;
 
   @override
@@ -132,7 +134,7 @@ class ProfileInfo extends StatelessWidget {
                   child: SizedBox(
                     height: AppDimens.buttonHeightSm,
                     child: OutlinedButton(
-                      onPressed: onShareTap,
+                      onPressed: () => _showProfileShareSheet(context),
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(AppStrings.shareProfile),
@@ -156,7 +158,7 @@ class ProfileInfo extends StatelessWidget {
                   child: SizedBox(
                     height: AppDimens.buttonHeightSm,
                     child: OutlinedButton(
-                      onPressed: onShareTap,
+                      onPressed: () => _showProfileShareSheet(context),
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(AppStrings.shareProfile),
@@ -168,6 +170,97 @@ class ProfileInfo extends StatelessWidget {
             ),
           Gap(AppDimens.vmd),
         ],
+      ),
+    );
+  }
+
+  void _showProfileShareSheet(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor =
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final mutedColor =
+        isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted;
+    final bgColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: bgColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppDimens.radiusXl),
+        ),
+      ),
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: AppDimens.vlg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36.w,
+                height: 4.h,
+                margin: EdgeInsets.only(bottom: AppDimens.vlg),
+                decoration: BoxDecoration(
+                  color: mutedColor.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              _ProfileShareOption(
+                icon: Icons.share_outlined,
+                label: AppStrings.shareProfile,
+                textColor: textColor,
+                onTap: () {
+                  Navigator.pop(context);
+                  onShareTap();
+                },
+              ),
+              _ProfileShareOption(
+                icon: Icons.link_rounded,
+                label: AppStrings.copyLink,
+                textColor: textColor,
+                onTap: () {
+                  Navigator.pop(context);
+                  onCopyLinkTap();
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileShareOption extends StatelessWidget {
+  const _ProfileShareOption({
+    required this.icon,
+    required this.label,
+    required this.textColor,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color textColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: AppDimens.screenPadding,
+          vertical: AppDimens.vmd,
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 22.w, color: textColor),
+            Gap(AppDimens.lg),
+            Text(label,
+                style: AppTextStyles.bodyMedium.copyWith(color: textColor)),
+          ],
+        ),
       ),
     );
   }

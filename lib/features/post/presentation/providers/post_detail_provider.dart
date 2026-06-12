@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/config/app_logger.dart';
 import '../../../../core/errors/result.dart';
 import '../../../../core/providers/current_user_provider.dart';
+import '../../../home/presentation/providers/home_provider.dart';
 import '../../../post/data/providers/post_data_providers.dart';
 import '../../../post/domain/entities/post.dart';
 
@@ -194,6 +195,7 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
     if (current == null) return;
 
     commentController.clear();
+    commentFocusNode.unfocus();
 
     final params = AddCommentParams(
       postId: _postId,
@@ -286,20 +288,21 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
 
   // ── Delete Post ─────────────────────────────────────────────────────────────
 
-  Future<bool> deletePost() async {
+  Future<void> deletePost() async {
     final userId = _currentUserId;
-    final postId = state.valueOrNull?.post?.id;
-    if (userId == null || postId == null) return false;
+    if (userId == null) throw Exception('Not logged in');
 
     final result = await ref.read(deletePostUseCaseProvider).call(
-          postId: postId,
+          postId: _postId,
           currentUserId: userId,
         );
 
-    return switch (result) {
-      Ok() => true,
-      Err(:final failure) => throw failure,
-    };
+    switch (result) {
+      case Ok():
+        ref.invalidate(homeProvider);
+      case Err(:final failure):
+        throw failure;
+    }
   }
 
   // ── Private helpers ─────────────────────────────────────────────────────────

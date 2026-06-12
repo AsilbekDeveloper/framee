@@ -85,7 +85,7 @@ class CreatePostState {
 
 // ── Notifier ──────────────────────────────────────────────────────────────────
 
-class CreatePostNotifier extends Notifier<CreatePostState> {
+class CreatePostNotifier extends AutoDisposeNotifier<CreatePostState> {
   final captionController = TextEditingController();
   final _picker = ImagePicker();
 
@@ -170,11 +170,6 @@ class CreatePostNotifier extends Notifier<CreatePostState> {
       return;
     }
 
-    if (state.postType == PostTypeSelection.imageOnly && !state.hasImage) {
-      state = state.copyWith(errorMessage: AppStrings.errorImageRequired);
-      return;
-    }
-
     if (state.isCaptionOverLimit) {
       state = state.copyWith(errorMessage: AppStrings.errorCaptionTooLong);
       return;
@@ -211,6 +206,6 @@ class CreatePostNotifier extends Notifier<CreatePostState> {
 }
 
 final createPostProvider =
-    NotifierProvider<CreatePostNotifier, CreatePostState>(
+    AutoDisposeNotifierProvider<CreatePostNotifier, CreatePostState>(
   CreatePostNotifier.new,
 );

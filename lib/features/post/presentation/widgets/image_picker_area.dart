@@ -79,28 +79,30 @@ class SelectedImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(AppDimens.radiusLg),
-          child: Image.file(
-            File(path),
-            width: double.infinity,
-            fit: BoxFit.fitWidth,
+    return AspectRatio(
+      aspectRatio: AppDimens.postImageAspectRatio,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppDimens.radiusLg),
+            child: Image.file(
+              File(path),
+              fit: BoxFit.cover,
+            ),
           ),
-        ),
-        Positioned(
-          top: 8.h,
-          left: 8.w,
-          child: _ImageActionButton(icon: Icons.crop_rounded, onTap: onCrop),
-        ),
-        Positioned(
-          top: 8.h,
-          right: 8.w,
-          child:
-              _ImageActionButton(icon: Icons.close_rounded, onTap: onRemove),
-        ),
-      ],
+          Positioned(
+            top: 8.h,
+            left: 8.w,
+            child: _ImageActionButton(icon: Icons.crop_rounded, onTap: onCrop),
+          ),
+          Positioned(
+            top: 8.h,
+            right: 8.w,
+            child: _ImageActionButton(icon: Icons.close_rounded, onTap: onRemove),
+          ),
+        ],
+      ),
     );
   }
 }

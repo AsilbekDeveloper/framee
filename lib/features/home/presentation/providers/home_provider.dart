@@ -155,6 +155,31 @@ class HomeNotifier extends AsyncNotifier<List<Post>> {
       state = AsyncData(posts.where((p) => p.id != postId).toList());
     });
   }
+
+  Future<void> deletePost(String postId) async {
+    final userId = _currentUserId;
+    if (userId == null) return;
+
+    final prev = state.valueOrNull;
+    if (prev == null) return;
+
+    // Optimistic removal
+    state = AsyncData(prev.where((p) => p.id != postId).toList());
+
+    final result = await ref.read(deletePostUseCaseProvider).call(
+          postId: postId,
+          currentUserId: userId,
+        );
+
+    switch (result) {
+      case Ok():
+        break;
+      case Err(:final failure):
+        AppLogger.w('HomeNotifier: deletePost failed — restoring feed');
+        state = AsyncData(prev);
+        throw failure;
+    }
+  }
 }
 
 final homeProvider = AsyncNotifierProvider<HomeNotifier, List<Post>>(

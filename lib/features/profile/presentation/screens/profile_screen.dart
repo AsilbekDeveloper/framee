@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
@@ -81,6 +82,13 @@ class ProfileScreen extends ConsumerWidget {
                     userId: profile.id,
                     username: profile.username,
                   ),
+                  onCopyLinkTap: () {
+                    Clipboard.setData(
+                      ClipboardData(
+                          text: ShareUtils.profileUrl(profile.id)),
+                    );
+                    context.showSnackBar(AppStrings.linkCopied);
+                  },
                   onFollowTap: () =>
                       ref.read(profileProvider(userId).notifier).toggleFollow(),
                 ),

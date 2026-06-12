@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:shimmer/shimmer.dart';
@@ -9,6 +10,7 @@ import '../constants/app_dimens.dart';
 import '../constants/app_strings.dart';
 import '../constants/app_text_styles.dart';
 import '../extensions/extensions.dart';
+import '../utils/share_utils.dart';
 import 'app_avatar.dart';
 import '../../features/post/domain/entities/post.dart';
 
@@ -20,7 +22,6 @@ class PostCard extends StatelessWidget {
     required this.post,
     this.onLikeTap,
     this.onCommentTap,
-    this.onShareTap,
     this.onSaveTap,
     this.onMoreTap,
     this.onUserTap,
@@ -29,7 +30,6 @@ class PostCard extends StatelessWidget {
   final Post post;
   final VoidCallback? onLikeTap;
   final VoidCallback? onCommentTap;
-  final VoidCallback? onShareTap;
   final VoidCallback? onSaveTap;
   final VoidCallback? onMoreTap;
   final VoidCallback? onUserTap;
@@ -49,14 +49,17 @@ class PostCard extends StatelessWidget {
               onUserTap: onUserTap,
               onMoreTap: onMoreTap,
             ),
-            if (post.hasImage) _PostImage(imageUrl: post.imageUrl!),
+            if (post.hasImage)
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppDimens.screenPadding),
+                child: _PostImage(imageUrl: post.imageUrl!),
+              ),
             if (!post.hasImage && post.hasCaption)
               _TextPostBody(caption: post.caption!),
             _PostActions(
               post: post,
               onLikeTap: onLikeTap,
               onCommentTap: onCommentTap,
-              onShareTap: onShareTap,
               onSaveTap: onSaveTap,
             ),
             if (post.hasImage && post.hasCaption)
@@ -176,28 +179,37 @@ class _PostImage extends StatelessWidget {
       width: double.infinity,
       fadeInDuration: Duration.zero,
       fadeOutDuration: Duration.zero,
-      imageBuilder: (context, imageProvider) => Image(
-        image: imageProvider,
-        width: double.infinity,
-        fit: BoxFit.fitWidth,
+      imageBuilder: (context, imageProvider) => ClipRRect(
+        borderRadius: BorderRadius.circular(AppDimens.radiusLg),
+        child: Image(
+          image: imageProvider,
+          width: double.infinity,
+          fit: BoxFit.fitWidth,
+        ),
       ),
       placeholder: (context, url) => AspectRatio(
         aspectRatio: AppDimens.postImageAspectRatio,
-        child: Shimmer.fromColors(
-          baseColor: isDark ? AppColors.darkElevated : const Color(0xFFE8E5FF),
-          highlightColor:
-              isDark ? AppColors.darkBorderSubtle : const Color(0xFFF4F3FB),
-          child: Container(color: Colors.white),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppDimens.radiusLg),
+          child: Shimmer.fromColors(
+            baseColor: isDark ? AppColors.darkElevated : const Color(0xFFE8E5FF),
+            highlightColor:
+                isDark ? AppColors.darkBorderSubtle : const Color(0xFFF4F3FF),
+            child: Container(color: Colors.white),
+          ),
         ),
       ),
       errorWidget: (context, url, error) => AspectRatio(
         aspectRatio: AppDimens.postImageAspectRatio,
-        child: Container(
-          color: isDark ? AppColors.darkElevated : AppColors.lightElevated,
-          child: Icon(
-            Icons.image_not_supported_outlined,
-            size: 40.w,
-            color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppDimens.radiusLg),
+          child: Container(
+            color: isDark ? AppColors.darkElevated : AppColors.lightElevated,
+            child: Icon(
+              Icons.image_not_supported_outlined,
+              size: 40.w,
+              color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+            ),
           ),
         ),
       ),
@@ -238,14 +250,12 @@ class _PostActions extends StatelessWidget {
     required this.post,
     required this.onLikeTap,
     required this.onCommentTap,
-    required this.onShareTap,
     required this.onSaveTap,
   });
 
   final Post post;
   final VoidCallback? onLikeTap;
   final VoidCallback? onCommentTap;
-  final VoidCallback? onShareTap;
   final VoidCallback? onSaveTap;
 
   @override
@@ -273,12 +283,11 @@ class _PostActions extends StatelessWidget {
             color: mutedColor,
             onTap: onCommentTap,
           ),
-          if (onShareTap != null)
-            _ActionButton(
-              icon: Icons.share_outlined,
-              color: mutedColor,
-              onTap: onShareTap,
-            ),
+          _ActionButton(
+            icon: Icons.share_outlined,
+            color: mutedColor,
+            onTap: () => _showShareSheet(context, post),
+          ),
           const Spacer(),
           if (onSaveTap != null)
             _ActionButton(
@@ -289,6 +298,105 @@ class _PostActions extends StatelessWidget {
               onTap: onSaveTap,
             ),
         ],
+      ),
+    );
+  }
+}
+
+void _showShareSheet(BuildContext context, Post post) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  final textColor =
+      isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+  final mutedColor =
+      isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted;
+  final bgColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: bgColor,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(AppDimens.radiusXl),
+      ),
+    ),
+    builder: (_) => SafeArea(
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: AppDimens.vlg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 36.w,
+              height: 4.h,
+              margin: EdgeInsets.only(bottom: AppDimens.vlg),
+              decoration: BoxDecoration(
+                color: mutedColor.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            _ShareOption(
+              icon: Icons.share_outlined,
+              label: AppStrings.sharePost,
+              textColor: textColor,
+              onTap: () {
+                Navigator.pop(context);
+                ShareUtils.sharePost(post);
+              },
+            ),
+            _ShareOption(
+              icon: Icons.link_rounded,
+              label: AppStrings.copyLink,
+              textColor: textColor,
+              onTap: () {
+                Navigator.pop(context);
+                Clipboard.setData(
+                  ClipboardData(text: ShareUtils.postUrl(post.id)),
+                );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(AppStrings.linkCopied),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _ShareOption extends StatelessWidget {
+  const _ShareOption({
+    required this.icon,
+    required this.label,
+    required this.textColor,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color textColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: AppDimens.screenPadding,
+          vertical: AppDimens.vmd,
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 22.w, color: textColor),
+            Gap(AppDimens.lg),
+            Text(label,
+                style: AppTextStyles.bodyMedium.copyWith(color: textColor)),
+          ],
+        ),
       ),
     );
   }

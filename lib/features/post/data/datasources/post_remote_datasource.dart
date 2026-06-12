@@ -416,7 +416,7 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     try {
       final existing = await _client
           .from(_commentLikesTable)
-          .select('id')
+          .select()
           .eq('comment_id', commentId)
           .eq('user_id', currentUserId)
           .maybeSingle();

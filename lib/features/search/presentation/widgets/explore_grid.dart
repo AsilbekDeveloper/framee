@@ -1,13 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:gap/gap.dart';
 
 import '../../../../../core/components/post_card.dart';
-import '../../../../../core/utils/share_utils.dart';
 import '../../../../../core/components/shared_widgets.dart';
 import '../../../../../core/constants/app_colors.dart';
-import '../../../../../core/constants/app_dimens.dart';
 import '../../../post/domain/entities/post.dart';
 
 class ExploreGrid extends StatelessWidget {
@@ -196,7 +193,6 @@ class ExploreTextTab extends StatelessWidget {
             onCommentTap: () => onPostTap(post.id),
             onUserTap: () => onUserTap(post.author.id),
             onMoreTap: null,
-            onShareTap: () => ShareUtils.sharePost(post),
             onSaveTap: null,
           );
         },

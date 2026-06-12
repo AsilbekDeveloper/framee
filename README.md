@@ -1,79 +1,68 @@
-# Framee Flutter App
+# Framee
 
-Social media app — share photos and thoughts.
+A full-featured social media mobile app built with Flutter and Supabase. Users can create posts with images and captions, follow others, explore content, interact via likes and nested comments, and share posts or profiles via deep links.
+
+---
+
+## Features
+
+- **Authentication** — Sign up, login, session persistence with Supabase Auth
+- **Feed** — Paginated home feed with like, save, comment, and share actions
+- **Create Post** — Instagram-style post creation with image picker and caption
+- **Post Detail** — Full post view with nested comment threads, reply system, and optimistic UI
+- **Explore** — Photo grid and text post tabs with pull-to-refresh
+- **Profile** — User profile with post grid, followers/following counts, edit profile
+- **Notifications** — Activity notifications with toggle settings
+- **Deep Links** — Android App Links (`framee.app`) for sharing posts and profiles
+- **Dark / Light Mode** — Adaptive theming persisted via SharedPreferences
+
+---
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| UI | Flutter 3.24+ / Dart 3.5+ |
-| State | Riverpod 2 + riverpod_generator |
-| Navigation | go_router 14 |
-| Models | freezed + json_serializable |
+| UI | Flutter 3.x / Dart 3.x |
+| State Management | Riverpod 2 (`AsyncNotifier`, `FamilyAsyncNotifier`) |
+| Navigation | go_router 14 (Navigator 2.0) |
+| Backend | Supabase (Auth, PostgreSQL, Storage) |
+| Images | cached_network_image + image_picker |
 | Push Notifications | Firebase Cloud Messaging |
 | Secure Storage | flutter_secure_storage |
 | Preferences | shared_preferences |
-| Images | cached_network_image + image_picker |
-| HTTP | Dio (Supabase REST ready) |
-| Backend (planned) | Supabase |
+| Responsive UI | flutter_screenutil (base: 393×852) |
+| Sharing | share_plus + Android App Links |
 
 ---
 
-## Project Structure
+## Architecture
+
+Clean Architecture with strict layer separation:
 
 ```
 lib/
 ├── core/
-│   ├── components/        # Reusable widgets (AppButton, AppAvatar, etc.)
+│   ├── components/        # Reusable widgets (PostCard, AppAvatar, AppButton, etc.)
 │   ├── constants/         # AppColors, AppTextStyles, AppDimens, AppStrings
-│   ├── errors/            # AppError sealed class + mapError()
+│   ├── errors/            # Result<T> type, AppFailure sealed class
 │   ├── extensions/        # BuildContext, String, DateTime, num extensions
-│   ├── l10n/              # Localization setup
-│   ├── models/            # UI models (UserModel, PostModel, etc.)
-│   ├── providers/         # ThemeProvider, ConnectivityProvider
-│   ├── router/            # go_router AppRouter + AppRoutes
-│   ├── services/          # FcmService, SecureStorageService, SupabaseService
+│   ├── providers/         # currentUserProvider, themeProvider
+│   ├── router/            # go_router AppRouter + AppRoutes + deep link config
 │   ├── theme/             # AppTheme (light + dark)
-│   └── utils/             # MockData
+│   └── utils/             # ShareUtils, AppLogger
 │
 ├── features/
-│   ├── auth/
-│   │   └── presentation/
-│   │       ├── screens/   # LoginScreen, SignUpScreen
-│   │       ├── widgets/
-│   │       └── providers/ # AuthProvider
-│   ├── home/
-│   │   └── presentation/
-│   │       ├── screens/   # HomeScreen
-│   │       ├── widgets/   # PostCard
-│   │       └── providers/ # HomeProvider
+│   ├── auth/              # Login, SignUp screens + AuthNotifier
+│   ├── home/              # Feed screen + HomeNotifier (pagination)
 │   ├── post/
-│   │   └── presentation/
-│   │       ├── screens/   # CreatePostScreen, PostDetailScreen
-│   │       ├── widgets/   # CommentTile
-│   │       └── providers/ # CreatePostProvider, PostDetailProvider
-│   ├── profile/
-│   │   └── presentation/
-│   │       ├── screens/   # ProfileScreen, FollowersScreen, EditProfileScreen
-│   │       ├── widgets/   # ProfileGrid
-│   │       └── providers/ # ProfileProvider, EditProfileProvider
-│   ├── search/
-│   │   └── presentation/
-│   │       ├── screens/   # SearchScreen
-│   │       └── providers/ # SearchProvider
-│   ├── notifications/
-│   │   └── presentation/
-│   │       ├── screens/   # NotificationsScreen
-│   │       └── providers/ # NotificationsProvider
-│   ├── settings/
-│   │   └── presentation/
-│   │       └── screens/   # SettingsScreen
-│   └── onboarding/
-│       └── presentation/
-│           ├── screens/   # OnboardingScreen, ProfileSetupScreen
-│           └── providers/ # ProfileSetupProvider
+│   │   ├── data/          # PostRemoteDataSource (Supabase queries)
+│   │   ├── domain/        # Post, Comment entities + use cases
+│   │   └── presentation/  # CreatePost, PostDetail screens + providers
+│   ├── profile/           # Profile, EditProfile, Followers screens
+│   ├── search/            # Explore grid (photo + text tabs)
+│   ├── notifications/     # Notifications screen + settings toggles
+│   └── settings/          # Settings screen (theme, logout)
 │
-├── firebase_options.dart  # Firebase config (replace with real values)
 └── main.dart
 ```
 
@@ -81,116 +70,52 @@ lib/
 
 ## Setup
 
-### 1. Install dependencies
+### 1. Clone and install dependencies
 ```bash
+git clone https://github.com/your-username/framee.git
+cd framee
 flutter pub get
 ```
 
-### 2. Run code generation
-```bash
-dart run build_runner build --delete-conflicting-outputs
+### 2. Configure Supabase
+
+Create a `.env` or update `lib/core/config/supabase_config.dart` with your project credentials:
+
+```dart
+static const supabaseUrl = 'https://your-project.supabase.co';
+static const supabaseAnonKey = 'your-anon-key';
 ```
 
-### 3. Configure Firebase
+### 3. Configure Firebase (for push notifications)
 ```bash
-# Install flutterfire CLI if not installed
 dart pub global activate flutterfire_cli
-
-# Configure for your Firebase project
 flutterfire configure
 ```
-This replaces `lib/firebase_options.dart` with your real config.
 
-### 4. Add fonts
-Download and place in `assets/fonts/`:
-- DMSans-Regular.ttf
-- DMSans-Medium.ttf
-- DMSans-SemiBold.ttf
-- DMSans-Bold.ttf
-- InstrumentSerif-Regular.ttf
-- InstrumentSerif-Italic.ttf
-
-Available free from: https://fonts.google.com/specimen/DM+Sans
-
-### 5. Create asset folders
-```bash
-mkdir -p assets/images assets/icons assets/animations
-```
-
-### 6. Configure Supabase (when ready)
-Add to pubspec.yaml:
-```yaml
-supabase_flutter: ^2.5.0
-```
-Then uncomment the code in `lib/core/services/supabase_service.dart`.
-
-### 7. Add flutter_local_notifications (for FCM foreground)
-Add to pubspec.yaml:
-```yaml
-flutter_local_notifications: ^17.2.2
-```
-
----
-
-## Run
-
+### 4. Run
 ```bash
 # Debug
 flutter run
 
-# Release
-flutter run --release
-
-# Specific device
-flutter run -d <device_id>
+# Release APK
+flutter build apk --release
 ```
 
 ---
 
-## Code Generation
+## Deep Links (Android App Links)
 
-After modifying any `@riverpod`, `@freezed`, or `@JsonSerializable` annotated class:
+The app handles `https://framee.app/post/{id}` and `https://framee.app/profile/{id}` links.
 
-```bash
-dart run build_runner build --delete-conflicting-outputs
-```
-
-For continuous watching during development:
-```bash
-dart run build_runner watch --delete-conflicting-outputs
-```
+Configured in `android/app/src/main/AndroidManifest.xml` with verified App Links using the Digital Asset Links protocol.
 
 ---
 
-## Generated Files (do not edit manually)
+## Code Style
 
-- `*.g.dart` — Riverpod providers, JSON serialization
-- `*.freezed.dart` — Freezed data classes
-
----
-
-## Responsive Design
-
-- Design base: 393×852 (iPhone 15)
-- Tablet breakpoint: 600dp
-- Desktop breakpoint: 900dp
-- Uses `flutter_screenutil` for adaptive sizing
-- `ResponsiveBuilder` widget for layout switching
-- `MaxWidthBox` for tablet centering
-
----
-
-## Dark / Light Mode
-
-Theme is controlled by `themeModeProvider` (Riverpod).
-Persisted to `SharedPreferences`. Toggle via Settings screen.
-
----
-
-## Notes
-
-- Domain / data layers are intentionally not implemented —
-  add your Supabase queries in the `// Supabase` comments inside providers.
-- `MockData` in `lib/core/utils/mock_data.dart` provides sample data for UI.
-- All colors: `AppColors` | All text styles: `AppTextStyles` |
-  All spacing: `AppDimens` | All strings: `AppStrings`
+- All colors → `AppColors`
+- All text styles → `AppTextStyles`
+- All spacing → `AppDimens`
+- All UI strings → `AppStrings`
+- Error handling → `Result<T, AppFailure>` (Ok / Err pattern)
+- Logging → `AppLogger` (debug/warning/error)
