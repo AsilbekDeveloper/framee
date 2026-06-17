@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/config/app_logger.dart';
+import '../../../../core/constants/app_config.dart';
+import '../../../../core/errors/failure_message.dart';
 import '../../../../core/errors/result.dart';
 import '../../../../core/providers/current_user_provider.dart';
 import '../../../../core/services/post_cache_service.dart';
@@ -56,10 +60,13 @@ class SearchState {
 /// [AsyncNotifier] is intentionally avoided to prevent two loading mechanisms
 /// (isSearching vs AsyncLoading) from conflicting.
 class SearchNotifier extends Notifier<SearchState> {
+  Timer? _debounce;
+
   @override
   SearchState build() {
     // Kick off Explore load asynchronously — state starts synchronously with the loading flag
     Future.microtask(_loadExplore);
+    ref.onDispose(() => _debounce?.cancel());
     return const SearchState(isLoadingExplore: true);
   }
 
@@ -86,7 +93,7 @@ class SearchNotifier extends Notifier<SearchState> {
     AppLogger.d('SearchNotifier: loading explore posts');
     final result = await ref
         .read(getExplorePostsUseCaseProvider)
-        .call(currentUserId: userId, limit: 30);
+        .call(currentUserId: userId, limit: AppConfig.explorePageSize);
 
     if (result case Ok(:final value)) {
       state = state.copyWith(isLoadingExplore: false, explorePosts: value);
@@ -100,7 +107,7 @@ class SearchNotifier extends Notifier<SearchState> {
     try {
       final result = await ref
           .read(getExplorePostsUseCaseProvider)
-          .call(currentUserId: userId, limit: 30);
+          .call(currentUserId: userId, limit: AppConfig.explorePageSize);
       if (result case Ok(:final value)) {
         state = state.copyWith(explorePosts: value);
         ref.read(postCacheServiceProvider).saveExplore(value);
@@ -108,39 +115,70 @@ class SearchNotifier extends Notifier<SearchState> {
     } catch (_) {}
   }
 
-  Future<void> search(String query) async {
+  /// Called on every keystroke. Updates the query text immediately so the UI
+  /// stays responsive, but debounces the network request to avoid firing one
+  /// query per character.
+  void search(String query) {
     final trimmed = query.trim();
+    _debounce?.cancel();
 
     if (trimmed.isEmpty) {
-      state = state.copyWith(query: '', userResults: const []);
+      state = state.copyWith(query: '', userResults: const [], isSearching: false);
       return;
     }
 
+    state = state.copyWith(query: trimmed, isSearching: true, clearError: true);
+    _debounce = Timer(
+      const Duration(milliseconds: AppConfig.searchDebounceMsec),
+      () => _performSearch(trimmed),
+    );
+  }
+
+  Future<void> _performSearch(String query) async {
     final userId = _currentUserId;
     if (userId == null) return;
 
-    state = state.copyWith(query: trimmed, isSearching: true, clearError: true);
-
-    AppLogger.d('SearchNotifier: searching "$trimmed"');
+    AppLogger.d('SearchNotifier: searching "$query"');
     final result = await ref.read(searchUsersUseCaseProvider).call(
-          query: trimmed,
+          query: query,
           currentUserId: userId,
         );
+
+    // Ignore stale responses — the user may have typed something new while
+    // this request was in flight.
+    if (state.query != query) return;
 
     state = switch (result) {
       Ok(:final value) => state.copyWith(
           userResults: value,
           isSearching: false,
+          clearError: true,
         ),
       Err(:final failure) => state.copyWith(
           isSearching: false,
-          errorMessage: failure.message,
+          userResults: const [],
+          errorMessage: localizedFailure(failure),
         ),
     };
   }
 
+  /// Re-runs the current query immediately (used by the error-state Retry button).
+  void retrySearch() {
+    final query = state.query;
+    if (query.isEmpty) return;
+    _debounce?.cancel();
+    state = state.copyWith(isSearching: true, clearError: true);
+    _performSearch(query);
+  }
+
   void clearSearch() {
-    state = state.copyWith(query: '', userResults: const []);
+    _debounce?.cancel();
+    state = state.copyWith(
+      query: '',
+      userResults: const [],
+      isSearching: false,
+      clearError: true,
+    );
   }
 
   Future<void> refreshExplore() async {
@@ -149,7 +187,7 @@ class SearchNotifier extends Notifier<SearchState> {
     try {
       final result = await ref
           .read(getExplorePostsUseCaseProvider)
-          .call(currentUserId: userId, limit: 30);
+          .call(currentUserId: userId, limit: AppConfig.explorePageSize);
       if (result case Ok(:final value)) {
         state = state.copyWith(explorePosts: value);
         ref.read(postCacheServiceProvider).saveExplore(value);

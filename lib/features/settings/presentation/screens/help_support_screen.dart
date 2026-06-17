@@ -24,37 +24,37 @@ class HelpSupportScreen extends StatelessWidget {
           SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: AppDimens.screenPadding),
-              child: SettingsCard(
+              child: const SettingsCard(
                 children: [
-                  const _FaqTile(
+                  _FaqTile(
                     question: 'How do I reset my password?',
                     answer:
                         'Go to Settings → Change Password. Enter your current password and choose a new one. '
                         'If you have forgotten your password, use the "Forgot Password" link on the login screen.',
                   ),
-                  const AppDivider(),
-                  const _FaqTile(
+                  AppDivider(),
+                  _FaqTile(
                     question: 'How do I delete my account?',
                     answer:
                         'Go to Settings and tap "Delete Account" at the bottom. '
                         'This action is permanent and cannot be undone.',
                   ),
-                  const AppDivider(),
-                  const _FaqTile(
+                  AppDivider(),
+                  _FaqTile(
                     question: "Why can't I see someone's posts?",
                     answer:
                         'The account may be private. Send them a follow request to access their content. '
                         'You may also have been blocked by that user.',
                   ),
-                  const AppDivider(),
-                  const _FaqTile(
+                  AppDivider(),
+                  _FaqTile(
                     question: 'How do I report a post?',
                     answer:
                         'Tap the three-dot menu on any post and select "Report". '
                         'We review all reports and take appropriate action within 24 hours.',
                   ),
-                  const AppDivider(),
-                  const _FaqTile(
+                  AppDivider(),
+                  _FaqTile(
                     question: 'How do I contact support?',
                     answer:
                         'Email us at support@framee.app. '

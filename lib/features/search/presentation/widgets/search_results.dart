@@ -126,7 +126,7 @@ class SearchUserRow extends StatelessWidget {
             Gap(AppDimens.sm),
             FollowButton(
               isFollowing: user.isFollowing || user.isRequested,
-              label: user.isRequested ? 'Requested' : null,
+              label: user.isRequested ? AppStrings.requested : null,
               onTap: onFollowTap,
             ),
           ],

@@ -1,10 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/config/app_logger.dart';
+import '../../../../core/constants/app_config.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/errors/failure_message.dart';
 import '../../../../core/errors/result.dart';
 import '../../../../core/providers/current_user_provider.dart';
 import '../../../profile/data/providers/profile_data_providers.dart';
@@ -39,11 +43,14 @@ class ProfileSetupState {
     bool? isSaved,
     String? errorMessage,
     bool clearError = false,
+    bool clearUsernameStatus = false,
   }) =>
       ProfileSetupState(
         step: step ?? this.step,
         avatarLocalPath: avatarLocalPath ?? this.avatarLocalPath,
-        isUsernameAvailable: isUsernameAvailable ?? this.isUsernameAvailable,
+        isUsernameAvailable: clearUsernameStatus
+            ? null
+            : (isUsernameAvailable ?? this.isUsernameAvailable),
         bioLength: bioLength ?? this.bioLength,
         isSaving: isSaving ?? this.isSaving,
         isSaved: isSaved ?? this.isSaved,
@@ -54,12 +61,52 @@ class ProfileSetupState {
 class ProfileSetupNotifier extends Notifier<ProfileSetupState> {
   final _picker = ImagePicker();
 
+  // Mirrors UpdateProfileUseCase: 3–30 chars, letters/digits/._ only.
+  static final _usernameRegex = RegExp(r'^[a-zA-Z0-9._]{3,30}$');
+
+  Timer? _usernameDebounce;
+  String? _lastUsernameQuery;
+
   @override
-  ProfileSetupState build() => const ProfileSetupState();
+  ProfileSetupState build() {
+    ref.onDispose(() => _usernameDebounce?.cancel());
+    return const ProfileSetupState();
+  }
 
   void onUsernameChanged(String value) {
-    // Minimal UI feedback — full validation happens inside UpdateProfileUseCase
-    state = state.copyWith(isUsernameAvailable: null);
+    final username = value.trim();
+    _usernameDebounce?.cancel();
+
+    // Only check well-formed usernames; otherwise hide the indicator (a format
+    // error still surfaces on save). The two-state UI has no "invalid" icon.
+    if (!_usernameRegex.hasMatch(username)) {
+      _lastUsernameQuery = null;
+      state = state.copyWith(clearUsernameStatus: true);
+      return;
+    }
+
+    // Clear the previous result while the debounced check is pending.
+    state = state.copyWith(clearUsernameStatus: true);
+    _lastUsernameQuery = username;
+    _usernameDebounce = Timer(
+      const Duration(milliseconds: AppConfig.searchDebounceMsec),
+      () => _checkUsername(username),
+    );
+  }
+
+  Future<void> _checkUsername(String username) async {
+    final userId = ref.read(currentUserIdProvider);
+    final result = await ref.read(profileRepositoryProvider).isUsernameAvailable(
+          username,
+          excludeUserId: userId,
+        );
+
+    // Ignore a stale response — the field changed while this was in flight.
+    if (_lastUsernameQuery != username) return;
+
+    if (result case Ok(:final value)) {
+      state = state.copyWith(isUsernameAvailable: value);
+    }
   }
 
   void onBioChanged(String bioText) {
@@ -117,7 +164,7 @@ class ProfileSetupNotifier extends Notifier<ProfileSetupState> {
         AppLogger.e('ProfileSetup: save error — ${failure.message}');
         state = state.copyWith(
           isSaving: false,
-          errorMessage: failure.message,
+          errorMessage: localizedFailure(failure),
         );
     }
   }

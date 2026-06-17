@@ -43,6 +43,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
 
       // Determine follow status from the follows table
       bool isFollowing = false;
+      bool isRequested = false;
       bool isFollowingMe = false;
       if (currentUserId != null && currentUserId != userId) {
         final followRows = await _client
@@ -51,22 +52,26 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
             .or('and(follower_id.eq.$currentUserId,following_id.eq.$userId),and(follower_id.eq.$userId,following_id.eq.$currentUserId)');
 
         for (final row in followRows) {
-          if (row['follower_id'] == currentUserId &&
-              row['status'] == 'accepted') {
-            isFollowing = true;
+          if (row['follower_id'] == currentUserId) {
+            if (row['status'] == 'accepted') {
+              isFollowing = true;
+            } else if (row['status'] == 'requested') {
+              isRequested = true;
+            }
           }
           if (row['follower_id'] == userId && row['status'] == 'accepted') {
             isFollowingMe = true;
           }
         }
         AppLogger.d(
-          'ProfileDS: follow status — isFollowing:$isFollowing isFollowingMe:$isFollowingMe',
+          'ProfileDS: follow status — isFollowing:$isFollowing isRequested:$isRequested isFollowingMe:$isFollowingMe',
         );
       }
 
       final dto = ProfileDto.fromJson(
         data,
         isFollowing: isFollowing,
+        isRequested: isRequested,
         isFollowingMe: isFollowingMe,
       );
 
@@ -92,6 +97,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
             isPrivate: dto.isPrivate,
             isVerified: dto.isVerified,
             isFollowing: isFollowing,
+            isRequested: isRequested,
             isFollowingMe: isFollowingMe,
             createdAt: dto.createdAt,
             updatedAt: dto.updatedAt,

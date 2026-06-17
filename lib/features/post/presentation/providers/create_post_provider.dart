@@ -5,32 +5,19 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/config/app_logger.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_config.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/errors/failure_message.dart';
 import '../../../../core/errors/result.dart';
 import '../../../../core/providers/current_user_provider.dart';
 import '../../../home/presentation/providers/home_provider.dart';
 import '../../../post/data/providers/post_data_providers.dart';
 import '../../../post/domain/entities/post.dart';
 
-// ── Post Type ─────────────────────────────────────────────────────────────────
-
-enum PostTypeSelection {
-  all,
-  textOnly,
-  imageOnly;
-
-  String get label => switch (this) {
-        all => AppStrings.allPosts,
-        textOnly => AppStrings.textOnly,
-        imageOnly => AppStrings.imageOnly,
-      };
-}
-
 // ── State ─────────────────────────────────────────────────────────────────────
 
 class CreatePostState {
   const CreatePostState({
-    this.postType = PostTypeSelection.all,
     this.selectedImagePath,
     this.captionLength = 0,
     this.isLoading = false,
@@ -38,14 +25,13 @@ class CreatePostState {
     this.publishedPost,
   });
 
-  final PostTypeSelection postType;
   final String? selectedImagePath;
   final int captionLength;
   final bool isLoading;
   final String? errorMessage;
   final Post? publishedPost;
 
-  static const int maxCaptionLength = 2200;
+  static const int maxCaptionLength = AppConfig.maxCaptionLength;
 
   bool get hasImage => selectedImagePath != null;
   bool get hasCaption => captionLength > 0;
@@ -63,7 +49,6 @@ class CreatePostState {
   bool get hasUnsavedContent => hasImage || hasCaption;
 
   CreatePostState copyWith({
-    PostTypeSelection? postType,
     String? selectedImagePath,
     int? captionLength,
     bool? isLoading,
@@ -73,7 +58,6 @@ class CreatePostState {
     bool clearError = false,
   }) =>
       CreatePostState(
-        postType: postType ?? this.postType,
         selectedImagePath:
             clearImage ? null : (selectedImagePath ?? this.selectedImagePath),
         captionLength: captionLength ?? this.captionLength,
@@ -93,12 +77,6 @@ class CreatePostNotifier extends AutoDisposeNotifier<CreatePostState> {
   CreatePostState build() {
     ref.onDispose(captionController.dispose);
     return const CreatePostState();
-  }
-
-  void setPostType(PostTypeSelection type) {
-    // textOnly → clear any selected image since the user switched to text-only mode
-    final shouldClearImage = type == PostTypeSelection.textOnly;
-    state = state.copyWith(postType: type, clearImage: shouldClearImage);
   }
 
   void onCaptionChanged(String val) =>
@@ -135,7 +113,7 @@ class CreatePostNotifier extends AutoDisposeNotifier<CreatePostState> {
         ),
         IOSUiSettings(
           title: AppStrings.cropImage,
-          doneButtonTitle: 'Done',
+          doneButtonTitle: AppStrings.done,
           cancelButtonTitle: AppStrings.cancel,
           aspectRatioPresets: [
             CropAspectRatioPreset.original,
@@ -199,7 +177,7 @@ class CreatePostNotifier extends AutoDisposeNotifier<CreatePostState> {
         AppLogger.w('CreatePost: error — ${failure.code}');
         state = state.copyWith(
           isLoading: false,
-          errorMessage: failure.message,
+          errorMessage: localizedFailure(failure),
         );
     }
   }

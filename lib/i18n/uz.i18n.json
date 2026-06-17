@@ -6,6 +6,13 @@
     "signUp": "Ro'yxatdan o'tish",
     "createAccount": "Hisob yaratish",
     "logOut": "Chiqish",
+    "logOutConfirm": "Rostdan ham chiqmoqchimisiz?",
+    "confirmEmailTitle": "Emailingizni tasdiqlang",
+    "confirmEmailBody": "Tasdiqlash havolasi $email manziliga yuborildi. Iltimos, emailingizni tasdiqlab, tizimga kiring.",
+    "goToSignIn": "Kirishga o'tish",
+    "resetPassword": "Parolni tiklash",
+    "emailAddressLabel": "Email manzilingiz",
+    "passwordResetSent": "Parol tiklash havolasi emailingizga yuborildi",
     "deleteAccount": "Hisobni o'chirish",
     "email": "Email",
     "password": "Parol",
@@ -17,6 +24,7 @@
     "repeatPasswordPlaceholder": "Parolni takrorlang",
     "fullNamePlaceholder": "To'liq ismingiz",
     "continueWithGoogle": "Google orqali davom etish",
+    "orDivider": "yoki",
     "welcomeBack": "Xush kelibsiz 👋",
     "forgotPassword": "Parolni unutdingizmi?",
     "joinFramee": "Framee'ga qo'shiling",
@@ -114,6 +122,8 @@
   "follow": {
     "follow": "Kuzatish",
     "following": "Kuzatilmoqda",
+    "followBack": "Javoban kuzatish",
+    "requested": "So'ralgan",
     "followSuccess": "Kuzatilmoqda!",
     "unfollowConfirm": "Kuzatishni to'xtatish"
   },
@@ -126,7 +136,11 @@
     "likedYourPost": "postingizni yoqladi",
     "andOthers": "va boshqalar",
     "startedFollowingYou": "sizni kuzata boshladi",
-    "commented": "izoh qoldirdi:"
+    "commented": "izoh qoldirdi:",
+    "wantsToFollowYou": "sizni kuzatmoqchi",
+    "commentedYourPost": "postingizga izoh qoldirdi",
+    "mentionedYou": "izohda sizni esladi",
+    "accept": "Qabul qilish"
   },
   "settings": {
     "settings": "Sozlamalar",
@@ -154,15 +168,15 @@
     "version": "Versiya",
     "versionValue": "1.0.0 MVP",
     "loggedOut": "Tizimdan chiqildi!",
-    "accountDeletionRequested": "Hisob o'chirish so'rovi yuborildi"
+    "accountDeletionRequested": "Hisob o'chirish so'rovi yuborildi",
+    "deleteAccountConfirm": "Hisobingizni o'chirishni xohlaysizmi? Bu amalni ortga qaytarib bo'lmaydi.",
+    "fillAllFields": "Barcha maydonlarni to'ldiring"
   },
   "editProfile": {
     "save": "Saqlash",
     "profileUpdated": "Profil yangilandi!",
     "privateAccount": "Yopiq hisob",
     "privateAccountSub": "Faqat tasdiqlangan kuzatuvchilar postlaringizni ko'radi",
-    "showActivityStatus": "Faollik holatini ko'rsatish",
-    "showActivityStatusSub": "Boshqalar qachon faol bo'lganingizni ko'rishi mumkin",
     "accountSettings": "Hisob sozlamalari"
   },
   "followers": {
@@ -173,7 +187,21 @@
     "noInternetConnection": "Internet aloqasi yo'q",
     "tryAgain": "Qayta urinish",
     "retry": "Qaytadan",
-    "sessionExpired": "Sessiya muddati tugadi. Qayta kiring."
+    "sessionExpired": "Sessiya muddati tugadi. Qayta kiring.",
+    "invalidCredentials": "Email yoki parol noto'g'ri.",
+    "emailInUse": "Bu email allaqachon ro'yxatdan o'tgan.",
+    "emailNotConfirmed": "Iltimos, email manzilingizni tasdiqlang.",
+    "weakPassword": "Parol kamida 6 ta belgidan iborat bo'lishi kerak."
+  },
+  "privacyInfo": {
+    "accountVisibility": "Hisob ko'rinishi",
+    "accountVisibilityBody": "Profilingiz, postlaringiz va faoliyatingizni kim ko'ra olishini boshqaring. Yopiq hisoblar kuzatish uchun tasdiq talab qiladi.",
+    "blockedUsers": "Bloklangan foydalanuvchilar",
+    "blockedUsersBody": "Bloklangan foydalanuvchilar profilingiz yoki kontentingizni ko'ra olmaydi va siz bilan hech qanday tarzda muloqot qila olmaydi.",
+    "comments": "Izohlar",
+    "commentsBody": "Postlaringizga kim izoh qoldira olishini tanlang — hamma, faqat kuzatuvchilaringiz yoki hech kim.",
+    "locationData": "Joylashuv ma'lumotlari",
+    "locationDataBody": "Framee joylashuvingizni yig'maydi va saqlamaydi. Postlaringizga joylashuv ma'lumoti biriktirilmaydi."
   },
   "empty": {
     "noPostsYet": "Hali postlar yo'q",
@@ -181,7 +209,10 @@
     "noNotifications": "Bildirishnomalar yo'q",
     "noNotificationsSub": "Bildirishnomalar olganingizda, ular bu yerda ko'rinadi.",
     "noResults": "Natija topilmadi",
-    "noResultsSub": "Boshqa qidiruv so'zini sinab ko'ring."
+    "noResultsSub": "Boshqa qidiruv so'zini sinab ko'ring.",
+    "savedSub": "Saqlagan postlaringiz bu yerda ko'rinadi.",
+    "noTextPosts": "Hozircha matnli post yo'q",
+    "noTextPostsSub": "Yozgan matnli postlaringiz bu yerda ko'rinadi."
   },
   "misc": {
     "more": "ko'proq",
@@ -191,6 +222,9 @@
     "edit": "Tahrirlash",
     "delete": "O'chirish",
     "options": "Variantlar",
+    "send": "Yuborish",
+    "done": "Tayyor",
+    "postNotFound": "Post topilmadi",
     "galleryOpened": "Galereya ochildi",
     "minutesAgo": "daqiqa oldin",
     "hourAgo": "soat oldin",

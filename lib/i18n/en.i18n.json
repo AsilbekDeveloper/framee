@@ -6,6 +6,13 @@
     "signUp": "Sign Up",
     "createAccount": "Create Account",
     "logOut": "Log Out",
+    "logOutConfirm": "Are you sure you want to sign out?",
+    "confirmEmailTitle": "Confirm your email",
+    "confirmEmailBody": "A confirmation link has been sent to $email. Please verify your email and sign in.",
+    "goToSignIn": "Go to Sign In",
+    "resetPassword": "Reset Password",
+    "emailAddressLabel": "Your email address",
+    "passwordResetSent": "A password reset link has been sent to your email",
     "deleteAccount": "Delete Account",
     "email": "Email",
     "password": "Password",
@@ -17,6 +24,7 @@
     "repeatPasswordPlaceholder": "Repeat password",
     "fullNamePlaceholder": "Your full name",
     "continueWithGoogle": "Continue with Google",
+    "orDivider": "or",
     "welcomeBack": "Welcome back 👋",
     "forgotPassword": "Forgot password?",
     "joinFramee": "Join Framee today",
@@ -114,6 +122,8 @@
   "follow": {
     "follow": "Follow",
     "following": "Following",
+    "followBack": "Follow Back",
+    "requested": "Requested",
     "followSuccess": "Following!",
     "unfollowConfirm": "Unfollow"
   },
@@ -126,7 +136,11 @@
     "likedYourPost": "liked your post",
     "andOthers": "and others",
     "startedFollowingYou": "started following you",
-    "commented": "commented:"
+    "commented": "commented:",
+    "wantsToFollowYou": "wants to follow you",
+    "commentedYourPost": "commented on your post",
+    "mentionedYou": "mentioned you in a comment",
+    "accept": "Accept"
   },
   "settings": {
     "settings": "Settings",
@@ -154,15 +168,15 @@
     "version": "Version",
     "versionValue": "1.0.0 MVP",
     "loggedOut": "Logged out!",
-    "accountDeletionRequested": "Account deletion requested"
+    "accountDeletionRequested": "Account deletion requested",
+    "deleteAccountConfirm": "Are you sure you want to delete your account? This action cannot be undone.",
+    "fillAllFields": "Please fill in all fields"
   },
   "editProfile": {
     "save": "Save",
     "profileUpdated": "Profile updated!",
     "privateAccount": "Private Account",
     "privateAccountSub": "Only approved followers see your posts",
-    "showActivityStatus": "Show Activity Status",
-    "showActivityStatusSub": "Let others see when you were last active",
     "accountSettings": "Account settings"
   },
   "followers": {
@@ -173,7 +187,21 @@
     "noInternetConnection": "No internet connection",
     "tryAgain": "Try Again",
     "retry": "Retry",
-    "sessionExpired": "Session expired. Please sign in again."
+    "sessionExpired": "Session expired. Please sign in again.",
+    "invalidCredentials": "Invalid email or password.",
+    "emailInUse": "This email is already registered.",
+    "emailNotConfirmed": "Please confirm your email address.",
+    "weakPassword": "Password must be at least 6 characters."
+  },
+  "privacyInfo": {
+    "accountVisibility": "Account Visibility",
+    "accountVisibilityBody": "Control who can see your profile, posts, and activity. Private accounts require approval before others can follow you.",
+    "blockedUsers": "Blocked Users",
+    "blockedUsersBody": "Blocked users cannot see your profile or content, and cannot interact with you in any way.",
+    "comments": "Comments",
+    "commentsBody": "Choose who can comment on your posts — everyone, your followers only, or no one.",
+    "locationData": "Location Data",
+    "locationDataBody": "Framee does not collect or store your location. No location data is attached to your posts."
   },
   "empty": {
     "noPostsYet": "No posts yet",
@@ -181,7 +209,10 @@
     "noNotifications": "No notifications",
     "noNotificationsSub": "When you get notifications, they'll appear here.",
     "noResults": "No results found",
-    "noResultsSub": "Try a different search term."
+    "noResultsSub": "Try a different search term.",
+    "savedSub": "Posts you save will appear here.",
+    "noTextPosts": "No text posts yet",
+    "noTextPostsSub": "Text posts you write will appear here."
   },
   "misc": {
     "more": "more",
@@ -191,6 +222,9 @@
     "edit": "Edit",
     "delete": "Delete",
     "options": "Options",
+    "send": "Send",
+    "done": "Done",
+    "postNotFound": "Post not found",
     "galleryOpened": "Gallery opened",
     "minutesAgo": "min ago",
     "hourAgo": "hr ago",

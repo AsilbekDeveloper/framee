@@ -69,6 +69,7 @@ class ProfileScreen extends ConsumerWidget {
                 ref.read(userPostsProvider(profile.id).notifier).refresh(),
               ]),
           child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               SliverToBoxAdapter(
                 child: ProfileInfo(
@@ -108,8 +109,9 @@ class ProfileScreen extends ConsumerWidget {
               if (tabIndex == 0)
                 ProfileImagePostsTab(
                   userId: profile.id,
-                  onPostTap: (postId) =>
-                      context.push(AppRoutes.postDetailPath(postId)),
+                  onPostTap: (postId) => context.push(
+                    AppRoutes.profilePostsFeedPath(profile.id, postId),
+                  ),
                 )
               else
                 ProfileTextPostsTab(

@@ -10,6 +10,9 @@ import '../../features/notifications/presentation/screens/notifications_screen.d
 import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../../features/onboarding/presentation/screens/profile_setup_screen.dart';
 import '../../features/post/presentation/screens/create_post_screen.dart';
+import '../../features/post/domain/entities/post.dart';
+import '../../features/post/presentation/screens/edit_post_screen.dart';
+import '../../features/profile/presentation/screens/profile_posts_feed_screen.dart';
 import '../../features/post/presentation/screens/post_detail_screen.dart';
 import '../../features/profile/presentation/screens/edit_profile_screen.dart';
 import '../../features/profile/presentation/screens/followers_screen.dart';
@@ -44,8 +47,11 @@ abstract final class AppRoutes {
   static const String termsOfService = '/terms-of-service';
 
   static String postDetailPath(String postId) => '/post/$postId';
+  static String editPostPath(String postId) => '/post/$postId/edit';
   static String followersPath(String userId) => '/followers/$userId';
   static String userProfilePath(String userId) => '/user/$userId';
+  static String profilePostsFeedPath(String userId, String postId) =>
+      '/user/$userId/posts?postId=$postId';
 }
 
 // Navigator keys for each shell branch
@@ -166,6 +172,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
+        path: '/post/:postId/edit',
+        pageBuilder: (_, state) => MaterialPage(
+          fullscreenDialog: true,
+          child: EditPostScreen(post: state.extra as Post),
+        ),
+      ),
+      GoRoute(
         path: '/followers/:userId',
         builder: (_, state) => FollowersScreen(
           userId: state.pathParameters['userId']!,
@@ -187,6 +200,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/user/:userId',
         builder: (_, state) => ProfileScreen(
           userId: state.pathParameters['userId'],
+        ),
+      ),
+      GoRoute(
+        path: '/user/:userId/posts',
+        builder: (_, state) => ProfilePostsFeedScreen(
+          userId: state.pathParameters['userId']!,
+          initialPostId: state.uri.queryParameters['postId'] ?? '',
         ),
       ),
       GoRoute(

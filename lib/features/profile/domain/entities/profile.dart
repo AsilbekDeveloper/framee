@@ -14,6 +14,7 @@ class Profile {
     this.isPrivate = false,
     this.isVerified = false,
     this.isFollowing = false,
+    this.isRequested = false,
     this.isFollowingMe = false,
     required this.createdAt,
     this.updatedAt,
@@ -33,6 +34,9 @@ class Profile {
 
   /// Whether the current viewer follows this profile (always false for own profile).
   final bool isFollowing;
+
+  /// Whether the current viewer has a pending follow request to this (private) profile.
+  final bool isRequested;
 
   /// Whether this profile follows the current viewer back.
   final bool isFollowingMe;
@@ -64,6 +68,7 @@ class Profile {
     bool? isPrivate,
     bool? isVerified,
     bool? isFollowing,
+    bool? isRequested,
     bool? isFollowingMe,
     DateTime? createdAt,
     Object? updatedAt = _unset,
@@ -81,6 +86,7 @@ class Profile {
         isPrivate: isPrivate ?? this.isPrivate,
         isVerified: isVerified ?? this.isVerified,
         isFollowing: isFollowing ?? this.isFollowing,
+        isRequested: isRequested ?? this.isRequested,
         isFollowingMe: isFollowingMe ?? this.isFollowingMe,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt == _unset ? this.updatedAt : updatedAt as DateTime?,

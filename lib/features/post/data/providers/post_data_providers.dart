@@ -14,6 +14,7 @@ import '../../domain/usecases/get_user_posts_usecase.dart';
 import '../../domain/usecases/toggle_comment_like_usecase.dart';
 import '../../domain/usecases/toggle_like_usecase.dart';
 import '../../domain/usecases/toggle_save_usecase.dart';
+import '../../domain/usecases/update_post_usecase.dart';
 import '../datasources/post_remote_datasource.dart';
 import '../repositories/post_repository_impl.dart';
 
@@ -82,4 +83,8 @@ final getSavedPostsUseCaseProvider = Provider<GetSavedPostsUseCase>(
 
 final toggleCommentLikeUseCaseProvider = Provider<ToggleCommentLikeUseCase>(
   (ref) => ToggleCommentLikeUseCase(ref.read(postRepositoryProvider)),
+);
+
+final updatePostUseCaseProvider = Provider<UpdatePostUseCase>(
+  (ref) => UpdatePostUseCase(ref.read(postRepositoryProvider)),
 );

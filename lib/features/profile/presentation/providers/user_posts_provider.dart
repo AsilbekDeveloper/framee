@@ -58,6 +58,62 @@ class UserPostsNotifier extends FamilyAsyncNotifier<List<Post>, String> {
       if (!state.hasValue) state = AsyncError(e, st);
     }
   }
+
+  void _patchPost(String postId, Post Function(Post) update) {
+    final cur = state.valueOrNull;
+    if (cur == null) return;
+    state = AsyncData([for (final p in cur) p.id == postId ? update(p) : p]);
+  }
+
+  Future<void> toggleLike(Post post) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) return;
+    if (state.valueOrNull == null) return;
+
+    final original = post;
+
+    _patchPost(post.id, (p) => p.copyWith(
+      isLiked: !p.isLiked,
+      likesCount: p.isLiked ? p.likesCount - 1 : p.likesCount + 1,
+    ));
+
+    final result = await ref.read(toggleLikeUseCaseProvider).call(
+          postId: post.id,
+          currentUserId: currentUserId,
+        );
+
+    switch (result) {
+      case Ok(:final value):
+        _patchPost(post.id, (p) => p.copyWith(
+          isLiked: value.isLiked,
+          likesCount: value.likesCount,
+        ));
+      case Err():
+        _patchPost(post.id, (p) => p.copyWith(
+          isLiked: original.isLiked,
+          likesCount: original.likesCount,
+        ));
+    }
+  }
+
+  Future<void> toggleSave(Post post) async {
+    final currentUserId = _currentUserId;
+    if (currentUserId == null) return;
+    if (state.valueOrNull == null) return;
+
+    final original = post;
+
+    _patchPost(post.id, (p) => p.copyWith(isSaved: !p.isSaved));
+
+    final result = await ref.read(toggleSaveUseCaseProvider).call(
+          postId: post.id,
+          currentUserId: currentUserId,
+        );
+
+    if (result is Err) {
+      _patchPost(post.id, (p) => p.copyWith(isSaved: original.isSaved));
+    }
+  }
 }
 
 final userPostsProvider =

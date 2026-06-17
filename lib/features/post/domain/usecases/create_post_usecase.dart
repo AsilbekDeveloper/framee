@@ -1,3 +1,4 @@
+import '../../../../core/constants/app_config.dart';
 import '../../../../core/errors/result.dart';
 import '../entities/post.dart';
 import '../failures/post_failure.dart';
@@ -20,10 +21,11 @@ class CreatePostUseCase {
       );
     }
 
-    if (caption.length > 2200) {
+    if (caption.length > AppConfig.maxCaptionLength) {
       return Future.value(
         const Err(PostValidationFailure(
-          message: 'Matn 2200 belgidan oshmasligi kerak.',
+          message:
+              'Matn ${AppConfig.maxCaptionLength} belgidan oshmasligi kerak.',
         )),
       );
     }

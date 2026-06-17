@@ -15,6 +15,14 @@ abstract final class AppStrings {
   static String get signUp => _t.auth.signUp;
   static String get createAccount => _t.auth.createAccount;
   static String get logOut => _t.auth.logOut;
+  static String get logOutConfirm => _t.auth.logOutConfirm;
+  static String get confirmEmailTitle => _t.auth.confirmEmailTitle;
+  static String confirmEmailBody(String email) =>
+      _t.auth.confirmEmailBody(email: email);
+  static String get goToSignIn => _t.auth.goToSignIn;
+  static String get resetPassword => _t.auth.resetPassword;
+  static String get emailAddressLabel => _t.auth.emailAddressLabel;
+  static String get passwordResetSent => _t.auth.passwordResetSent;
   static String get deleteAccount => _t.auth.deleteAccount;
   static String get email => _t.auth.email;
   static String get password => _t.auth.password;
@@ -26,6 +34,7 @@ abstract final class AppStrings {
   static String get repeatPasswordPlaceholder => _t.auth.repeatPasswordPlaceholder;
   static String get fullNamePlaceholder => _t.auth.fullNamePlaceholder;
   static String get continueWithGoogle => _t.auth.continueWithGoogle;
+  static String get orDivider => _t.auth.orDivider;
   static String get welcomeBack => _t.auth.welcomeBack;
   static String get forgotPassword => _t.auth.forgotPassword;
   static String get joinFramee => _t.auth.joinFramee;
@@ -97,6 +106,10 @@ abstract final class AppStrings {
   static String get postDeleted => _t.post.postDeleted;
   static String get postPublished => _t.post.postPublished;
   static String get postReported => _t.post.postReported;
+  static String get editPost => 'Edit Post';
+  static String get postUpdated => 'Post updated';
+  static String get discardChanges => 'Discard changes?';
+  static String get discardChangesSub => 'Your changes will be lost.';
 
   // ─── Search ───────────────────────────────────────────────
   static String get search => _t.search.search;
@@ -121,7 +134,8 @@ abstract final class AppStrings {
 
   // ─── Follow ───────────────────────────────────────────────
   static String get follow => _t.follow.follow;
-  static String get followBack => 'Follow Back';
+  static String get followBack => _t.follow.followBack;
+  static String get requested => _t.follow.requested;
   static String get following => _t.follow.following;
   static String get followSuccess => _t.follow.followSuccess;
   static String get unfollowConfirm => _t.follow.unfollowConfirm;
@@ -136,6 +150,10 @@ abstract final class AppStrings {
   static String get andOthers => _t.notifications.andOthers;
   static String get startedFollowingYou => _t.notifications.startedFollowingYou;
   static String get commented => _t.notifications.commented;
+  static String get wantsToFollowYou => _t.notifications.wantsToFollowYou;
+  static String get commentedYourPost => _t.notifications.commentedYourPost;
+  static String get mentionedYou => _t.notifications.mentionedYou;
+  static String get accept => _t.notifications.accept;
 
   // ─── Settings ─────────────────────────────────────────────
   static String get settings => _t.settings.settings;
@@ -167,14 +185,14 @@ abstract final class AppStrings {
   static String get versionValue => _t.settings.versionValue;
   static String get loggedOut => _t.settings.loggedOut;
   static String get accountDeletionRequested => _t.settings.accountDeletionRequested;
+  static String get deleteAccountConfirm => _t.settings.deleteAccountConfirm;
+  static String get fillAllFields => _t.settings.fillAllFields;
 
   // ─── Edit Profile ─────────────────────────────────────────
   static String get save => _t.editProfile.save;
   static String get profileUpdated => _t.editProfile.profileUpdated;
   static String get privateAccount => _t.editProfile.privateAccount;
   static String get privateAccountSub => _t.editProfile.privateAccountSub;
-  static String get showActivityStatus => _t.editProfile.showActivityStatus;
-  static String get showActivityStatusSub => _t.editProfile.showActivityStatusSub;
   static String get accountSettings => _t.editProfile.accountSettings;
 
   // ─── Followers ────────────────────────────────────────────
@@ -187,10 +205,28 @@ abstract final class AppStrings {
   static String get retry => _t.errors.retry;
   static String get errorOccurred => _t.errors.somethingWentWrong;
   static String get sessionExpired => _t.errors.sessionExpired;
+  static String get errorInvalidCredentials => _t.errors.invalidCredentials;
+  static String get errorEmailInUse => _t.errors.emailInUse;
+  static String get errorEmailNotConfirmed => _t.errors.emailNotConfirmed;
+  static String get errorWeakPassword => _t.errors.weakPassword;
 
   // ─── Empty States ─────────────────────────────────────────
   static String get noPostsYet => _t.empty.noPostsYet;
   static String get noPostsYetSub => _t.empty.noPostsYetSub;
+  static String get savedSub => _t.empty.savedSub;
+  static String get noTextPosts => _t.empty.noTextPosts;
+  static String get noTextPostsSub => _t.empty.noTextPostsSub;
+
+  // ─── Privacy info ─────────────────────────────────────────
+  static String get pvAccountVisibility => _t.privacyInfo.accountVisibility;
+  static String get pvAccountVisibilityBody =>
+      _t.privacyInfo.accountVisibilityBody;
+  static String get pvBlockedUsers => _t.privacyInfo.blockedUsers;
+  static String get pvBlockedUsersBody => _t.privacyInfo.blockedUsersBody;
+  static String get pvComments => _t.privacyInfo.comments;
+  static String get pvCommentsBody => _t.privacyInfo.commentsBody;
+  static String get pvLocationData => _t.privacyInfo.locationData;
+  static String get pvLocationDataBody => _t.privacyInfo.locationDataBody;
   static String get noNotifications => _t.empty.noNotifications;
   static String get noNotificationsSub => _t.empty.noNotificationsSub;
   static String get noResults => _t.empty.noResults;
@@ -204,6 +240,9 @@ abstract final class AppStrings {
   static String get edit => _t.misc.edit;
   static String get delete => _t.misc.delete;
   static String get options => _t.misc.options;
+  static String get send => _t.misc.send;
+  static String get done => _t.misc.done;
+  static String get postNotFound => _t.misc.postNotFound;
   static String get galleryOpened => _t.misc.galleryOpened;
   static const String charCountFormat = '{count} / {max}';
   static String get minutesAgo => _t.misc.minutesAgo;

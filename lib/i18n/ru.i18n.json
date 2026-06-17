@@ -6,6 +6,13 @@
     "signUp": "Регистрация",
     "createAccount": "Создать аккаунт",
     "logOut": "Выйти",
+    "logOutConfirm": "Вы уверены, что хотите выйти?",
+    "confirmEmailTitle": "Подтвердите email",
+    "confirmEmailBody": "Ссылка для подтверждения отправлена на $email. Пожалуйста, подтвердите email и войдите.",
+    "goToSignIn": "Перейти ко входу",
+    "resetPassword": "Сброс пароля",
+    "emailAddressLabel": "Ваш email адрес",
+    "passwordResetSent": "Ссылка для сброса пароля отправлена на ваш email",
     "deleteAccount": "Удалить аккаунт",
     "email": "Email",
     "password": "Пароль",
@@ -17,6 +24,7 @@
     "repeatPasswordPlaceholder": "Повторите пароль",
     "fullNamePlaceholder": "Ваше полное имя",
     "continueWithGoogle": "Продолжить с Google",
+    "orDivider": "или",
     "welcomeBack": "С возвращением 👋",
     "forgotPassword": "Забыли пароль?",
     "joinFramee": "Присоединяйтесь к Framee",
@@ -114,6 +122,8 @@
   "follow": {
     "follow": "Подписаться",
     "following": "Вы подписаны",
+    "followBack": "Подписаться в ответ",
+    "requested": "Запрошено",
     "followSuccess": "Подписались!",
     "unfollowConfirm": "Отписаться"
   },
@@ -126,7 +136,11 @@
     "likedYourPost": "понравился ваш пост",
     "andOthers": "и другие",
     "startedFollowingYou": "подписался на вас",
-    "commented": "прокомментировал:"
+    "commented": "прокомментировал:",
+    "wantsToFollowYou": "хочет подписаться на вас",
+    "commentedYourPost": "прокомментировал ваш пост",
+    "mentionedYou": "упомянул вас в комментарии",
+    "accept": "Принять"
   },
   "settings": {
     "settings": "Настройки",
@@ -154,15 +168,15 @@
     "version": "Версия",
     "versionValue": "1.0.0 MVP",
     "loggedOut": "Вы вышли!",
-    "accountDeletionRequested": "Запрос на удаление аккаунта отправлен"
+    "accountDeletionRequested": "Запрос на удаление аккаунта отправлен",
+    "deleteAccountConfirm": "Вы уверены, что хотите удалить аккаунт? Это действие необратимо.",
+    "fillAllFields": "Пожалуйста, заполните все поля"
   },
   "editProfile": {
     "save": "Сохранить",
     "profileUpdated": "Профиль обновлён!",
     "privateAccount": "Закрытый аккаунт",
     "privateAccountSub": "Только подтверждённые подписчики видят ваши посты",
-    "showActivityStatus": "Показывать статус активности",
-    "showActivityStatusSub": "Позволить другим видеть время вашей последней активности",
     "accountSettings": "Настройки аккаунта"
   },
   "followers": {
@@ -173,7 +187,21 @@
     "noInternetConnection": "Нет подключения к интернету",
     "tryAgain": "Попробовать снова",
     "retry": "Повторить",
-    "sessionExpired": "Сессия истекла. Войдите снова."
+    "sessionExpired": "Сессия истекла. Войдите снова.",
+    "invalidCredentials": "Неверный email или пароль.",
+    "emailInUse": "Этот email уже зарегистрирован.",
+    "emailNotConfirmed": "Пожалуйста, подтвердите свой email.",
+    "weakPassword": "Пароль должен содержать не менее 6 символов."
+  },
+  "privacyInfo": {
+    "accountVisibility": "Видимость аккаунта",
+    "accountVisibilityBody": "Управляйте тем, кто может видеть ваш профиль, посты и активность. Закрытые аккаунты требуют подтверждения перед подпиской.",
+    "blockedUsers": "Заблокированные пользователи",
+    "blockedUsersBody": "Заблокированные пользователи не видят ваш профиль или контент и не могут с вами взаимодействовать.",
+    "comments": "Комментарии",
+    "commentsBody": "Выберите, кто может комментировать ваши посты — все, только подписчики или никто.",
+    "locationData": "Данные о местоположении",
+    "locationDataBody": "Framee не собирает и не хранит ваше местоположение. К вашим постам не прикрепляются данные о местоположении."
   },
   "empty": {
     "noPostsYet": "Пока нет постов",
@@ -181,7 +209,10 @@
     "noNotifications": "Нет уведомлений",
     "noNotificationsSub": "Когда у вас появятся уведомления, они отобразятся здесь.",
     "noResults": "Ничего не найдено",
-    "noResultsSub": "Попробуйте другой запрос."
+    "noResultsSub": "Попробуйте другой запрос.",
+    "savedSub": "Сохранённые посты появятся здесь.",
+    "noTextPosts": "Пока нет текстовых постов",
+    "noTextPostsSub": "Написанные вами текстовые посты появятся здесь."
   },
   "misc": {
     "more": "ещё",
@@ -191,6 +222,9 @@
     "edit": "Изменить",
     "delete": "Удалить",
     "options": "Варианты",
+    "send": "Отправить",
+    "done": "Готово",
+    "postNotFound": "Пост не найден",
     "galleryOpened": "Галерея открыта",
     "minutesAgo": "мин назад",
     "hourAgo": "ч назад",

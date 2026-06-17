@@ -15,64 +15,110 @@ import '../widgets/home_app_bar.dart';
 import '../widgets/loading_feed.dart';
 import '../widgets/post_options_sheet.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final postsAsync = ref.watch(homeProvider);
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 400) {
+      ref.read(homeProvider.notifier).loadMore();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final feedAsync = ref.watch(homeProvider);
 
     return Scaffold(
       appBar: const HomeAppBar(),
       body: RefreshIndicator(
         color: AppColors.primary,
         onRefresh: () => ref.read(homeProvider.notifier).refresh(),
-        child: postsAsync.when(
+        child: feedAsync.when(
           loading: () => const LoadingFeed(),
-          error: (e, _) => EmptyState(
-            icon: Icons.error_outline,
-            title: AppStrings.errorOccurred,
-            subtitle: AppStrings.tryAgain,
+          // Wrapped in a scrollable so pull-to-refresh works, and an explicit
+          // Retry button so the user is never stranded on a failed load.
+          error: (e, _) => _ScrollableFill(
+            child: EmptyState(
+              icon: Icons.error_outline,
+              title: AppStrings.errorOccurred,
+              action: () => ref.read(homeProvider.notifier).refresh(),
+              actionLabel: AppStrings.retry,
+            ),
           ),
-          data: (posts) => posts.isEmpty
-              ? EmptyState(
-                  icon: Icons.photo_library_outlined,
-                  title: AppStrings.noPostsYet,
-                  subtitle: AppStrings.noPostsYetSub,
+          data: (feed) => feed.posts.isEmpty
+              ? _ScrollableFill(
+                  child: EmptyState(
+                    icon: Icons.photo_library_outlined,
+                    title: AppStrings.noPostsYet,
+                    subtitle: AppStrings.noPostsYetSub,
+                  ),
                 )
               : CustomScrollView(
+                  controller: _scrollController,
                   slivers: [
                     SliverList.builder(
-                      itemCount: posts.length,
-                      itemBuilder: (context, index) => PostCard(
-                        key: ValueKey(posts[index].id),
-                        post: posts[index],
-                        onLikeTap: () =>
-                            ref.read(homeProvider.notifier).toggleLike(
-                                  posts[index].id,
-                                ),
-                        onCommentTap: () => context.push(
-                          AppRoutes.postDetailPath(posts[index].id),
-                        ),
-                        onSaveTap: () =>
-                            ref.read(homeProvider.notifier).toggleSave(
-                                  posts[index].id,
-                                ),
-                        onMoreTap: () => _showPostOptions(
-                          context,
-                          ref: ref,
-                          postId: posts[index].id,
-                          isSaved: posts[index].isSaved,
-                          isOwner: posts[index].author.id ==
-                              ref.read(currentUserIdProvider),
-                        ),
-                        onUserTap: () => context.push(
-                          AppRoutes.userProfilePath(posts[index].author.id),
-                        ),
-                      ),
+                      addAutomaticKeepAlives: false,
+                      addRepaintBoundaries: false,
+                      itemCount: feed.posts.length,
+                      itemBuilder: (context, index) {
+                        final post = feed.posts[index];
+                        return PostCard(
+                          key: ValueKey(post.id),
+                          post: post,
+                          onLikeTap: () =>
+                              ref.read(homeProvider.notifier).toggleLike(post.id),
+                          onCommentTap: () => context.push(
+                            AppRoutes.postDetailPath(post.id),
+                          ),
+                          onSaveTap: () =>
+                              ref.read(homeProvider.notifier).toggleSave(post.id),
+                          onMoreTap: () => _showPostOptions(
+                            context,
+                            postId: post.id,
+                            isSaved: post.isSaved,
+                            isOwner: post.author.id ==
+                                ref.read(currentUserIdProvider),
+                          ),
+                          onUserTap: () => context.push(
+                            AppRoutes.userProfilePath(post.author.id),
+                          ),
+                        );
+                      },
                     ),
                     SliverToBoxAdapter(
-                      child: SizedBox(height: AppDimens.vlg),
+                      child: feed.isLoadingMore
+                          ? const Padding(
+                              padding: EdgeInsets.all(16),
+                              child: Center(
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2),
+                                ),
+                              ),
+                            )
+                          : SizedBox(height: AppDimens.vlg),
                     ),
                   ],
                 ),
@@ -83,7 +129,6 @@ class HomeScreen extends ConsumerWidget {
 
   void _showPostOptions(
     BuildContext context, {
-    required WidgetRef ref,
     required String postId,
     required bool isSaved,
     required bool isOwner,
@@ -96,16 +141,12 @@ class HomeScreen extends ConsumerWidget {
         isSaved: isSaved,
         onToggleSave: () =>
             ref.read(homeProvider.notifier).toggleSave(postId),
-        onDelete: isOwner ? () => _confirmDeletePost(context, ref, postId) : null,
+        onDelete: isOwner ? () => _confirmDeletePost(postId) : null,
       ),
     );
   }
 
-  Future<void> _confirmDeletePost(
-    BuildContext context,
-    WidgetRef ref,
-    String postId,
-  ) async {
+  Future<void> _confirmDeletePost(String postId) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -124,17 +165,39 @@ class HomeScreen extends ConsumerWidget {
         ],
       ),
     );
-    if (confirm == true && context.mounted) {
+    if (confirm == true && mounted) {
       try {
         await ref.read(homeProvider.notifier).deletePost(postId);
-        if (context.mounted) {
+        if (mounted) {
           context.showSnackBar(AppStrings.postDeleted);
         }
       } catch (_) {
-        if (context.mounted) {
+        if (mounted) {
           context.showSnackBar(AppStrings.somethingWentWrong);
         }
       }
     }
+  }
+}
+
+/// Wraps a non-scrollable child (e.g. an empty/error state) so that it fills the
+/// viewport and remains over-scrollable — required for [RefreshIndicator]'s
+/// pull-to-refresh to work when the feed is empty or has failed to load.
+class _ScrollableFill extends StatelessWidget {
+  const _ScrollableFill({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: child,
+        ),
+      ),
+    );
   }
 }

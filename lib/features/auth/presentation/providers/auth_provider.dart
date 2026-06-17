@@ -1,7 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/config/app_logger.dart';
+import '../../../../core/services/fcm_service.dart';
+import '../../../../core/services/post_cache_service.dart';
+import '../../../../core/errors/failure_message.dart';
 import '../../../../core/errors/result.dart';
+import '../../../home/presentation/providers/home_provider.dart';
+import '../../../notifications/presentation/providers/notifications_provider.dart';
+import '../../../profile/presentation/providers/profile_provider.dart';
+import '../../../profile/presentation/providers/user_posts_provider.dart';
+import '../../../search/presentation/providers/search_provider.dart';
 import '../../data/providers/auth_data_providers.dart';
 import '../../domain/entities/auth_user.dart';
 import '../../domain/usecases/send_password_reset_usecase.dart';
@@ -112,9 +120,11 @@ class AuthNotifier extends Notifier<AuthState> {
       case Ok(:final value):
         AppLogger.i('Auth: signed in — ${value.email}');
         state = state.copyWith(isLoading: false, user: value);
+        FcmService.instance.saveTokenAfterLogin();
       case Err(:final failure):
         AppLogger.w('Auth: sign-in error — ${failure.code}');
-        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+        state = state.copyWith(
+            isLoading: false, errorMessage: localizedFailure(failure));
     }
   }
 
@@ -148,7 +158,8 @@ class AuthNotifier extends Notifier<AuthState> {
         state = state.copyWith(isLoading: false, user: value);
       case Err(:final failure):
         AppLogger.w('Auth: sign-up error — ${failure.code}');
-        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+        state = state.copyWith(
+            isLoading: false, errorMessage: localizedFailure(failure));
     }
   }
 
@@ -161,7 +172,8 @@ class AuthNotifier extends Notifier<AuthState> {
     // On success, the auth stream delivers the new user — only handle errors here.
     if (result case Err(:final failure)) {
       AppLogger.w('Auth: Google sign-in error — ${failure.code}');
-      state = state.copyWith(isLoading: false, errorMessage: failure.message);
+      state = state.copyWith(
+          isLoading: false, errorMessage: localizedFailure(failure));
     }
   }
 
@@ -179,7 +191,16 @@ class AuthNotifier extends Notifier<AuthState> {
         state = state.copyWith(isLoading: false);
       case Err(:final failure):
         AppLogger.w('Auth: password reset error — ${failure.code}');
-        state = state.copyWith(isLoading: false, errorMessage: failure.message);
+        state = state.copyWith(
+            isLoading: false, errorMessage: localizedFailure(failure));
+    }
+  }
+
+  /// Clears any pending error message. Call when leaving a screen so a login
+  /// error never lingers onto the sign-up screen (they share this notifier).
+  void clearError() {
+    if (state.errorMessage != null) {
+      state = state.copyWith(clearError: true);
     }
   }
 
@@ -191,8 +212,36 @@ class AuthNotifier extends Notifier<AuthState> {
     if (result case Err(:final failure)) {
       AppLogger.e('Auth: sign-out error — ${failure.code}');
     }
+    await _clearUserScopedState();
     // Always reset local state regardless of the result.
     state = const AuthState();
+  }
+
+  /// Permanently deletes the account, then performs the same local cleanup as
+  /// [signOut]. The data source signs out on success (which the router observes
+  /// and redirects), so cleanup runs only when deletion actually succeeded —
+  /// otherwise the user remains authenticated and nothing is wiped.
+  Future<Result<void>> deleteAccount() async {
+    AppLogger.i('Auth: delete account');
+    final result = await ref.read(deleteAccountUseCaseProvider).call();
+    if (result case Ok()) {
+      await _clearUserScopedState();
+      state = const AuthState();
+    } else {
+      AppLogger.w('Auth: delete account failed — state left intact');
+    }
+    return result;
+  }
+
+  /// Clears cached posts and resets every user-scoped provider so the next
+  /// account starts clean and never sees the previous user's data.
+  Future<void> _clearUserScopedState() async {
+    await ref.read(postCacheServiceProvider).clearAll();
+    ref.invalidate(homeProvider);
+    ref.invalidate(notificationsProvider);
+    ref.invalidate(searchProvider);
+    ref.invalidate(profileProvider);
+    ref.invalidate(userPostsProvider);
   }
 }
 

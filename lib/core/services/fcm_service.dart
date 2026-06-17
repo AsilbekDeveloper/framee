@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Handles Firebase Cloud Messaging (FCM) for Framee.
 /// Call [initialize] once in main() before runApp.
@@ -10,10 +13,24 @@ class FcmService {
 
   final _messaging = FirebaseMessaging.instance;
   final _localNotifications = FlutterLocalNotificationsPlugin();
+  final _routeStream = StreamController<String>.broadcast();
 
   static const _channelId = 'framee_channel';
   static const _channelName = 'Framee Notifications';
   static const _channelDesc = 'Framee social activity notifications';
+
+  /// Notification tap qilinganda navigate qilish kerak bo'lgan route stream.
+  Stream<String> get navigationStream => _routeStream.stream;
+
+  String? _pendingRoute;
+
+  /// App terminated holatdan notification tap qilinsa saqlangan route.
+  /// Bir marta o'qilgandan keyin null bo'ladi.
+  String? consumePendingRoute() {
+    final r = _pendingRoute;
+    _pendingRoute = null;
+    return r;
+  }
 
   Future<void> initialize() async {
     // 1. Request permission
@@ -24,9 +41,7 @@ class FcmService {
     );
 
     if (kDebugMode) {
-      debugPrint(
-        '[FCM] Permission: ${settings.authorizationStatus}',
-      );
+      debugPrint('[FCM] Permission: ${settings.authorizationStatus}');
     }
 
     // 2. Setup local notifications channel (Android)
@@ -58,19 +73,47 @@ class FcmService {
     // 5. Background / terminated open handler
     FirebaseMessaging.onMessageOpenedApp.listen(_onMessageOpenedApp);
 
-    // 6. Get & print FCM token
+    // 6. App terminated holatdan notification tap qilinsa (cold start)
+    final initialMessage = await _messaging.getInitialMessage();
+    if (initialMessage != null) {
+      final route = initialMessage.data['route'] as String?;
+      if (kDebugMode) debugPrint('[FCM] Cold start route: $route');
+      if (route != null) _pendingRoute = route;
+    }
+
+    // 7. Get FCM token and save to Supabase if user is logged in
     final token = await _messaging.getToken();
     if (kDebugMode) debugPrint('[FCM] Token: $token');
+    if (token != null) await _saveTokenToSupabase(token);
 
-    // Send token to Supabase user profile in production:
-    // await supabase.from('profiles').update({'fcm_token': token})
-    //     .eq('id', supabase.auth.currentUser!.id);
-
-    // 7. Token refresh
+    // 8. Token refresh — save updated token
     _messaging.onTokenRefresh.listen((newToken) {
       if (kDebugMode) debugPrint('[FCM] Token refreshed: $newToken');
-      // Update Supabase profile
+      _saveTokenToSupabase(newToken);
     });
+  }
+
+  /// Call this after a successful login to ensure the token is saved.
+  Future<void> saveTokenAfterLogin() async {
+    final token = await _messaging.getToken();
+    if (token != null) await _saveTokenToSupabase(token);
+  }
+
+  Future<void> _saveTokenToSupabase(String token) async {
+    try {
+      final client = Supabase.instance.client;
+      final userId = client.auth.currentUser?.id;
+      if (userId == null) return;
+
+      await client
+          .from('profiles')
+          .update({'fcm_token': token})
+          .eq('id', userId);
+
+      if (kDebugMode) debugPrint('[FCM] Token saved to Supabase');
+    } catch (e) {
+      if (kDebugMode) debugPrint('[FCM] Failed to save token: $e');
+    }
   }
 
   void _onForegroundMessage(RemoteMessage message) {
@@ -101,17 +144,15 @@ class FcmService {
   }
 
   void _onMessageOpenedApp(RemoteMessage message) {
-    // Navigate to the relevant screen based on message.data
-    // Use your GoRouter navigatorKey to push route
     final route = message.data['route'] as String?;
     if (kDebugMode) debugPrint('[FCM] Opened from notification: $route');
-    // routerNavigatorKey.currentContext?.push(route);
+    if (route != null) _routeStream.add(route);
   }
 
   void _onNotificationTap(NotificationResponse response) {
     final route = response.payload;
     if (kDebugMode) debugPrint('[FCM] Tapped notification route: $route');
-    // routerNavigatorKey.currentContext?.push(route ?? '/');
+    if (route != null) _routeStream.add(route);
   }
 
   Future<String?> getToken() => _messaging.getToken();

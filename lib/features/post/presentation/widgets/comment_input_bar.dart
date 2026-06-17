@@ -10,6 +10,7 @@ import '../../../../../core/constants/app_dimens.dart';
 import '../../../../../core/constants/app_strings.dart';
 import '../../../../../core/constants/app_text_styles.dart';
 import '../../../auth/data/providers/auth_data_providers.dart';
+import '../../../profile/presentation/providers/profile_provider.dart';
 
 class ReplyBanner extends StatelessWidget {
   const ReplyBanner({
@@ -97,11 +98,15 @@ class _CommentInputBarState extends ConsumerState<CommentInputBar> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Prefer the profile's uploaded (http) avatar over auth metadata, which can
+    // still hold a stale local crop-cache path that no longer exists on disk.
+    final profile = ref.watch(profileProvider(null)).valueOrNull;
     final authUser = ref.watch(authUserStreamProvider).valueOrNull;
-    final avatarUrl = authUser?.avatarUrl;
-    final initials = authUser?.username?.isNotEmpty == true
-        ? authUser!.username![0].toUpperCase()
-        : 'A';
+    final avatarUrl = profile?.avatarUrl ?? authUser?.avatarUrl;
+    final initials = profile?.initials ??
+        (authUser?.username?.isNotEmpty == true
+            ? authUser!.username![0].toUpperCase()
+            : 'A');
 
     return Container(
       padding: EdgeInsets.fromLTRB(

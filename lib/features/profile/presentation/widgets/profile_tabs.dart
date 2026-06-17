@@ -191,8 +191,8 @@ class ProfileTextPostsTab extends ConsumerWidget {
           return SliverToBoxAdapter(
             child: EmptyState(
               icon: Icons.text_fields_rounded,
-              title: 'No text posts yet',
-              subtitle: 'Text posts you write will appear here.',
+              title: AppStrings.noTextPosts,
+              subtitle: AppStrings.noTextPostsSub,
             ),
           );
         }

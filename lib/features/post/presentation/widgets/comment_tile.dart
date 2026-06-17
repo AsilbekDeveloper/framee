@@ -24,7 +24,11 @@ class CommentTile extends StatelessWidget {
 
   final Comment comment;
   final VoidCallback onLikeTap;
-  final VoidCallback onReplyTap;
+
+  /// Called when the user taps "Reply". Receives the username of the tapped
+  /// comment/reply author so the input can show the correct @mention, while
+  /// the screen keeps the reply attached to the top-level comment.
+  final void Function(String username) onReplyTap;
   final VoidCallback? onDeleteTap;
   final void Function(String commentId)? onReplyLikeTap;
   final void Function(String replyId)? onReplyDeleteTap;
@@ -107,7 +111,7 @@ class _RepliesSection extends StatelessWidget {
   final String? currentUserId;
   final void Function(String)? onReplyLikeTap;
   final void Function(String)? onReplyDeleteTap;
-  final VoidCallback onReplyTap;
+  final void Function(String username) onReplyTap;
   final bool isDark;
 
   @override
@@ -173,7 +177,7 @@ class _ReplyTile extends StatelessWidget {
   final String? currentUserId;
   final VoidCallback onLikeTap;
   final VoidCallback? onDeleteTap;
-  final VoidCallback onReplyTap;
+  final void Function(String username) onReplyTap;
   final bool isDark;
 
   @override
@@ -275,7 +279,7 @@ class _CommentMeta extends StatelessWidget {
 
   final Comment comment;
   final Color mutedColor;
-  final VoidCallback onReplyTap;
+  final void Function(String username) onReplyTap;
   final VoidCallback? onDeleteTap;
 
   @override
@@ -295,7 +299,7 @@ class _CommentMeta extends StatelessWidget {
         ],
         Gap(AppDimens.lg),
         GestureDetector(
-          onTap: onReplyTap,
+          onTap: () => onReplyTap(comment.author.username),
           child: Text(
             AppStrings.reply,
             style: AppTextStyles.caption.copyWith(

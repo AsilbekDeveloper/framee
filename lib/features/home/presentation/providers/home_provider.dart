@@ -1,47 +1,73 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/config/app_logger.dart';
+import '../../../../core/constants/app_config.dart';
 import '../../../../core/errors/result.dart';
 import '../../../../core/providers/current_user_provider.dart';
 import '../../../../core/services/post_cache_service.dart';
 import '../../../post/data/providers/post_data_providers.dart';
 import '../../../post/domain/entities/post.dart';
 
-// ── Home Notifier ─────────────────────────────────────────────────────────────
+// ── State ─────────────────────────────────────────────────────────────────────
 
-/// Manages the home feed posts.
-///
-/// [build()] loads posts from Supabase.
-/// Like and save operations use optimistic updates — the UI updates before the server responds.
-class HomeNotifier extends AsyncNotifier<List<Post>> {
+class HomeFeedState {
+  const HomeFeedState({
+    this.posts = const [],
+    this.hasMore = true,
+    this.isLoadingMore = false,
+  });
+
+  final List<Post> posts;
+  final bool hasMore;
+  final bool isLoadingMore;
+
+  HomeFeedState copyWith({
+    List<Post>? posts,
+    bool? hasMore,
+    bool? isLoadingMore,
+  }) =>
+      HomeFeedState(
+        posts: posts ?? this.posts,
+        hasMore: hasMore ?? this.hasMore,
+        isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      );
+}
+
+// ── Notifier ──────────────────────────────────────────────────────────────────
+
+class HomeNotifier extends AsyncNotifier<HomeFeedState> {
+  static const _pageSize = AppConfig.feedPageSize;
+
   @override
-  Future<List<Post>> build() async {
+  Future<HomeFeedState> build() async {
     final cached = await ref.read(postCacheServiceProvider).loadFeed();
     if (cached.isNotEmpty) {
-      // Cache hit — show immediately and refresh in the background
       Future.microtask(_backgroundRefresh);
-      return cached;
+      return HomeFeedState(
+        posts: cached,
+        hasMore: cached.length >= _pageSize,
+      );
     }
-    // No cache — fetch from network
     return _fetchAndSave();
   }
 
-  String? get _currentUserId =>
-      ref.read(currentUserIdProvider);
+  String? get _currentUserId => ref.read(currentUserIdProvider);
 
-  Future<List<Post>> _fetchAndSave() async {
-    final posts = await _fetchPosts();
-    ref.read(postCacheServiceProvider).saveFeed(posts);
-    return posts;
+  Future<HomeFeedState> _fetchAndSave({int offset = 0}) async {
+    final posts = await _fetchPosts(offset: offset);
+    if (offset == 0) ref.read(postCacheServiceProvider).saveFeed(posts);
+    return HomeFeedState(
+      posts: posts,
+      hasMore: posts.length >= _pageSize,
+    );
   }
 
   Future<void> _backgroundRefresh() async {
     try {
-      final posts = await _fetchPosts();
-      state = AsyncData(posts);
-      ref.read(postCacheServiceProvider).saveFeed(posts);
+      final feedState = await _fetchAndSave();
+      state = AsyncData(feedState);
     } catch (_) {
-      // Offline or error — keep showing cached data
+      // Offline or error — keep cached data
     }
   }
 
@@ -55,7 +81,7 @@ class HomeNotifier extends AsyncNotifier<List<Post>> {
     AppLogger.d('HomeNotifier: loading feed — offset:$offset');
     final result = await ref.read(getFeedUseCaseProvider).call(
           currentUserId: userId,
-          limit: 20,
+          limit: _pageSize,
           offset: offset,
         );
 
@@ -67,29 +93,64 @@ class HomeNotifier extends AsyncNotifier<List<Post>> {
 
   Future<void> refresh() async {
     try {
-      final posts = await _fetchPosts();
-      state = AsyncData(posts);
-      ref.read(postCacheServiceProvider).saveFeed(posts);
+      final feedState = await _fetchAndSave();
+      state = AsyncData(feedState);
     } catch (e, st) {
-      // If we already have data, rely on the offline banner and keep the current state
       if (!state.hasValue) state = AsyncError(e, st);
     }
   }
 
-  /// Optimistic like toggle — server xatosi bo'lsa rollback qiladi
-  Future<void> toggleLike(String postId) async {
-    final prev = state.valueOrNull;
-    if (prev == null) return;
+  Future<void> loadMore() async {
+    final current = state.valueOrNull;
+    if (current == null || !current.hasMore || current.isLoadingMore) return;
 
-    // Optimistic update
-    state = AsyncData(prev
-        .map((p) => p.id != postId
-            ? p
-            : p.copyWith(
-                isLiked: !p.isLiked,
-                likesCount: p.isLiked ? p.likesCount - 1 : p.likesCount + 1,
-              ))
-        .toList());
+    state = AsyncData(current.copyWith(isLoadingMore: true));
+
+    try {
+      final newPosts = await _fetchPosts(offset: current.posts.length);
+      final combined = [...current.posts, ...newPosts];
+      state = AsyncData(HomeFeedState(
+        posts: combined,
+        hasMore: newPosts.length >= _pageSize,
+        isLoadingMore: false,
+      ));
+    } catch (_) {
+      // On error, just stop the spinner — keep existing posts
+      state = AsyncData(current.copyWith(isLoadingMore: false));
+    }
+  }
+
+  /// Replaces a single post (matched by id) in the current feed, leaving every
+  /// other post — including any loaded concurrently — untouched.
+  void _patchPost(String postId, Post Function(Post) update) {
+    final cur = state.valueOrNull;
+    if (cur == null) return;
+    state = AsyncData(cur.copyWith(
+      posts: [
+        for (final p in cur.posts) p.id == postId ? update(p) : p,
+      ],
+    ));
+  }
+
+  Post? _findPost(String postId) {
+    for (final p in state.valueOrNull?.posts ?? const <Post>[]) {
+      if (p.id == postId) return p;
+    }
+    return null;
+  }
+
+  Future<void> toggleLike(String postId) async {
+    final original = _findPost(postId);
+    if (original == null) return;
+
+    // Optimistic
+    _patchPost(
+      postId,
+      (p) => p.copyWith(
+        isLiked: !p.isLiked,
+        likesCount: p.isLiked ? p.likesCount - 1 : p.likesCount + 1,
+      ),
+    );
 
     final userId = _currentUserId;
     if (userId == null) return;
@@ -101,31 +162,31 @@ class HomeNotifier extends AsyncNotifier<List<Post>> {
 
     switch (result) {
       case Ok(:final value):
-        // Sync with the actual count returned by the server
-        state = AsyncData(state.valueOrNull!
-            .map((p) => p.id != postId
-                ? p
-                : p.copyWith(
-                    isLiked: value.isLiked,
-                    likesCount: value.likesCount,
-                  ))
-            .toList());
+        _patchPost(
+          postId,
+          (p) => p.copyWith(
+            isLiked: value.isLiked,
+            likesCount: value.likesCount,
+          ),
+        );
       case Err(:final failure):
-        // Rollback
         AppLogger.w('HomeNotifier: toggleLike rollback — ${failure.code}');
-        state = AsyncData(prev);
+        _patchPost(
+          postId,
+          (p) => p.copyWith(
+            isLiked: original.isLiked,
+            likesCount: original.likesCount,
+          ),
+        );
     }
   }
 
-  /// Optimistic save toggle
   Future<void> toggleSave(String postId) async {
-    final prev = state.valueOrNull;
-    if (prev == null) return;
+    final original = _findPost(postId);
+    if (original == null) return;
 
-    // Optimistic update
-    state = AsyncData(prev
-        .map((p) => p.id != postId ? p : p.copyWith(isSaved: !p.isSaved))
-        .toList());
+    // Optimistic
+    _patchPost(postId, (p) => p.copyWith(isSaved: !p.isSaved));
 
     final userId = _currentUserId;
     if (userId == null) return;
@@ -135,25 +196,10 @@ class HomeNotifier extends AsyncNotifier<List<Post>> {
           currentUserId: userId,
         );
 
-    switch (result) {
-      case Ok():
-        break; // optimistic update was correct
-      case Err(:final failure):
-        // Rollback
-        AppLogger.w('HomeNotifier: toggleSave rollback — ${failure.code}');
-        state = AsyncData(prev);
+    if (result case Err(:final failure)) {
+      AppLogger.w('HomeNotifier: toggleSave rollback — ${failure.code}');
+      _patchPost(postId, (p) => p.copyWith(isSaved: original.isSaved));
     }
-  }
-
-  Future<void> onPostCreated() async {
-    await refresh();
-  }
-
-  /// Removes a post from the feed after it has been deleted.
-  void removePost(String postId) {
-    state.whenData((posts) {
-      state = AsyncData(posts.where((p) => p.id != postId).toList());
-    });
   }
 
   Future<void> deletePost(String postId) async {
@@ -163,8 +209,9 @@ class HomeNotifier extends AsyncNotifier<List<Post>> {
     final prev = state.valueOrNull;
     if (prev == null) return;
 
-    // Optimistic removal
-    state = AsyncData(prev.where((p) => p.id != postId).toList());
+    state = AsyncData(prev.copyWith(
+      posts: prev.posts.where((p) => p.id != postId).toList(),
+    ));
 
     final result = await ref.read(deletePostUseCaseProvider).call(
           postId: postId,
@@ -182,6 +229,6 @@ class HomeNotifier extends AsyncNotifier<List<Post>> {
   }
 }
 
-final homeProvider = AsyncNotifierProvider<HomeNotifier, List<Post>>(
+final homeProvider = AsyncNotifierProvider<HomeNotifier, HomeFeedState>(
   HomeNotifier.new,
 );

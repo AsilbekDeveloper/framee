@@ -42,18 +42,15 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       context: ctx,
       barrierDismissible: false,
       builder: (_) => AlertDialog(
-        title: const Text('Confirm your email'),
-        content: Text(
-          'A confirmation link has been sent to ${_emailController.text}. '
-          'Please verify your email and sign in.',
-        ),
+        title: Text(AppStrings.confirmEmailTitle),
+        content: Text(AppStrings.confirmEmailBody(_emailController.text)),
         actions: [
           TextButton(
             onPressed: () {
               ctx.pop();
               ctx.go(AppRoutes.login);
             },
-            child: const Text('Go to Sign In'),
+            child: Text(AppStrings.goToSignIn),
           ),
         ],
       ),
@@ -205,7 +202,10 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                           ),
                           Gap(4.w),
                           GestureDetector(
-                            onTap: () => context.pop(),
+                            onTap: () {
+                              ref.read(authProvider.notifier).clearError();
+                              context.pop();
+                            },
                             child: Text(
                               AppStrings.signIn,
                               style: AppTextStyles.labelSmall

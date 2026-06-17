@@ -30,37 +30,29 @@ class PrivacyScreen extends StatelessWidget {
                 children: [
                   _PrivacySection(
                     icon: Icons.visibility_outlined,
-                    title: 'Account Visibility',
-                    body:
-                        'Control who can see your profile, posts, and activity. '
-                        'Private accounts require approval before others can follow you.',
+                    title: AppStrings.pvAccountVisibility,
+                    body: AppStrings.pvAccountVisibilityBody,
                     isDark: isDark,
                   ),
                   const AppDivider(),
                   _PrivacySection(
                     icon: Icons.block_outlined,
-                    title: 'Blocked Users',
-                    body:
-                        'Blocked users cannot see your profile or content, '
-                        'and cannot interact with you in any way.',
+                    title: AppStrings.pvBlockedUsers,
+                    body: AppStrings.pvBlockedUsersBody,
                     isDark: isDark,
                   ),
                   const AppDivider(),
                   _PrivacySection(
                     icon: Icons.comment_outlined,
-                    title: 'Comments',
-                    body:
-                        'Choose who can comment on your posts — everyone, '
-                        'your followers only, or no one.',
+                    title: AppStrings.pvComments,
+                    body: AppStrings.pvCommentsBody,
                     isDark: isDark,
                   ),
                   const AppDivider(),
                   _PrivacySection(
                     icon: Icons.location_off_outlined,
-                    title: 'Location Data',
-                    body:
-                        'Framee does not collect or store your location. '
-                        'No location data is attached to your posts.',
+                    title: AppStrings.pvLocationData,
+                    body: AppStrings.pvLocationDataBody,
                     isDark: isDark,
                   ),
                 ],

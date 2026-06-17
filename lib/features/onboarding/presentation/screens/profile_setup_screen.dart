@@ -8,6 +8,7 @@ import '../../../../core/components/app_avatar.dart';
 import '../../../../core/components/app_button.dart';
 import '../../../../core/components/app_text_field.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_config.dart';
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_text_styles.dart';
@@ -43,8 +44,21 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     final notifier = ref.read(profileSetupProvider.notifier);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    ref.listen<ProfileSetupState>(profileSetupProvider, (_, next) {
-      if (next.isSaved) context.go(AppRoutes.home);
+    ref.listen<ProfileSetupState>(profileSetupProvider, (prev, next) {
+      if (next.isSaved) {
+        context.go(AppRoutes.home);
+      } else if (next.errorMessage != null &&
+          next.errorMessage != prev?.errorMessage) {
+        // Surface save failures (e.g. username taken) instead of silently
+        // proceeding — the button no longer navigates on its own.
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.errorMessage!),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     });
 
     return Scaffold(
@@ -151,7 +165,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                           controller: _bioController,
                           hint: AppStrings.bioPlaceholder,
                           maxLines: 3,
-                          maxLength: 150,
+                          maxLength: AppConfig.maxBioLength,
                           onChanged: notifier.onBioChanged,
                           textInputAction: TextInputAction.next,
                         ),
@@ -159,7 +173,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: Text(
-                            '${state.bioLength} / 150',
+                            '${state.bioLength} / ${AppConfig.maxBioLength}',
                             style: AppTextStyles.caption.copyWith(
                               color: isDark
                                   ? AppColors.darkTextMuted
@@ -215,15 +229,15 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
 
                     AppButton(
                       label: AppStrings.saveAndContinue,
-                      onPressed: () async {
-                        await notifier.save(
-                          username: _usernameController.text,
-                          displayName: _displayNameController.text,
-                          bio: _bioController.text,
-                          website: _websiteController.text,
-                        );
-                        if (context.mounted) context.go(AppRoutes.home);
-                      },
+                      // Navigation happens in the ref.listen above, but only on
+                      // success (isSaved) — a failed save stays on this screen
+                      // and shows the error.
+                      onPressed: () => notifier.save(
+                        username: _usernameController.text,
+                        displayName: _displayNameController.text,
+                        bio: _bioController.text,
+                        website: _websiteController.text,
+                      ),
                       isLoading: state.isSaving,
                     ),
                     Gap(AppDimens.vmd),

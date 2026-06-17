@@ -177,6 +177,7 @@ class _PostImage extends StatelessWidget {
     return CachedNetworkImage(
       imageUrl: imageUrl,
       width: double.infinity,
+      memCacheWidth: 800,
       fadeInDuration: Duration.zero,
       fadeOutDuration: Duration.zero,
       imageBuilder: (context, imageProvider) => ClipRRect(

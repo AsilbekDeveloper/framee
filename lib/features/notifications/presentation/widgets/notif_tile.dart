@@ -70,8 +70,14 @@ class NotifTile extends StatelessWidget {
               NotifAcceptButton(onTap: onFollowTap)
             else if (notif.type == NotificationType.follow)
               FollowButton(
+                // A pending request to a private account uses the same outlined
+                // style as Following, with a "Requested" label.
                 isFollowing:
-                    notif.actor.followStatus == FollowStatus.following,
+                    notif.actor.followStatus == FollowStatus.following ||
+                        notif.actor.followStatus == FollowStatus.requested,
+                label: notif.actor.followStatus == FollowStatus.requested
+                    ? AppStrings.requested
+                    : null,
                 onTap: onFollowTap,
               )
             else
@@ -129,9 +135,9 @@ class NotifText extends StatelessWidget {
     final body = switch (notif.type) {
       NotificationType.like => AppStrings.likedYourPost,
       NotificationType.follow => AppStrings.startedFollowingYou,
-      NotificationType.followRequest => 'wants to follow you',
-      NotificationType.comment => 'commented on your post',
-      NotificationType.mention => 'mentioned you in a comment',
+      NotificationType.followRequest => AppStrings.wantsToFollowYou,
+      NotificationType.comment => AppStrings.commentedYourPost,
+      NotificationType.mention => AppStrings.mentionedYou,
     };
 
     return RichText(
@@ -171,7 +177,7 @@ class NotifAcceptButton extends StatelessWidget {
           ),
         ),
         child: Text(
-          'Accept',
+          AppStrings.accept,
           style: AppTextStyles.labelSmall.copyWith(color: Colors.white),
         ),
       ),
@@ -197,6 +203,8 @@ class NotifPostThumbnail extends StatelessWidget {
             ? CachedNetworkImage(
                 imageUrl: imageUrl!,
                 fit: BoxFit.cover,
+                memCacheWidth:
+                    (size * MediaQuery.devicePixelRatioOf(context)).round(),
                 placeholder: (_, _) =>
                     _FallbackThumbnail(isDark: isDark, size: size),
                 errorWidget: (_, _, _) =>

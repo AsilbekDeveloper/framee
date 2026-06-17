@@ -1,3 +1,4 @@
+import '../../../follow/domain/entities/follow.dart';
 import '../../domain/entities/notification.dart';
 
 class NotificationDto {
@@ -12,6 +13,7 @@ class NotificationDto {
     this.actorAvatarUrl,
     this.postId,
     this.postImageUrl,
+    this.actorFollowStatus = FollowStatus.none,
   });
 
   final String id;
@@ -24,6 +26,7 @@ class NotificationDto {
   final String? actorAvatarUrl;
   final String? postId;
   final String? postImageUrl;
+  final FollowStatus actorFollowStatus;
 
   /// RPC flat format (eski — backward compat uchun)
   factory NotificationDto.fromRpc(Map<String, dynamic> json) =>
@@ -68,6 +71,7 @@ class NotificationDto {
           username: actorUsername,
           displayName: actorDisplayName,
           avatarUrl: actorAvatarUrl,
+          followStatus: actorFollowStatus,
         ),
         createdAt: createdAt,
         postId: postId,

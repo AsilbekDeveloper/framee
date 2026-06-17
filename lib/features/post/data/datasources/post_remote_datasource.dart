@@ -68,6 +68,8 @@ abstract interface class PostRemoteDataSource {
     int limit = 30,
     int offset = 0,
   });
+
+  Future<Result<PostDto>> updatePost(UpdatePostParams params);
 }
 
 class PostRemoteDataSourceImpl implements PostRemoteDataSource {
@@ -553,6 +555,57 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
       return (data as List).map((e) => e['post_id'] as String).toSet();
     } catch (_) {
       return {};
+    }
+  }
+
+  // ── Update Post ─────────────────────────────────────────────────────────────
+
+  @override
+  Future<Result<PostDto>> updatePost(UpdatePostParams params) async {
+    try {
+      AppLogger.i('PostDS: updating post — ${params.postId}');
+
+      final updates = <String, dynamic>{};
+
+      if (params.removeImage) {
+        updates['image_url'] = null;
+      } else if (params.newImageLocalPath != null) {
+        final uploadResult = await _uploadPostImage(
+          userId: params.userId,
+          localPath: params.newImageLocalPath!,
+        );
+        switch (uploadResult) {
+          case Ok(:final value):
+            updates['image_url'] = value;
+          case Err(:final failure):
+            return Err(failure);
+        }
+      }
+
+      updates['caption'] = params.caption?.trim().isEmpty == true
+          ? null
+          : params.caption?.trim();
+
+      final data = await _client
+          .from(_postsTable)
+          .update(updates)
+          .eq('id', params.postId)
+          .eq('user_id', params.userId)
+          .select('''
+            id, user_id, image_url, caption,
+            likes_count, comments_count, created_at,
+            profiles!user_id(id, username, display_name, avatar_url, is_verified)
+          ''')
+          .single();
+
+      AppLogger.i('PostDS: post updated — ${params.postId}');
+      return Ok(PostDto.fromJoin(data));
+    } on PostgrestException catch (e) {
+      AppLogger.e('PostDS: updatePost DB error', error: e);
+      return Err(ServerFailure(message: e.message, originalError: e));
+    } catch (e, st) {
+      AppLogger.e('PostDS: updatePost unexpected error', error: e, stackTrace: st);
+      return Err(NetworkFailure(originalError: e, stackTrace: st));
     }
   }
 

@@ -224,3 +224,19 @@ class GetFeedParams {
   final int limit;
   final int offset;
 }
+
+class UpdatePostParams {
+  const UpdatePostParams({
+    required this.postId,
+    required this.userId,
+    this.caption,
+    this.newImageLocalPath,
+    this.removeImage = false,
+  });
+
+  final String postId;
+  final String userId;
+  final String? caption;
+  final String? newImageLocalPath;
+  final bool removeImage;
+}

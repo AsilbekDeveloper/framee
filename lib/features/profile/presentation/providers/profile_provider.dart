@@ -74,20 +74,34 @@ class ProfileNotifier extends FamilyAsyncNotifier<Profile, String?> {
       return;
     }
 
-    final wasFollowing = profile.isFollowing;
+    // "Active" means already following, or a pending request to a private account.
+    // Tapping the button in either state should undo it.
+    final wasActive = profile.isFollowing || profile.isRequested;
 
-    // Optimistic update
-    state = AsyncData(
-      profile.copyWith(
-        isFollowing: !wasFollowing,
-        followersCount: wasFollowing
-            ? profile.followersCount - 1
-            : profile.followersCount + 1,
-      ),
-    );
+    // Optimistic update — only an accepted follow affects the follower count.
+    if (wasActive) {
+      state = AsyncData(
+        profile.copyWith(
+          isFollowing: false,
+          isRequested: false,
+          followersCount: profile.isFollowing
+              ? profile.followersCount - 1
+              : profile.followersCount,
+        ),
+      );
+    } else {
+      // Assume a public follow for now; corrected to "requested" below if private.
+      state = AsyncData(
+        profile.copyWith(
+          isFollowing: true,
+          isRequested: false,
+          followersCount: profile.followersCount + 1,
+        ),
+      );
+    }
 
     try {
-      if (wasFollowing) {
+      if (wasActive) {
         final result = await ref.read(unfollowUserUseCaseProvider).call(
               currentUserId: currentUserId,
               targetUserId: targetUserId,
@@ -104,9 +118,11 @@ class ProfileNotifier extends FamilyAsyncNotifier<Profile, String?> {
             );
         switch (result) {
           case Ok(:final value):
-            // Private account → requested; public → following
+            // Private account → pending request, not an actual follow.
             if (value == FollowStatus.requested) {
-              state = AsyncData(profile.copyWith(isFollowing: false));
+              state = AsyncData(
+                profile.copyWith(isFollowing: false, isRequested: true),
+              );
             }
           case Err(:final failure):
             state = AsyncData(profile);

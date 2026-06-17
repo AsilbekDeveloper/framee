@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/components/app_avatar.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
@@ -124,7 +125,11 @@ class CreatePostScreen extends ConsumerWidget {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _AvatarCircle(avatarUrl: profile?.avatarUrl),
+                          AppAvatar(
+                            imageUrl: profile?.avatarUrl,
+                            initials: profile?.initials,
+                            size: AvatarSize.md,
+                          ),
                           Gap(AppDimens.md),
                           Expanded(
                             child: CaptionField(
@@ -214,30 +219,6 @@ class _ImagePlaceholder extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-// ── User Avatar Circle ────────────────────────────────────────────────────────
-
-class _AvatarCircle extends StatelessWidget {
-  const _AvatarCircle({this.avatarUrl});
-  final String? avatarUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return CircleAvatar(
-      radius: 18.r,
-      backgroundColor:
-          isDark ? AppColors.darkElevated : AppColors.lightElevated,
-      backgroundImage:
-          avatarUrl != null ? NetworkImage(avatarUrl!) : null,
-      child: avatarUrl == null
-          ? Icon(Icons.person_rounded,
-              size: 20.r,
-              color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted)
-          : null,
     );
   }
 }

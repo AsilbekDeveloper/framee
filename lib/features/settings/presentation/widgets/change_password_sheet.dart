@@ -9,6 +9,7 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_dimens.dart';
 import '../../../../../core/constants/app_strings.dart';
 import '../../../../../core/constants/app_text_styles.dart';
+import '../../../../../core/errors/failure_message.dart';
 import '../../../../../core/errors/result.dart';
 import 'package:go_router/go_router.dart';
 
@@ -41,17 +42,15 @@ class _ChangePasswordSheetState extends ConsumerState<ChangePasswordSheet> {
     final confirm = _confirmController.text.trim();
 
     if (newPw.isEmpty || confirm.isEmpty) {
-      setState(() => _errorMessage = 'Barcha maydonlarni to\'ldiring');
+      setState(() => _errorMessage = AppStrings.fillAllFields);
       return;
     }
     if (newPw != confirm) {
       setState(() => _errorMessage = AppStrings.passwordMismatch);
       return;
     }
-    if (newPw.length < 6) {
-      setState(() => _errorMessage = 'Parol kamida 6 ta belgi bo\'lsin');
-      return;
-    }
+    // Minimum-length is enforced by UpdatePasswordUseCase, which returns a
+    // WeakPasswordFailure surfaced in the Err branch below.
 
     setState(() {
       _isLoading = true;
@@ -68,7 +67,7 @@ class _ChangePasswordSheetState extends ConsumerState<ChangePasswordSheet> {
         context.pop();
         context.showSnackBar(AppStrings.passwordChanged);
       case Err(:final failure):
-        setState(() => _errorMessage = failure.message);
+        setState(() => _errorMessage = localizedFailure(failure));
     }
   }
 

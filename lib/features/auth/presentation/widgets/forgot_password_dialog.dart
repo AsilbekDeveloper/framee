@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/app_strings.dart';
+
 class ForgotPasswordDialog extends StatefulWidget {
   const ForgotPasswordDialog({
     super.key,
@@ -33,20 +35,20 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Parolni tiklash'),
+      title: Text(AppStrings.resetPassword),
       content: TextField(
         controller: _emailCtrl,
         keyboardType: TextInputType.emailAddress,
         autofocus: true,
-        decoration: const InputDecoration(
-          labelText: 'Email manzilingiz',
+        decoration: InputDecoration(
+          labelText: AppStrings.emailAddressLabel,
           hintText: 'example@mail.com',
         ),
       ),
       actions: [
         TextButton(
           onPressed: () => context.pop(),
-          child: const Text('Bekor qilish'),
+          child: Text(AppStrings.cancel),
         ),
         TextButton(
           onPressed: () {
@@ -54,7 +56,7 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
             context.pop();
             widget.onSend(email);
           },
-          child: const Text('Yuborish'),
+          child: Text(AppStrings.send),
         ),
       ],
     );

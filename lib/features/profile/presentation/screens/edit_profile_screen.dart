@@ -6,8 +6,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/components/app_avatar.dart';
 import '../../../../core/components/app_text_field.dart';
-import '../../../../core/components/shared_widgets.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_config.dart';
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_text_styles.dart';
@@ -146,7 +146,7 @@ class EditProfileScreen extends ConsumerWidget {
                   controller: notifier.bioController,
                   label: AppStrings.bio,
                   maxLines: 3,
-                  maxLength: 150,
+                  maxLength: AppConfig.maxBioLength,
                   onChanged: (_) => notifier.onBioChanged(),
                   textInputAction: TextInputAction.next,
                 ),
@@ -154,9 +154,9 @@ class EditProfileScreen extends ConsumerWidget {
                 Align(
                   alignment: Alignment.centerRight,
                   child: Text(
-                    '${state.bioLength} / 150',
+                    '${state.bioLength} / ${AppConfig.maxBioLength}',
                     style: AppTextStyles.caption.copyWith(
-                      color: state.bioLength > 140
+                      color: state.bioLength > AppConfig.maxBioLength - 10
                           ? AppColors.error
                           : isDark
                               ? AppColors.darkTextMuted
@@ -227,22 +227,11 @@ class EditProfileScreen extends ConsumerWidget {
                       : AppColors.lightBorderSubtle,
                 ),
               ),
-              child: Column(
-                children: [
-                  ToggleRow(
-                    title: AppStrings.privateAccount,
-                    subtitle: AppStrings.privateAccountSub,
-                    value: state.isPrivate,
-                    onChanged: notifier.setPrivate,
-                  ),
-                  const AppDivider(),
-                  ToggleRow(
-                    title: AppStrings.showActivityStatus,
-                    subtitle: AppStrings.showActivityStatusSub,
-                    value: state.showActivityStatus,
-                    onChanged: notifier.setShowActivity,
-                  ),
-                ],
+              child: ToggleRow(
+                title: AppStrings.privateAccount,
+                subtitle: AppStrings.privateAccountSub,
+                value: state.isPrivate,
+                onChanged: notifier.setPrivate,
               ),
             ),
             Gap(AppDimens.vmassive),

@@ -22,6 +22,21 @@ class PostCacheService {
       _save(_userKey(userId), posts);
   Future<List<Post>> loadUserPosts(String userId) => _load(_userKey(userId));
 
+  /// Removes every cached post list. Called on sign-out so the next account
+  /// never sees the previous user's feed, explore, or profile posts.
+  Future<void> clearAll() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final keys = prefs
+          .getKeys()
+          .where((k) => k.startsWith('post_cache_'))
+          .toList();
+      for (final key in keys) {
+        await prefs.remove(key);
+      }
+    } catch (_) {}
+  }
+
   Future<void> _save(String key, List<Post> posts) async {
     try {
       final prefs = await SharedPreferences.getInstance();

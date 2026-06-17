@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/config/app_logger.dart';
+import '../../../../core/errors/failure_message.dart';
 import '../../../../core/errors/result.dart';
 import '../../../../core/providers/current_user_provider.dart';
 import '../../../home/presentation/providers/home_provider.dart';
@@ -103,19 +104,27 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
 
   // ── Like ────────────────────────────────────────────────────────────────────
 
+  /// Updates only the `post` field of the latest state, leaving comments — and
+  /// any changes made concurrently while a request is in flight — untouched.
+  void _patchPost(Post Function(Post) update) {
+    final cur = state.valueOrNull;
+    final post = cur?.post;
+    if (cur == null || post == null) return;
+    state = AsyncData(cur.copyWith(post: update(post)));
+  }
+
   Future<void> toggleLike() async {
-    final current = state.valueOrNull;
-    final post = current?.post;
+    final post = state.valueOrNull?.post;
     if (post == null) return;
 
     final userId = _currentUserId;
     if (userId == null) return;
 
-    final optimistic = post.copyWith(
-      isLiked: !post.isLiked,
-      likesCount: post.isLiked ? post.likesCount - 1 : post.likesCount + 1,
-    );
-    state = AsyncData(current!.copyWith(post: optimistic));
+    final original = post;
+    _patchPost((p) => p.copyWith(
+          isLiked: !p.isLiked,
+          likesCount: p.isLiked ? p.likesCount - 1 : p.likesCount + 1,
+        ));
 
     final result = await ref.read(toggleLikeUseCaseProvider).call(
           postId: post.id,
@@ -124,15 +133,16 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
 
     switch (result) {
       case Ok(:final value):
-        state = AsyncData(current.copyWith(
-          post: post.copyWith(
-            isLiked: value.isLiked,
-            likesCount: value.likesCount,
-          ),
-        ));
+        _patchPost((p) => p.copyWith(
+              isLiked: value.isLiked,
+              likesCount: value.likesCount,
+            ));
       case Err(:final failure):
         AppLogger.w('PostDetail: toggleLike rollback — ${failure.code}');
-        state = AsyncData(current.copyWith(post: post));
+        _patchPost((p) => p.copyWith(
+              isLiked: original.isLiked,
+              likesCount: original.likesCount,
+            ));
     }
   }
 
@@ -141,17 +151,23 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
   Future<void> toggleCommentLike(String commentId) async {
     final userId = _currentUserId;
     if (userId == null) return;
+    if (state.valueOrNull == null) return;
 
-    final current = state.valueOrNull;
-    if (current == null) return;
+    // Toggles like/count for the target comment in the *latest* state, so it
+    // never clobbers concurrent changes. Called once optimistically and again
+    // to undo on failure (toggling twice restores the original values).
+    void toggle() {
+      final cur = state.valueOrNull;
+      if (cur == null) return;
+      state = AsyncData(cur.copyWith(
+        comments: _mapComments(cur.comments, commentId, (c) => c.copyWith(
+              isLiked: !c.isLiked,
+              likesCount: c.isLiked ? c.likesCount - 1 : c.likesCount + 1,
+            )),
+      ));
+    }
 
-    // Optimistic update
-    state = AsyncData(current.copyWith(
-      comments: _mapComments(current.comments, commentId, (c) => c.copyWith(
-            isLiked: !c.isLiked,
-            likesCount: c.isLiked ? c.likesCount - 1 : c.likesCount + 1,
-          )),
-    ));
+    toggle(); // optimistic
 
     final result = await ref.read(toggleCommentLikeUseCaseProvider).call(
           commentId: commentId,
@@ -159,9 +175,8 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
         );
 
     if (result is Err) {
-      // Rollback on failure
       AppLogger.w('PostDetail: toggleCommentLike rollback');
-      state = AsyncData(current);
+      toggle(); // undo — patches only this comment, preserving other changes
     }
   }
 
@@ -211,25 +226,31 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
     switch (result) {
       case Ok(:final value):
         AppLogger.d('PostDetail: comment added — parentId:${value.parentId}');
+        // Read the latest state (not the pre-request snapshot) so a like or
+        // other change made while the request was in flight is not lost.
+        final latest = state.valueOrNull ?? current;
         List<Comment> updatedComments;
         if (value.parentId != null) {
           // Reply → nest inside the parent comment's replies list
-          updatedComments = _nestReply(current.comments, value);
+          updatedComments = _nestReply(latest.comments, value);
         } else {
           // Top-level comment → listning oxiriga
-          updatedComments = [...current.comments, value];
+          updatedComments = [...latest.comments, value];
         }
-        final updatedPost = current.post?.copyWith(
-          commentsCount: (current.post?.commentsCount ?? 0) + 1,
+        final updatedPost = latest.post?.copyWith(
+          commentsCount: (latest.post?.commentsCount ?? 0) + 1,
         );
-        state = AsyncData(current.copyWith(
+        state = AsyncData(latest.copyWith(
           comments: updatedComments,
           post: updatedPost,
           clearReply: true,
+          clearError: true,
         ));
       case Err(:final failure):
         AppLogger.w('PostDetail: comment error — ${failure.code}');
-        state = AsyncData(current.copyWith(errorMessage: failure.message));
+        final latest = state.valueOrNull ?? current;
+        state =
+            AsyncData(latest.copyWith(errorMessage: localizedFailure(failure)));
     }
   }
 
@@ -267,16 +288,14 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
   // ── Save ────────────────────────────────────────────────────────────────────
 
   Future<void> toggleSave() async {
-    final current = state.valueOrNull;
-    final post = current?.post;
+    final post = state.valueOrNull?.post;
     if (post == null) return;
 
     final userId = _currentUserId;
     if (userId == null) return;
 
-    state = AsyncData(current!.copyWith(
-      post: post.copyWith(isSaved: !post.isSaved),
-    ));
+    final original = post;
+    _patchPost((p) => p.copyWith(isSaved: !p.isSaved));
 
     final result = await ref.read(toggleSaveUseCaseProvider).call(
           postId: post.id,
@@ -284,7 +303,7 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
         );
 
     if (result is Err) {
-      state = AsyncData(current.copyWith(post: post));
+      _patchPost((p) => p.copyWith(isSaved: original.isSaved));
     }
   }
 

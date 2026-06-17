@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/config/app_logger.dart';
 import '../../../../core/errors/failure.dart';
 import '../../../../core/errors/result.dart';
+import '../../../follow/domain/entities/follow.dart';
 import '../../domain/failures/notification_failure.dart';
 import '../dtos/notification_dto.dart';
 
@@ -19,6 +20,12 @@ abstract interface class NotificationRemoteDataSource {
     required String userId,
     int limit = 30,
     int offset = 0,
+  });
+
+  /// Returns a map of actorId → FollowStatus for the given actorIds.
+  Future<Map<String, String>> getFollowStatuses({
+    required String currentUserId,
+    required List<String> actorIds,
   });
 
   Future<Result<bool>> markRead(String notificationId);
@@ -46,10 +53,41 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
           .limit(limit)
           .range(offset, offset + limit - 1);
 
-      final dtos = (data as List<dynamic>)
+      var dtos = (data as List<dynamic>)
           .cast<Map<String, dynamic>>()
           .map(NotificationDto.fromJson)
           .toList();
+
+      // Enrich follow/followRequest actor notifications with real follow status
+      final actorIds = dtos
+          .where((d) => d.type == 'follow' || d.type == 'follow_request')
+          .map((d) => d.actorId)
+          .toSet()
+          .toList();
+
+      if (actorIds.isNotEmpty) {
+        final statuses = await getFollowStatuses(
+          currentUserId: userId,
+          actorIds: actorIds,
+        );
+        dtos = dtos.map((dto) {
+          if (!statuses.containsKey(dto.actorId)) return dto;
+          final status = _parseFollowStatus(statuses[dto.actorId]);
+          return NotificationDto(
+            id: dto.id,
+            type: dto.type,
+            isRead: dto.isRead,
+            createdAt: dto.createdAt,
+            actorId: dto.actorId,
+            actorUsername: dto.actorUsername,
+            actorDisplayName: dto.actorDisplayName,
+            actorAvatarUrl: dto.actorAvatarUrl,
+            postId: dto.postId,
+            postImageUrl: dto.postImageUrl,
+            actorFollowStatus: status,
+          );
+        }).toList();
+      }
 
       AppLogger.d('NotificationDS: ${dtos.length} notifications loaded');
       return Ok(dtos);
@@ -60,6 +98,38 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
       return Err(NotificationLoadFailure(originalError: e, stackTrace: st));
     }
   }
+
+  @override
+  Future<Map<String, String>> getFollowStatuses({
+    required String currentUserId,
+    required List<String> actorIds,
+  }) async {
+    if (actorIds.isEmpty) return {};
+    try {
+      final data = await _client
+          .from('follows')
+          .select('following_id, status')
+          .eq('follower_id', currentUserId)
+          .inFilter('following_id', actorIds);
+
+      final map = <String, String>{};
+      for (final row in (data as List<dynamic>).cast<Map<String, dynamic>>()) {
+        map[row['following_id'] as String] = row['status'] as String? ?? '';
+      }
+      return map;
+    } catch (_) {
+      return {};
+    }
+  }
+
+  static FollowStatus _parseFollowStatus(String? status) => switch (status) {
+        'accepted' => FollowStatus.following,
+        // The `follows` table uses 'requested' (not 'pending') for a pending
+        // request — see follow_remote_datasource. Mismatch here previously made
+        // requested follows show as "Follow".
+        'requested' => FollowStatus.requested,
+        _ => FollowStatus.none,
+      };
 
   @override
   Future<Result<bool>> markRead(String notificationId) async {

@@ -53,7 +53,7 @@ class PostDetailScreen extends ConsumerWidget {
         if (post == null) {
           return Scaffold(
             appBar: AppBar(leading: BackButton(onPressed: () => context.pop())),
-            body: const Center(child: Text('Post topilmadi')),
+            body: Center(child: Text(AppStrings.postNotFound)),
           );
         }
 
@@ -70,11 +70,19 @@ class PostDetailScreen extends ConsumerWidget {
                 icon: Icons.share_outlined,
                 onTap: () => _sharePost(context, post),
               ),
-              if (isOwnPost)
+              if (isOwnPost) ...[
+                AppIconButton(
+                  icon: Icons.edit_outlined,
+                  onTap: () => context.push(
+                    AppRoutes.editPostPath(post.id),
+                    extra: post,
+                  ),
+                ),
                 AppIconButton(
                   icon: Icons.delete_outline_rounded,
                   onTap: () => _confirmDeletePost(context, ref),
                 ),
+              ],
             ],
           ),
           body: Column(
@@ -139,9 +147,9 @@ class PostDetailScreen extends ConsumerWidget {
                                 notifier.toggleCommentLike(comment.id),
                             onReplyLikeTap: (id) =>
                                 notifier.toggleCommentLike(id),
-                            onReplyTap: () => notifier.setReplyTo(
+                            onReplyTap: (username) => notifier.setReplyTo(
                               comment.id,
-                              comment.author.username,
+                              username,
                             ),
                             onDeleteTap: comment.author.id == currentUserId
                                 ? () => _confirmDeleteComment(

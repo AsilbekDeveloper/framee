@@ -16,6 +16,7 @@ class ProfileDto {
     this.isPrivate = false,
     this.isVerified = false,
     this.isFollowing = false,
+    this.isRequested = false,
     this.isFollowingMe = false,
     required this.createdAt,
     this.updatedAt,
@@ -34,6 +35,8 @@ class ProfileDto {
   final bool isVerified;
   /// Whether the viewing user follows this profile — derived from the `follows` table, not stored directly in `profiles`.
   final bool isFollowing;
+  /// Whether the viewing user has a pending follow request to this private profile.
+  final bool isRequested;
   final bool isFollowingMe;
   final DateTime createdAt;
   final DateTime? updatedAt;
@@ -41,6 +44,7 @@ class ProfileDto {
   factory ProfileDto.fromJson(
     Map<String, dynamic> json, {
     bool isFollowing = false,
+    bool isRequested = false,
     bool isFollowingMe = false,
   }) =>
       ProfileDto(
@@ -56,6 +60,7 @@ class ProfileDto {
         isPrivate: json['is_private'] as bool? ?? false,
         isVerified: json['is_verified'] as bool? ?? false,
         isFollowing: isFollowing,
+        isRequested: isRequested,
         isFollowingMe: isFollowingMe,
         createdAt: DateTime.parse(json['created_at'] as String),
         updatedAt: json['updated_at'] == null
@@ -86,6 +91,7 @@ class ProfileDto {
         isPrivate: isPrivate,
         isVerified: isVerified,
         isFollowing: isFollowing,
+        isRequested: isRequested,
         isFollowingMe: isFollowingMe,
         createdAt: createdAt,
         updatedAt: updatedAt,

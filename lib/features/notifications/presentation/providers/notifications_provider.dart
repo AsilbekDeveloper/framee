@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/config/app_logger.dart';
+import '../../../../core/constants/app_config.dart';
 import '../../../../core/errors/result.dart';
 import '../../../../core/providers/current_user_provider.dart';
 import '../../../auth/data/providers/auth_data_providers.dart';
@@ -9,27 +10,60 @@ import '../../../follow/domain/entities/follow.dart';
 import '../../data/providers/notification_data_providers.dart';
 import '../../domain/entities/notification.dart';
 
-// ── Notifications Notifier ────────────────────────────────────────────────────
+// ── State ─────────────────────────────────────────────────────────────────────
 
-class NotificationsNotifier extends AsyncNotifier<List<AppNotification>> {
+class NotifFeedState {
+  const NotifFeedState({
+    this.notifications = const [],
+    this.hasMore = true,
+    this.isLoadingMore = false,
+  });
+
+  final List<AppNotification> notifications;
+  final bool hasMore;
+  final bool isLoadingMore;
+
+  NotifFeedState copyWith({
+    List<AppNotification>? notifications,
+    bool? hasMore,
+    bool? isLoadingMore,
+  }) =>
+      NotifFeedState(
+        notifications: notifications ?? this.notifications,
+        hasMore: hasMore ?? this.hasMore,
+        isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      );
+}
+
+// ── Notifier ──────────────────────────────────────────────────────────────────
+
+class NotificationsNotifier extends AsyncNotifier<NotifFeedState> {
+  static const _pageSize = AppConfig.notificationsPageSize;
+
   @override
-  Future<List<AppNotification>> build() async {
+  Future<NotifFeedState> build() async {
     final userId = ref.read(currentUserIdProvider);
-    if (userId == null) return const [];
+    if (userId == null) return const NotifFeedState();
 
-    // Subscribe to realtime — prepend new notifications as they arrive
     _watchRealtime(userId);
 
-    return _fetchNotifications(userId);
+    final notifications = await _fetchNotifications(userId);
+    return NotifFeedState(
+      notifications: notifications,
+      hasMore: notifications.length >= _pageSize,
+    );
   }
 
   String? get _userId => ref.read(currentUserIdProvider);
 
-  Future<List<AppNotification>> _fetchNotifications(String userId) async {
-    AppLogger.d('NotificationsNotifier: loading');
+  Future<List<AppNotification>> _fetchNotifications(
+    String userId, {
+    int offset = 0,
+  }) async {
+    AppLogger.d('NotificationsNotifier: loading offset:$offset');
     final result = await ref
         .read(notificationRepositoryProvider)
-        .getNotifications(userId: userId);
+        .getNotifications(userId: userId, limit: _pageSize, offset: offset);
 
     return switch (result) {
       Ok(:final value) => value,
@@ -43,62 +77,98 @@ class NotificationsNotifier extends AsyncNotifier<List<AppNotification>> {
         .watchNewNotifications(userId)
         .listen(
       (newNotif) {
-        state.whenData((current) {
-          if (current.any((n) => n.id == newNotif.id)) return;
-          state = AsyncData([newNotif, ...current]);
+        state.whenData((feed) {
+          if (feed.notifications.any((n) => n.id == newNotif.id)) return;
+          state = AsyncData(
+              feed.copyWith(notifications: [newNotif, ...feed.notifications]));
           AppLogger.d(
-            'NotificationsNotifier: new notification — ${newNotif.type}',
-          );
+              'NotificationsNotifier: new notification — ${newNotif.type}');
         });
       },
-      // JWT expiry or connection drop — log silently to avoid crashing
       onError: (Object e) {
         AppLogger.w('NotificationsNotifier: realtime error — $e');
       },
     );
 
-    // Re-subscribe when the auth token is refreshed
     ref.listen(authUserStreamProvider, (prev, next) {
       final prevUser = prev?.valueOrNull;
       final nextUser = next.valueOrNull;
-      // Token refresh: same user but session updated
       if (nextUser != null && prevUser?.id == nextUser.id) {
-        AppLogger.d('NotificationsNotifier: token refreshed — reconnecting realtime');
+        AppLogger.d(
+            'NotificationsNotifier: token refreshed — reconnecting realtime');
         subscription.cancel();
         subscription = ref
             .read(notificationRepositoryProvider)
             .watchNewNotifications(userId)
             .listen(
           (newNotif) {
-            state.whenData((current) {
-              if (current.any((n) => n.id == newNotif.id)) return;
-              state = AsyncData([newNotif, ...current]);
+            state.whenData((feed) {
+              if (feed.notifications.any((n) => n.id == newNotif.id)) return;
+              state = AsyncData(feed.copyWith(
+                  notifications: [newNotif, ...feed.notifications]));
             });
           },
           onError: (Object e) {
-            AppLogger.w('NotificationsNotifier: realtime error (retry) — $e');
+            AppLogger.w(
+                'NotificationsNotifier: realtime error (retry) — $e');
           },
         );
       }
     });
 
-    ref.onDispose(subscription.cancel);
+    // Wrap in a closure so dispose cancels whatever `subscription` currently
+    // points to — after a token-refresh reconnect it is reassigned, and a bare
+    // `subscription.cancel` tear-off would leak the reconnected subscription.
+    ref.onDispose(() => subscription.cancel());
   }
 
   Future<void> refresh() async {
     final userId = _userId;
     if (userId == null) return;
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() => _fetchNotifications(userId));
+    try {
+      final notifications = await _fetchNotifications(userId);
+      state = AsyncData(NotifFeedState(
+        notifications: notifications,
+        hasMore: notifications.length >= _pageSize,
+      ));
+    } catch (e, st) {
+      state = AsyncError(e, st);
+    }
+  }
+
+  Future<void> loadMore() async {
+    final feed = state.valueOrNull;
+    if (feed == null || !feed.hasMore || feed.isLoadingMore) return;
+
+    final userId = _userId;
+    if (userId == null) return;
+
+    state = AsyncData(feed.copyWith(isLoadingMore: true));
+
+    try {
+      final newNotifs = await _fetchNotifications(
+        userId,
+        offset: feed.notifications.length,
+      );
+      state = AsyncData(NotifFeedState(
+        notifications: [...feed.notifications, ...newNotifs],
+        hasMore: newNotifs.length >= _pageSize,
+        isLoadingMore: false,
+      ));
+    } catch (_) {
+      state = AsyncData(feed.copyWith(isLoadingMore: false));
+    }
   }
 
   Future<void> markRead(String notifId) async {
-    state.whenData((notifications) {
-      state = AsyncData(notifications
-          .map((n) => n.id == notifId ? n.copyWith(isRead: true) : n)
-          .toList());
+    state.whenData((feed) {
+      state = AsyncData(feed.copyWith(
+        notifications: feed.notifications
+            .map((n) => n.id == notifId ? n.copyWith(isRead: true) : n)
+            .toList(),
+      ));
     });
-
     await ref.read(notificationRepositoryProvider).markRead(notifId);
   }
 
@@ -106,57 +176,54 @@ class NotificationsNotifier extends AsyncNotifier<List<AppNotification>> {
     final userId = _userId;
     if (userId == null) return;
 
-    state.whenData((notifications) {
-      state = AsyncData(
-        notifications.map((n) => n.copyWith(isRead: true)).toList(),
-      );
+    state.whenData((feed) {
+      state = AsyncData(feed.copyWith(
+        notifications:
+            feed.notifications.map((n) => n.copyWith(isRead: true)).toList(),
+      ));
     });
 
     final result =
         await ref.read(notificationRepositoryProvider).markAllRead(userId);
 
     if (result.isErr) {
-      // Rollback on failure
-      final r = await AsyncValue.guard(() => _fetchNotifications(userId));
-      state = r;
+      final userId2 = _userId;
+      if (userId2 == null) return;
+      try {
+        final notifications = await _fetchNotifications(userId2);
+        state = AsyncData(NotifFeedState(
+          notifications: notifications,
+          hasMore: notifications.length >= _pageSize,
+        ));
+      } catch (_) {}
     }
   }
 
-  /// Toggles follow/unfollow for a `follow`-type notification.
-  Future<void> toggleFollow(String actorId, bool isCurrentlyFollowing) async {
+  Future<void> toggleFollow(String actorId, bool isActive) async {
     final userId = _userId;
     if (userId == null) return;
 
-    if (isCurrentlyFollowing) {
-      await ref.read(unfollowUserUseCaseProvider).call(
+    if (isActive) {
+      // Following or a pending request → undo it.
+      final result = await ref.read(unfollowUserUseCaseProvider).call(
             currentUserId: userId,
             targetUserId: actorId,
           );
-      state.whenData((notifications) {
-        state = AsyncData(notifications.map((n) {
-          if (n.actor.id != actorId) return n;
-          return n.copyWith(
-            actor: n.actor.copyWith(followStatus: FollowStatus.none),
-          );
-        }).toList());
-      });
+      // Only reflect the change if the server confirmed it.
+      if (result.isOk) _patchActorStatus(actorId, FollowStatus.none);
     } else {
-      await ref.read(followUserUseCaseProvider).call(
+      final result = await ref.read(followUserUseCaseProvider).call(
             currentUserId: userId,
             targetUserId: actorId,
           );
-      state.whenData((notifications) {
-        state = AsyncData(notifications.map((n) {
-          if (n.actor.id != actorId) return n;
-          return n.copyWith(
-            actor: n.actor.copyWith(followStatus: FollowStatus.following),
-          );
-        }).toList());
-      });
+      // A private account returns `requested`, a public one `following` —
+      // never assume `following`, or a request would look like a real follow.
+      if (result case Ok(:final value)) {
+        _patchActorStatus(actorId, value);
+      }
     }
   }
 
-  /// Accepts a follow request triggered from within a notification.
   Future<void> acceptFollowRequest(String actorId) async {
     final userId = _userId;
     if (userId == null) return;
@@ -167,35 +234,48 @@ class NotificationsNotifier extends AsyncNotifier<List<AppNotification>> {
         );
 
     if (result.isOk) {
-      // Update the notification type from followRequest to follow
-      state.whenData((notifications) {
-        state = AsyncData(notifications.map((n) {
-          if (n.actor.id != actorId ||
-              n.type != NotificationType.followRequest) {
-            return n;
-          }
-          return AppNotification(
-            id: n.id,
-            type: NotificationType.follow,
-            actor: n.actor.copyWith(followStatus: FollowStatus.following),
-            createdAt: n.createdAt,
-            isRead: true,
-          );
-        }).toList());
+      state.whenData((feed) {
+        state = AsyncData(feed.copyWith(
+          notifications: feed.notifications.map((n) {
+            if (n.actor.id != actorId ||
+                n.type != NotificationType.followRequest) {
+              return n;
+            }
+            return AppNotification(
+              id: n.id,
+              type: NotificationType.follow,
+              actor: n.actor.copyWith(followStatus: FollowStatus.following),
+              createdAt: n.createdAt,
+              isRead: true,
+            );
+          }).toList(),
+        ));
       });
     }
+  }
+
+  void _patchActorStatus(String actorId, FollowStatus status) {
+    state.whenData((feed) {
+      state = AsyncData(feed.copyWith(
+        notifications: feed.notifications.map((n) {
+          if (n.actor.id != actorId) return n;
+          return n.copyWith(actor: n.actor.copyWith(followStatus: status));
+        }).toList(),
+      ));
+    });
   }
 }
 
 final notificationsProvider =
-    AsyncNotifierProvider<NotificationsNotifier, List<AppNotification>>(
+    AsyncNotifierProvider<NotificationsNotifier, NotifFeedState>(
   NotificationsNotifier.new,
 );
 
 final hasUnreadNotificationsProvider = Provider<bool>(
   (ref) => ref.watch(
     notificationsProvider.select(
-      (async) => async.valueOrNull?.any((n) => !n.isRead) ?? false,
+      (async) =>
+          async.valueOrNull?.notifications.any((n) => !n.isRead) ?? false,
     ),
   ),
 );

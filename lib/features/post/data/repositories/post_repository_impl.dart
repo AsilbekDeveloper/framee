@@ -129,6 +129,12 @@ class PostRepositoryImpl implements PostRepository {
     return result.map((dtos) => dtos.map((d) => d.toEntity()).toList());
   }
 
+  @override
+  Future<Result<Post>> updatePost(UpdatePostParams params) async {
+    final result = await _dataSource.updatePost(params);
+    return result.map((dto) => dto.toEntity());
+  }
+
   // ── Private helpers ─────────────────────────────────────────────────────────
 
   /// Flat list → nested tree (top-level comments + replies)

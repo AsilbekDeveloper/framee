@@ -40,9 +40,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       builder: (_) => ForgotPasswordDialog(
         initialEmail: _emailController.text,
         onSend: (email) {
+          if (email.isEmpty) return;
+          // Actually trigger the reset email — previously this only showed a
+          // success snackbar without sending anything.
+          ref.read(authProvider.notifier).sendPasswordReset(email);
           ScaffoldMessenger.of(ctx).showSnackBar(
-            const SnackBar(
-              content: Text('Parol tiklash havolasi emailingizga yuborildi'),
+            SnackBar(
+              content: Text(AppStrings.passwordResetSent),
             ),
           );
         },
@@ -173,7 +177,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 12.w),
                       child: Text(
-                        'or',
+                        AppStrings.orDivider,
                         style: AppTextStyles.caption.copyWith(
                           color: isDark
                               ? AppColors.darkTextMuted
@@ -214,7 +218,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       Gap(4.w),
                       GestureDetector(
-                        onTap: () => context.push(AppRoutes.signUp),
+                        onTap: () {
+                          ref.read(authProvider.notifier).clearError();
+                          context.push(AppRoutes.signUp);
+                        },
                         child: Text(
                           AppStrings.signUp,
                           style: AppTextStyles.labelSmall

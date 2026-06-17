@@ -73,9 +73,19 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       if (state.isSearching) {
         return const SearchLoading(key: ValueKey('loading'));
       }
+      // A failed request must not look like "no results" — surface it with Retry.
+      if (state.errorMessage != null) {
+        return EmptyState(
+          key: const ValueKey('error'),
+          icon: Icons.error_outline_rounded,
+          title: AppStrings.errorOccurred,
+          action: notifier.retrySearch,
+          actionLabel: AppStrings.retry,
+        );
+      }
       if (state.userResults.isEmpty) {
         return EmptyState(
-          key: ValueKey('empty'),
+          key: const ValueKey('empty'),
           icon: Icons.search_off_rounded,
           title: AppStrings.noResults,
           subtitle: AppStrings.noResultsSub,

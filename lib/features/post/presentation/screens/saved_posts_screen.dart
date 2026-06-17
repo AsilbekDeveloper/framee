@@ -9,6 +9,7 @@ import '../../../../core/components/shared_widgets.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/errors/failure_message.dart';
 import '../../../../core/errors/result.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/providers/current_user_provider.dart';
@@ -61,7 +62,7 @@ class _SavedPostsScreenState extends ConsumerState<SavedPostsScreen> {
         case Ok(:final value):
           _posts = value;
         case Err(:final failure):
-          _errorMessage = failure.message;
+          _errorMessage = localizedFailure(failure);
       }
     });
   }
@@ -108,7 +109,7 @@ class _SavedPostsScreenState extends ConsumerState<SavedPostsScreen> {
       return EmptyState(
         icon: Icons.bookmark_border_rounded,
         title: AppStrings.saved,
-        subtitle: 'Saqlagan postlaringiz bu yerda ko\'rinadi',
+        subtitle: AppStrings.savedSub,
       );
     }
 

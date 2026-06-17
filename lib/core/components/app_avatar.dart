@@ -66,6 +66,10 @@ class AppAvatar extends StatelessWidget {
   Widget _buildAvatar(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    // Decode the avatar at display resolution instead of full source size —
+    // avatars appear in long lists (feed, notifications, followers), so this
+    // saves significant memory without affecting layout.
+    final cacheSize = (_size * MediaQuery.devicePixelRatioOf(context)).round();
 
     return Container(
       width: _size,
@@ -88,6 +92,8 @@ class AppAvatar extends StatelessWidget {
               ? CachedNetworkImage(
                   imageUrl: imageUrl!,
                   fit: BoxFit.cover,
+                  memCacheWidth: cacheSize,
+                  memCacheHeight: cacheSize,
                   fadeInDuration: Duration.zero,
                   fadeOutDuration: Duration.zero,
                   placeholder: (context, url) => Shimmer.fromColors(
@@ -105,6 +111,11 @@ class AppAvatar extends StatelessWidget {
                   fit: BoxFit.cover,
                   width: double.infinity,
                   height: double.infinity,
+                  // The local path can point to a cache file that the OS has
+                  // since evicted — fall back to initials instead of throwing
+                  // a PathNotFoundException / showing a broken image.
+                  errorBuilder: (_, _, _) =>
+                      _Initials(initials: initials, fontSize: _fontSize),
                 )
           : _Initials(initials: initials, fontSize: _fontSize),
     );
@@ -202,6 +213,13 @@ class AvatarUpload extends StatelessWidget {
                   fit: BoxFit.cover,
                   width: double.infinity,
                   height: double.infinity,
+                  errorBuilder: (_, _, _) => Icon(
+                    Icons.person_outline_rounded,
+                    size: 32.w,
+                    color: isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted,
+                  ),
                 ))
                     : Icon(
                         Icons.person_outline_rounded,

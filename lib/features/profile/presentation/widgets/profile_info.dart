@@ -149,8 +149,12 @@ class ProfileInfo extends StatelessWidget {
               children: [
                 Expanded(
                   child: FollowButton(
-                    isFollowing: profile.isFollowing,
-                    isFollowBack: profile.isFollowingMe && !profile.isFollowing,
+                    // A pending request uses the same "outlined" style as Following.
+                    isFollowing: profile.isFollowing || profile.isRequested,
+                    isFollowBack: profile.isFollowingMe &&
+                        !profile.isFollowing &&
+                        !profile.isRequested,
+                    label: profile.isRequested ? AppStrings.requested : null,
                     onTap: onFollowTap,
                   ),
                 ),

@@ -62,7 +62,20 @@
       "Bash(sed -n '75,90p' lib/features/profile/presentation/screens/profile_screen.dart)",
       "Bash(xargs grep -l \"follow\")",
       "Bash(flutter run *)",
-      "Bash(dir \"C:\\\\FlutterProjects\\\\framee\\\\assets\\\\screenshots\")"
+      "Bash(dir \"C:\\\\FlutterProjects\\\\framee\\\\assets\\\\screenshots\")",
+      "Bash(Get-ChildItem -Recurse \"C:\\\\FlutterProjects\\\\framee\\\\admin\")",
+      "Bash(ls /c/Users/)",
+      "Bash(git checkout *)",
+      "Bash(grep -rn \"ListView\\(\\\\|Column\\(\\\\s*$\" lib --include=\"*.dart\")",
+      "Bash(grep -vE \":\\(0|1|2\\)$\")",
+      "Bash(grep -iv \"import\\\\|//\")",
+      "Bash(grep -iv \"signout_usecase\\\\|//\\\\|import\")",
+      "Bash(sed -n '129,135p' lib/features/profile/presentation/providers/profile_provider.dart)",
+      "Bash(sed -n '122,128p' lib/features/profile/presentation/providers/user_posts_provider.dart)",
+      "Bash(sed -n '/\\\\\"follow\\\\\":/,/}/p' lib/i18n/uz.i18n.json)",
+      "Bash(sed -n '/\\\\\"follow\\\\\":/,/}/p' lib/i18n/ru.i18n.json)",
+      "WebFetch(domain:pub.dev)",
+      "Bash(grep -iv \"AppLogger\\\\|throw\\\\|originalError\\\\|//\\\\|toString\\\\|e.message\\\\|exception.message\")"
     ]
   }
 }

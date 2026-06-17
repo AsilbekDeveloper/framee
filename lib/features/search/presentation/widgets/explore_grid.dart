@@ -208,10 +208,16 @@ class ExploreCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Decode at the grid-cell resolution (3 columns) rather than full size —
+    // keeps the image cache small when many thumbnails are on screen.
+    final cellWidth = MediaQuery.sizeOf(context).width / 3;
+    final cacheWidth =
+        (cellWidth * MediaQuery.devicePixelRatioOf(context)).round();
 
     return CachedNetworkImage(
       imageUrl: post.imageUrl!,
       fit: BoxFit.cover,
+      memCacheWidth: cacheWidth,
       fadeInDuration: Duration.zero,
       fadeOutDuration: Duration.zero,
       placeholder: (_, _) => Container(

@@ -7,6 +7,7 @@
 build/
 *.g.dart
 *.freezed.dart
+devtools_options.yaml
 
 # Firebase
 google-services.json

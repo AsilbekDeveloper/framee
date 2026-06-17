@@ -11,7 +11,6 @@ import '../../../../core/providers/locale_provider.dart';
 import '../../../../core/providers/theme_provider.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../i18n/strings.g.dart';
-import '../../../auth/data/providers/auth_data_providers.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../profile/presentation/providers/profile_provider.dart';
 import '../providers/notification_settings_provider.dart';
@@ -50,7 +49,7 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
 
-          SliverToBoxAdapter(child: SettingsSectionGap()),
+          const SliverToBoxAdapter(child: SettingsSectionGap()),
 
           SliverToBoxAdapter(child: SectionLabel(AppStrings.appearance)),
           SliverToBoxAdapter(
@@ -69,7 +68,7 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
 
-          SliverToBoxAdapter(child: SettingsSectionGap()),
+          const SliverToBoxAdapter(child: SettingsSectionGap()),
 
           SliverToBoxAdapter(child: SectionLabel(AppStrings.privacySecurity)),
           SliverToBoxAdapter(
@@ -98,7 +97,7 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
 
-          SliverToBoxAdapter(child: SettingsSectionGap()),
+          const SliverToBoxAdapter(child: SettingsSectionGap()),
 
           SliverToBoxAdapter(
               child: SectionLabel(AppStrings.notificationsLabel)),
@@ -122,7 +121,7 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
 
-          SliverToBoxAdapter(child: SettingsSectionGap()),
+          const SliverToBoxAdapter(child: SettingsSectionGap()),
 
           SliverToBoxAdapter(child: SectionLabel(AppStrings.about)),
           SliverToBoxAdapter(
@@ -150,7 +149,7 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
 
-          SliverToBoxAdapter(child: SettingsSectionGap()),
+          const SliverToBoxAdapter(child: SettingsSectionGap()),
 
           SliverToBoxAdapter(
             child: SettingsCard(
@@ -192,9 +191,7 @@ class SettingsScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(AppStrings.deleteAccount),
-        content: const Text(
-          'Are you sure you want to delete your account? This action cannot be undone.',
-        ),
+        content: Text(AppStrings.deleteAccountConfirm),
         actions: [
           TextButton(
             onPressed: () => ctx.pop(),
@@ -204,10 +201,9 @@ class SettingsScreen extends ConsumerWidget {
             onPressed: () async {
               ctx.pop();
               final result =
-                  await ref.read(deleteAccountUseCaseProvider).call();
+                  await ref.read(authProvider.notifier).deleteAccount();
               if (result.isErr && context.mounted) {
-                context.showSnackBar(
-                    'Something went wrong. Please try again.');
+                context.showSnackBar(AppStrings.somethingWentWrong);
               }
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
@@ -223,7 +219,7 @@ class SettingsScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(AppStrings.logOut),
-        content: const Text('Are you sure you want to sign out?'),
+        content: Text(AppStrings.logOutConfirm),
         actions: [
           TextButton(
             onPressed: () => ctx.pop(),

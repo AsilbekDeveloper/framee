@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,12 +10,13 @@ import '../constants/app_colors.dart';
 import '../constants/app_dimens.dart';
 import '../constants/app_strings.dart';
 import '../router/app_router.dart';
+import '../services/fcm_service.dart';
 import '../../features/notifications/presentation/providers/notifications_provider.dart';
 import 'no_internet_banner.dart';
 
 /// Shell scaffold with 4 branches: Home(0), Search(1), Notifications(2), Profile(3).
 /// The create button pushes a modal route instead of switching branches.
-class ScaffoldWithNavBar extends ConsumerWidget {
+class ScaffoldWithNavBar extends ConsumerStatefulWidget {
   const ScaffoldWithNavBar({
     super.key,
     required this.navigationShell,
@@ -22,24 +25,58 @@ class ScaffoldWithNavBar extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ScaffoldWithNavBar> createState() => _ScaffoldWithNavBarState();
+}
+
+class _ScaffoldWithNavBarState extends ConsumerState<ScaffoldWithNavBar> {
+  late final StreamSubscription<String> _fcmSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _fcmSub = FcmService.instance.navigationStream.listen((route) {
+      if (mounted) context.push(route);
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Cold start: app terminated holatdan notification tap qilingan bo'lsa
+    final pending = FcmService.instance.consumePendingRoute();
+    if (pending != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) context.push(pending);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _fcmSub.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final hasUnread = ref.watch(hasUnreadNotificationsProvider);
 
     return Scaffold(
-      body: NoInternetBanner(child: navigationShell),
+      body: NoInternetBanner(child: widget.navigationShell),
       bottomNavigationBar: _FrameeBottomNav(
-        currentIndex: navigationShell.currentIndex,
+        currentIndex: widget.navigationShell.currentIndex,
         onTabTap: _onTabTap,
         onCreateTap: () => context.push(AppRoutes.createPost),
-        showNotificationBadge: hasUnread && navigationShell.currentIndex != 2,
+        showNotificationBadge:
+            hasUnread && widget.navigationShell.currentIndex != 2,
       ),
     );
   }
 
   void _onTabTap(int index) {
-    navigationShell.goBranch(
+    widget.navigationShell.goBranch(
       index,
-      initialLocation: index == navigationShell.currentIndex,
+      initialLocation: index == widget.navigationShell.currentIndex,
     );
   }
 }

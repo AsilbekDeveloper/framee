@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/config/app_logger.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/errors/failure_message.dart';
 import '../../../../core/errors/result.dart';
 import '../../../../core/providers/current_user_provider.dart';
 import '../../../auth/data/providers/auth_data_providers.dart';
@@ -19,7 +20,6 @@ class EditProfileState {
     this.avatarPreviewPath,
     this.bioLength = 0,
     this.isPrivate = false,
-    this.showActivityStatus = true,
     this.isSaving = false,
     this.errorMessage,
     this.savedSuccessfully = false,
@@ -28,7 +28,6 @@ class EditProfileState {
   final String? avatarPreviewPath;
   final int bioLength;
   final bool isPrivate;
-  final bool showActivityStatus;
   final bool isSaving;
   final String? errorMessage;
   final bool savedSuccessfully;
@@ -37,7 +36,6 @@ class EditProfileState {
     String? avatarPreviewPath,
     int? bioLength,
     bool? isPrivate,
-    bool? showActivityStatus,
     bool? isSaving,
     String? errorMessage,
     bool? savedSuccessfully,
@@ -49,7 +47,6 @@ class EditProfileState {
             clearAvatar ? null : (avatarPreviewPath ?? this.avatarPreviewPath),
         bioLength: bioLength ?? this.bioLength,
         isPrivate: isPrivate ?? this.isPrivate,
-        showActivityStatus: showActivityStatus ?? this.showActivityStatus,
         isSaving: isSaving ?? this.isSaving,
         errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
         savedSuccessfully: savedSuccessfully ?? this.savedSuccessfully,
@@ -123,6 +120,12 @@ class EditProfileNotifier extends Notifier<EditProfileState> {
           if (p.avatarUrl != null && state.avatarPreviewPath == null) {
             state = state.copyWith(avatarPreviewPath: p.avatarUrl);
           }
+          // Sync the private flag from the loaded profile — unless the user
+          // already toggled it. Without this, opening Edit Profile before the
+          // profile loads and saving would silently reset a private account.
+          if (!_privateTouched) {
+            state = state.copyWith(isPrivate: p.isPrivate);
+          }
         });
       });
     }
@@ -139,10 +142,14 @@ class EditProfileNotifier extends Notifier<EditProfileState> {
   void onBioChanged() =>
       state = state.copyWith(bioLength: bioController.text.length);
 
-  void setPrivate(bool val) => state = state.copyWith(isPrivate: val);
+  /// Set once the user manually toggles privacy, so the reactive profile-load
+  /// listener stops overwriting their choice.
+  bool _privateTouched = false;
 
-  void setShowActivity(bool val) =>
-      state = state.copyWith(showActivityStatus: val);
+  void setPrivate(bool val) {
+    _privateTouched = true;
+    state = state.copyWith(isPrivate: val);
+  }
 
   // ── Avatar tanlov ───────────────────────────────────────────────────────────
 
@@ -190,8 +197,10 @@ class EditProfileNotifier extends Notifier<EditProfileState> {
     switch (result) {
       case Ok(:final value):
         AppLogger.i('EditProfile: saved — ${value.username}');
-        // Push the fresh profile into profileProvider so it is reflected immediately
+        // Update both the null-keyed own-profile instance and the id-keyed one
+        // (the latter is watched when navigating to own profile via /user/:id).
         ref.read(profileProvider(null).notifier).updateProfile(value);
+        ref.read(profileProvider(value.id).notifier).updateProfile(value);
         state = state.copyWith(
           isSaving: false,
           savedSuccessfully: true,
@@ -201,7 +210,7 @@ class EditProfileNotifier extends Notifier<EditProfileState> {
         AppLogger.w('EditProfile: save error — ${failure.code}');
         state = state.copyWith(
           isSaving: false,
-          errorMessage: failure.message,
+          errorMessage: localizedFailure(failure),
         );
     }
   }

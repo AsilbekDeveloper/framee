@@ -86,4 +86,7 @@ abstract interface class PostRepository {
     int limit = 30,
     int offset = 0,
   });
+
+  /// Updates a post's caption and/or image (owner only).
+  Future<Result<Post>> updatePost(UpdatePostParams params);
 }

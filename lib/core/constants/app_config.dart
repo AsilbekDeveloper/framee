@@ -9,6 +9,8 @@ abstract final class AppConfig {
   static const int explorePageSize = 30;
   /// Number of posts loaded per page on a user profile.
   static const int profilePostPageSize = 18;
+  /// Number of notifications loaded per page.
+  static const int notificationsPageSize = 30;
   /// Maximum number of users returned in a search query.
   static const int searchResultLimit = 20;
 
