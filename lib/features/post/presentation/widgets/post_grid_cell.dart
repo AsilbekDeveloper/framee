@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../core/constants/app_colors.dart';
 import '../../domain/entities/post.dart';
 
 /// Profile grid ve explore grid uchun umumiy cell widget.
@@ -31,20 +32,10 @@ class _Placeholder extends StatelessWidget {
   final Post post;
   final bool isDark;
 
-  static const List<List<Color>> _gradients = [
-    [Color(0xFFe8e5ff), Color(0xFFd4caff)],
-    [Color(0xFFffecd2), Color(0xFFfcb69f)],
-    [Color(0xFF667eea), Color(0xFF764ba2)],
-    [Color(0xFF4facfe), Color(0xFF00f2fe)],
-    [Color(0xFFf093fb), Color(0xFFf5576c)],
-    [Color(0xFFd4fc79), Color(0xFF96e6a1)],
-    [Color(0xFFf7971e), Color(0xFFffd200)],
-    [Color(0xFFa18cd1), Color(0xFFfbc2eb)],
-  ];
-
   @override
   Widget build(BuildContext context) {
-    final colors = _gradients[post.id.hashCode.abs() % _gradients.length];
+    final colors = AppColors
+        .postGridGradients[post.id.hashCode.abs() % AppColors.postGridGradients.length];
 
     return Container(
       decoration: BoxDecoration(

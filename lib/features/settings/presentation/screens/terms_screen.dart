@@ -22,7 +22,9 @@ class TermsScreen extends StatelessWidget {
         leading: BackButton(onPressed: () => context.pop()),
         title: Text(AppStrings.termsOfService),
       ),
-      body: SingleChildScrollView(
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
           horizontal: AppDimens.screenPadding,
           vertical: AppDimens.vxl,
@@ -94,6 +96,7 @@ class TermsScreen extends StatelessWidget {
             ),
             SizedBox(height: AppDimens.vmassive),
           ],
+        ),
         ),
       ),
     );

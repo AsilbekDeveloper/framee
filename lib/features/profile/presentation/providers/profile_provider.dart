@@ -20,6 +20,8 @@ final _getProfileUseCaseProvider = Provider<GetProfileUseCase>(
 class ProfileNotifier extends FamilyAsyncNotifier<Profile, String?> {
   @override
   Future<Profile> build(String? userId) async {
+    // Watch so the current-user's profile rebuilds on auth change (login/logout).
+    if (userId == null) ref.watch(currentUserIdProvider);
     final targetId = userId ?? _currentUserId;
     if (targetId == null) throw StateError('User is not authenticated.');
     AppLogger.d('ProfileNotifier: loading profile — $targetId');

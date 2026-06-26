@@ -23,8 +23,6 @@
     "minPasswordPlaceholder": "Min. 8 characters",
     "repeatPasswordPlaceholder": "Repeat password",
     "fullNamePlaceholder": "Your full name",
-    "continueWithGoogle": "Continue with Google",
-    "orDivider": "or",
     "welcomeBack": "Welcome back 👋",
     "forgotPassword": "Forgot password?",
     "joinFramee": "Join Framee today",
@@ -32,7 +30,9 @@
     "alreadyHaveAccount": "Already have an account?",
     "bySigningUp": "By signing up you agree to our Terms and Privacy Policy",
     "terms": "Terms",
-    "privacyPolicy": "Privacy Policy"
+    "privacyPolicy": "Privacy Policy",
+    "continueWithGoogle": "Continue with Google",
+    "orDivider": "or"
   },
   "setup": {
     "setUpProfile": "Set up your profile",
@@ -93,6 +93,8 @@
     "postPublished": "Post published!",
     "postReported": "Post reported",
     "noCommentsYet": "No comments yet",
+    "viewComments": "View comments",
+    "showLess": "less",
     "replyingTo": "Replying to",
     "deleteComment": "Delete Comment",
     "deleteCommentConfirm": "This comment will be permanently deleted.",

@@ -19,4 +19,10 @@ abstract interface class ProfileRepository {
 
   /// Real-time stream of profile changes (Supabase Realtime).
   Stream<Profile?> watchProfile(String userId);
+
+  /// Persists the FCM device token for push notifications.
+  Future<void> saveFcmToken(String userId, String token);
+
+  /// Removes the FCM token on logout so the device stops receiving pushes.
+  Future<void> clearFcmToken(String userId);
 }

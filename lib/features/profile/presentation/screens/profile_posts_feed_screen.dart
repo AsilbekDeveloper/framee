@@ -71,7 +71,9 @@ class _ProfilePostsFeedScreenState
         leading: BackButton(onPressed: () => context.pop()),
         title: Text(AppStrings.posts),
       ),
-      body: postsAsync.when(
+      body: SafeArea(
+        top: false,
+        child: postsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
           child: Column(
@@ -135,6 +137,7 @@ class _ProfilePostsFeedScreenState
             ],
           );
         },
+        ),
       ),
     );
   }

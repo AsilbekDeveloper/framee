@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/components/post_card.dart';
 import '../../../../core/components/shared_widgets.dart';
+import '../../../post/domain/entities/post.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
@@ -24,6 +25,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _scrollController = ScrollController();
+  bool _loadMorePending = false;
 
   @override
   void initState() {
@@ -38,9 +40,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _onScroll() {
+    if (_loadMorePending) return;
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 400) {
-      ref.read(homeProvider.notifier).loadMore();
+      _loadMorePending = true;
+      ref.read(homeProvider.notifier).loadMore().whenComplete(() {
+        _loadMorePending = false;
+      });
     }
   }
 
@@ -78,26 +84,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   slivers: [
                     SliverList.builder(
                       addAutomaticKeepAlives: false,
-                      addRepaintBoundaries: false,
                       itemCount: feed.posts.length,
                       itemBuilder: (context, index) {
                         final post = feed.posts[index];
-                        return PostCard(
+                        final notifier = ref.read(homeProvider.notifier);
+                        final currentUserId = ref.read(currentUserIdProvider);
+                        return _HomeFeedItem(
                           key: ValueKey(post.id),
                           post: post,
-                          onLikeTap: () =>
-                              ref.read(homeProvider.notifier).toggleLike(post.id),
+                          onLikeTap: () => notifier.toggleLike(post.id),
                           onCommentTap: () => context.push(
                             AppRoutes.postDetailPath(post.id),
                           ),
-                          onSaveTap: () =>
-                              ref.read(homeProvider.notifier).toggleSave(post.id),
+                          onSaveTap: () => notifier.toggleSave(post.id),
                           onMoreTap: () => _showPostOptions(
                             context,
                             postId: post.id,
                             isSaved: post.isSaved,
-                            isOwner: post.author.id ==
-                                ref.read(currentUserIdProvider),
+                            isOwner: post.author.id == currentUserId,
                           ),
                           onUserTap: () => context.push(
                             AppRoutes.userProfilePath(post.author.id),
@@ -177,6 +181,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         }
       }
     }
+  }
+}
+
+class _HomeFeedItem extends StatelessWidget {
+  const _HomeFeedItem({
+    super.key,
+    required this.post,
+    required this.onLikeTap,
+    required this.onCommentTap,
+    required this.onSaveTap,
+    required this.onMoreTap,
+    required this.onUserTap,
+  });
+
+  final Post post;
+  final VoidCallback onLikeTap;
+  final VoidCallback onCommentTap;
+  final VoidCallback onSaveTap;
+  final VoidCallback onMoreTap;
+  final VoidCallback onUserTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: PostCard(
+        post: post,
+        onLikeTap: onLikeTap,
+        onCommentTap: onCommentTap,
+        onSaveTap: onSaveTap,
+        onMoreTap: onMoreTap,
+        onUserTap: onUserTap,
+      ),
+    );
   }
 }
 

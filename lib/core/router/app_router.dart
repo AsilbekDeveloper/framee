@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -17,6 +18,7 @@ import '../../features/post/presentation/screens/post_detail_screen.dart';
 import '../../features/profile/presentation/screens/edit_profile_screen.dart';
 import '../../features/profile/presentation/screens/followers_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
+import '../../features/search/presentation/screens/explore_post_feed_screen.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
 import '../../features/post/presentation/screens/saved_posts_screen.dart';
 import '../components/avatar_crop_screen.dart';
@@ -47,6 +49,7 @@ abstract final class AppRoutes {
   static const String termsOfService = '/terms-of-service';
 
   static String postDetailPath(String postId) => '/post/$postId';
+  static String exploreFeedPath(String postId) => '/explore-feed/$postId';
   static String editPostPath(String postId) => '/post/$postId/edit';
   static String followersPath(String userId) => '/followers/$userId';
   static String userProfilePath(String userId) => '/user/$userId';
@@ -79,6 +82,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: AppRoutes.onboarding,
     debugLogDiagnostics: false,
     refreshListenable: notifier,
+    observers: [
+      FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
+    ],
     redirect: (context, routerState) {
       final authAsync = ref.read(authUserStreamProvider);
       final location = routerState.matchedLocation;
@@ -87,14 +93,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // This prevents a "flash of wrong route" on startup.
       if (authAsync.isLoading) return null;
 
-      final isAuthenticated = authAsync.valueOrNull != null;
+      final user = authAsync.valueOrNull;
+      final isAuthenticated = user != null;
       final isUnauthRoute = _unauthenticatedRoutes.contains(location);
 
       // Unauthenticated user trying to access a protected route.
       if (!isAuthenticated && !isUnauthRoute) return AppRoutes.onboarding;
 
-      // Authenticated user should not land on onboarding/login/signup.
-      if (isAuthenticated && isUnauthRoute) return AppRoutes.home;
+      if (isAuthenticated) {
+        final needsProfileSetup = user.username == null;
+
+        // New user (no username yet) must complete profile setup first.
+        if (needsProfileSetup && location != AppRoutes.profileSetup) {
+          return AppRoutes.profileSetup;
+        }
+
+        // Existing user should not land on onboarding/login/signup.
+        if (!needsProfileSetup && isUnauthRoute) return AppRoutes.home;
+      }
 
       return null;
     },
@@ -169,6 +185,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/post/:postId',
         builder: (_, state) => PostDetailScreen(
           postId: state.pathParameters['postId']!,
+        ),
+      ),
+      GoRoute(
+        path: '/explore-feed/:postId',
+        builder: (_, state) => ExplorePostFeedScreen(
+          initialPostId: state.pathParameters['postId']!,
         ),
       ),
       GoRoute(

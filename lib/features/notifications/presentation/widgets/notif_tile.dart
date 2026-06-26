@@ -5,7 +5,7 @@ import 'package:framee/features/follow/domain/entities/follow.dart';
 import 'package:gap/gap.dart';
 
 import '../../../../../core/components/app_avatar.dart';
-import '../../../../../core/components/app_button.dart';
+import '../../../../../core/components/follow_button.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_dimens.dart';
 import '../../../../../core/constants/app_strings.dart';
@@ -32,7 +32,14 @@ class NotifTile extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Container(
-        color: !notif.isRead ? AppColors.primaryMuted : Colors.transparent,
+        decoration: BoxDecoration(
+          color: !notif.isRead ? AppColors.primaryMuted : Colors.transparent,
+          border: notif.isRead
+              ? null
+              : const Border(
+                  left: BorderSide(color: AppColors.primary, width: 3),
+                ),
+        ),
         padding: EdgeInsets.symmetric(
           horizontal: AppDimens.lg,
           vertical: AppDimens.vmd,

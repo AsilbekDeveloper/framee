@@ -106,7 +106,9 @@ class _FollowersScreenState extends ConsumerState<FollowersScreen>
         ),
         titleSpacing: 0,
       ),
-      body: stateAsync.when(
+      body: SafeArea(
+        top: false,
+        child: stateAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
           child: Column(
@@ -162,6 +164,7 @@ class _FollowersScreenState extends ConsumerState<FollowersScreen>
               ),
             ),
           ],
+        ),
         ),
       ),
     );

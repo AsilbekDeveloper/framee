@@ -64,9 +64,10 @@ class SearchNotifier extends Notifier<SearchState> {
 
   @override
   SearchState build() {
-    // Kick off Explore load asynchronously — state starts synchronously with the loading flag
-    Future.microtask(_loadExplore);
+    final userId = ref.watch(currentUserIdProvider);
     ref.onDispose(() => _debounce?.cancel());
+    if (userId == null) return const SearchState();
+    Future.microtask(_loadExplore);
     return const SearchState(isLoadingExplore: true);
   }
 

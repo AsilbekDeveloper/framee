@@ -1,6 +1,6 @@
 # Framee
 
-A full-featured social media mobile app built with Flutter and Supabase. Users can create posts with images and captions, follow others, explore content, interact via likes and nested comments, and share posts or profiles via deep links.
+A clean, production-ready social network app built with Flutter and Supabase. Users can share text and photo posts, follow others, explore content, interact via likes and nested comments, and share posts or profiles via deep links.
 
 ---
 
@@ -44,7 +44,6 @@ A full-featured social media mobile app built with Flutter and Supabase. Users c
 | Backend | Supabase (Auth, PostgreSQL, Storage) |
 | Images | cached_network_image + image_picker |
 | Push Notifications | Firebase Cloud Messaging |
-| Secure Storage | flutter_secure_storage |
 | Preferences | shared_preferences |
 | Responsive UI | flutter_screenutil (base: 393×852) |
 | Sharing | share_plus + Android App Links |
@@ -86,29 +85,25 @@ lib/
 
 ## Setup
 
-### 1. Clone and install dependencies
+See **[INSTALLATION.md](INSTALLATION.md)** for the complete step-by-step guide (Supabase, Firebase, environment variables).
+
+Quick start:
 
 ```bash
-git clone https://github.com/AsilbekDeveloper/framee.git
-cd framee
 flutter pub get
+dart run slang                    # generate translations
+
+cp .env.json.example .env.json    # then fill in your Supabase URL & anon key
 ```
 
-### 2. Configure Firebase (for push notifications)
-
-```bash
-dart pub global activate flutterfire_cli
-flutterfire configure
-```
-
-### 3. Run
+Run the contents of `setup.sql` in your Supabase SQL Editor (creates all tables, policies, triggers and storage buckets), then:
 
 ```bash
 # Debug
-flutter run
+flutter run --dart-define-from-file=.env.json
 
 # Release APK
-flutter build apk --release
+flutter build apk --dart-define-from-file=.env.json --release
 ```
 
 ---

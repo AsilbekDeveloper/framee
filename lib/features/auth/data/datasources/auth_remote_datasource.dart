@@ -1,3 +1,4 @@
+import 'package:google_sign_in/google_sign_in.dart' show GoogleSignIn, GoogleSignInException, GoogleSignInExceptionCode;
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthUser;
 
 import '../../../../core/config/app_logger.dart';
@@ -101,13 +102,25 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<Result<void>> signInWithGoogle() async {
     try {
-      await _client.auth.signInWithOAuth(OAuthProvider.google);
+      final account = await GoogleSignIn.instance.authenticate();
+      final idToken = account.authentication.idToken;
+      if (idToken == null) {
+        return const Err(UnknownAuthFailure(message: 'Google sign-in: no ID token received.'));
+      }
+      await _client.auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: idToken,
+      );
       return const Ok(null);
+    } on GoogleSignInException catch (e) {
+      if (e.code == GoogleSignInExceptionCode.canceled) return const Ok(null);
+      AppLogger.w('AuthDS: signInWithGoogle error — ${e.code}');
+      return Err(NetworkFailure(originalError: e, stackTrace: StackTrace.current));
     } on AuthException catch (e) {
-      AppLogger.w('AuthDS: Google sign-in error — ${e.message}');
+      AppLogger.w('AuthDS: signInWithGoogle error — ${e.message}');
       return Err(_mapAuthException(e));
     } catch (e, st) {
-      AppLogger.e('AuthDS: Google sign-in unexpected error', error: e, stackTrace: st);
+      AppLogger.e('AuthDS: signInWithGoogle unexpected error', error: e, stackTrace: st);
       return Err(NetworkFailure(originalError: e, stackTrace: st));
     }
   }

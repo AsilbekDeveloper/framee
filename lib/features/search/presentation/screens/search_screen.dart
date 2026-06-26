@@ -105,7 +105,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     return ExploreGrid(
       key: const ValueKey('explore'),
       posts: state.explorePosts,
-      onPostTap: (id) => context.push(AppRoutes.postDetailPath(id)),
+      // Opens a feed (tapped post + more posts below) with inline comments,
+      // rather than a single post detail.
+      onPostTap: (id) => context.push(AppRoutes.exploreFeedPath(id)),
       onUserTap: (id) => context.push(AppRoutes.userProfilePath(id)),
       onRefresh: () => notifier.refreshExplore(),
     );

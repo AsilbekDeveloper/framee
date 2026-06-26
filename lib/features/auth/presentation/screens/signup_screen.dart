@@ -13,6 +13,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
 import '../providers/auth_provider.dart';
+import '../widgets/google_icon.dart';
 import '../widgets/signup_header.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
@@ -70,7 +71,11 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   Widget build(BuildContext context) {
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next.isAuthenticated && !(previous?.isAuthenticated ?? false)) {
-        context.go(AppRoutes.profileSetup);
+        if (next.user?.username == null) {
+          context.go(AppRoutes.profileSetup);
+        } else {
+          context.go(AppRoutes.home);
+        }
       }
       if (next.awaitingEmailConfirmation &&
           !(previous?.awaitingEmailConfirmation ?? false)) {
@@ -186,6 +191,31 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                         label: AppStrings.createAccount,
                         onPressed: _submit,
                         isLoading: state.isLoading,
+                      ),
+                      Gap(AppDimens.vxl),
+
+                      Row(
+                        children: [
+                          Expanded(child: Divider(color: isDark ? AppColors.darkBorderSubtle : AppColors.lightBorderSubtle)),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: AppDimens.md),
+                            child: Text(
+                              AppStrings.orDivider,
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                              ),
+                            ),
+                          ),
+                          Expanded(child: Divider(color: isDark ? AppColors.darkBorderSubtle : AppColors.lightBorderSubtle)),
+                        ],
+                      ),
+                      Gap(AppDimens.vxl),
+
+                      AppButton(
+                        label: AppStrings.continueWithGoogle,
+                        onPressed: () => ref.read(authProvider.notifier).signInWithGoogle(),
+                        variant: AppButtonVariant.secondary,
+                        leadingIcon: const GoogleIcon(),
                       ),
                       Gap(AppDimens.vxxxl),
 

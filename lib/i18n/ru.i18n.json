@@ -23,8 +23,6 @@
     "minPasswordPlaceholder": "Минимум 8 символов",
     "repeatPasswordPlaceholder": "Повторите пароль",
     "fullNamePlaceholder": "Ваше полное имя",
-    "continueWithGoogle": "Продолжить с Google",
-    "orDivider": "или",
     "welcomeBack": "С возвращением 👋",
     "forgotPassword": "Забыли пароль?",
     "joinFramee": "Присоединяйтесь к Framee",
@@ -32,7 +30,9 @@
     "alreadyHaveAccount": "Уже есть аккаунт?",
     "bySigningUp": "Регистрируясь, вы соглашаетесь с Условиями и Политикой конфиденциальности",
     "terms": "Условия",
-    "privacyPolicy": "Политика конфиденциальности"
+    "privacyPolicy": "Политика конфиденциальности",
+    "continueWithGoogle": "Войти через Google",
+    "orDivider": "или"
   },
   "setup": {
     "setUpProfile": "Настройте профиль",
@@ -93,6 +93,8 @@
     "postPublished": "Пост опубликован!",
     "postReported": "Жалоба отправлена",
     "noCommentsYet": "Пока нет комментариев",
+    "viewComments": "Показать комментарии",
+    "showLess": "меньше",
     "replyingTo": "Ответить",
     "deleteComment": "Удалить комментарий",
     "deleteCommentConfirm": "Этот комментарий будет удалён навсегда.",

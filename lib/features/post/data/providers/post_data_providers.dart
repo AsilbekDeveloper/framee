@@ -15,6 +15,7 @@ import '../../domain/usecases/toggle_comment_like_usecase.dart';
 import '../../domain/usecases/toggle_like_usecase.dart';
 import '../../domain/usecases/toggle_save_usecase.dart';
 import '../../domain/usecases/update_post_usecase.dart';
+import '../datasources/comment_remote_datasource.dart';
 import '../datasources/post_remote_datasource.dart';
 import '../repositories/post_repository_impl.dart';
 
@@ -29,10 +30,17 @@ final _postRemoteDataSourceProvider = Provider<PostRemoteDataSource>(
   (ref) => PostRemoteDataSourceImpl(ref.read(_supabaseClientProvider)),
 );
 
+final _commentRemoteDataSourceProvider = Provider<CommentRemoteDataSource>(
+  (ref) => CommentRemoteDataSourceImpl(ref.read(_supabaseClientProvider)),
+);
+
 // ── Repository ─────────────────────────────────────────────────────────────────
 
 final postRepositoryProvider = Provider<PostRepository>(
-  (ref) => PostRepositoryImpl(ref.read(_postRemoteDataSourceProvider)),
+  (ref) => PostRepositoryImpl(
+    ref.read(_postRemoteDataSourceProvider),
+    ref.read(_commentRemoteDataSourceProvider),
+  ),
 );
 
 // ── Use Cases ──────────────────────────────────────────────────────────────────

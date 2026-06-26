@@ -65,7 +65,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next.isAuthenticated && !(previous?.isAuthenticated ?? false)) {
-        context.go(AppRoutes.home);
+        if (next.user?.username == null) {
+          context.go(AppRoutes.profileSetup);
+        } else {
+          context.go(AppRoutes.home);
+        }
       }
     });
 
@@ -74,9 +78,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      body: SafeArea(
-        child: MaxWidthBox(
-          child: SingleChildScrollView(
+      body: Stack(
+        children: [
+          SafeArea(
+            child: MaxWidthBox(
+              child: SingleChildScrollView(
             padding: EdgeInsets.symmetric(
               horizontal: AppDimens.screenPadding,
               vertical: AppDimens.vxxxl,
@@ -160,46 +166,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                 AppButton(
                   label: AppStrings.signIn,
-                  onPressed: _submit,
-                  isLoading: state.isLoading,
+                  onPressed: state.isLoading ? null : _submit,
                 ),
                 Gap(AppDimens.vxl),
 
                 Row(
                   children: [
-                    Expanded(
-                      child: Divider(
-                        color: isDark
-                            ? AppColors.darkBorderSubtle
-                            : AppColors.lightBorderSubtle,
-                      ),
-                    ),
+                    Expanded(child: Divider(color: isDark ? AppColors.darkBorderSubtle : AppColors.lightBorderSubtle)),
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12.w),
+                      padding: EdgeInsets.symmetric(horizontal: AppDimens.md),
                       child: Text(
                         AppStrings.orDivider,
-                        style: AppTextStyles.caption.copyWith(
-                          color: isDark
-                              ? AppColors.darkTextMuted
-                              : AppColors.lightTextMuted,
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
                         ),
                       ),
                     ),
-                    Expanded(
-                      child: Divider(
-                        color: isDark
-                            ? AppColors.darkBorderSubtle
-                            : AppColors.lightBorderSubtle,
-                      ),
-                    ),
+                    Expanded(child: Divider(color: isDark ? AppColors.darkBorderSubtle : AppColors.lightBorderSubtle)),
                   ],
                 ),
                 Gap(AppDimens.vxl),
 
                 AppButton(
                   label: AppStrings.continueWithGoogle,
+                  onPressed: () => ref.read(authProvider.notifier).signInWithGoogle(),
                   variant: AppButtonVariant.secondary,
-                  onPressed: ref.read(authProvider.notifier).signInWithGoogle,
                   leadingIcon: const GoogleIcon(),
                 ),
                 Gap(AppDimens.vxxxl),
@@ -235,6 +226,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
           ),
         ),
+      ),
+          if (state.isLoading)
+            Container(
+              color: Colors.black.withValues(alpha: 0.4),
+              child: const Center(
+                child: CircularProgressIndicator(
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

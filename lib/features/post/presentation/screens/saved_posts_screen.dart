@@ -74,7 +74,7 @@ class _SavedPostsScreenState extends ConsumerState<SavedPostsScreen> {
         leading: BackButton(onPressed: () => context.pop()),
         title: Text(AppStrings.saved),
       ),
-      body: _buildBody(),
+      body: SafeArea(top: false, child: _buildBody()),
     );
   }
 

@@ -20,7 +20,9 @@ class PrivacyScreen extends StatelessWidget {
         leading: BackButton(onPressed: () => context.pop()),
         title: Text(AppStrings.privacy),
       ),
-      body: CustomScrollView(
+      body: SafeArea(
+        top: false,
+        child: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(child: SizedBox(height: AppDimens.vxl)),
           SliverToBoxAdapter(
@@ -61,6 +63,7 @@ class PrivacyScreen extends StatelessWidget {
           ),
           SliverToBoxAdapter(child: SizedBox(height: AppDimens.vmassive)),
         ],
+        ),
       ),
     );
   }

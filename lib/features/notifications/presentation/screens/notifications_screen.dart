@@ -76,7 +76,10 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         ],
       ),
       body: notifAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => ListView.builder(
+          itemCount: 6,
+          itemBuilder: (_, _) => const NotifTileShimmer(),
+        ),
         error: (e, _) => Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,

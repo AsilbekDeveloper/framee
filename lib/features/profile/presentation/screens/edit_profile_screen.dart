@@ -97,7 +97,9 @@ class EditProfileScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
           horizontal: AppDimens.screenPadding,
           vertical: AppDimens.vxl,
@@ -236,6 +238,7 @@ class EditProfileScreen extends ConsumerWidget {
             ),
             Gap(AppDimens.vmassive),
           ],
+        ),
         ),
       ),
     );

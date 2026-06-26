@@ -17,6 +17,7 @@ lib/firebase_options.dart
 # Environment / secrets
 .env
 *.env.*
+.env.json
 secrets/
 
 # IDE
@@ -35,3 +36,8 @@ coverage/
 
 # Generated
 lib/generated/
+
+# Release signing (NEVER commit)
+android/app/*.jks
+android/app/*.keystore
+android/key.properties

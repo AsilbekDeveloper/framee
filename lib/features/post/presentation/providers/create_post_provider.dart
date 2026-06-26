@@ -137,6 +137,48 @@ class CreatePostNotifier extends AutoDisposeNotifier<CreatePostState> {
     state = state.copyWith(selectedImagePath: cropped.path);
   }
 
+  /// Re-crops the already-selected image without opening the gallery.
+  Future<void> recropImage() async {
+    final currentPath = state.selectedImagePath;
+    if (currentPath == null) return;
+
+    final cropped = await ImageCropper().cropImage(
+      sourcePath: currentPath,
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarTitle: AppStrings.cropImage,
+          toolbarColor: AppColors.primary,
+          toolbarWidgetColor: Colors.white,
+          activeControlsWidgetColor: AppColors.primary,
+          backgroundColor: Colors.black,
+          aspectRatioPresets: [
+            CropAspectRatioPreset.original,
+            CropAspectRatioPreset.square,
+            CropAspectRatioPreset.ratio4x3,
+            CropAspectRatioPreset.ratio16x9,
+          ],
+          lockAspectRatio: false,
+        ),
+        IOSUiSettings(
+          title: AppStrings.cropImage,
+          doneButtonTitle: AppStrings.done,
+          cancelButtonTitle: AppStrings.cancel,
+          aspectRatioPresets: [
+            CropAspectRatioPreset.original,
+            CropAspectRatioPreset.square,
+            CropAspectRatioPreset.ratio4x3,
+            CropAspectRatioPreset.ratio16x9,
+          ],
+          resetAspectRatioEnabled: true,
+          aspectRatioLockEnabled: false,
+        ),
+      ],
+    );
+
+    if (cropped == null) return;
+    state = state.copyWith(selectedImagePath: cropped.path);
+  }
+
   void removeImage() => state = state.copyWith(clearImage: true);
 
   // ── Submit ──────────────────────────────────────────────────────────────────

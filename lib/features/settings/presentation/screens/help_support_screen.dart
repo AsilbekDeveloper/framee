@@ -18,7 +18,9 @@ class HelpSupportScreen extends StatelessWidget {
         leading: BackButton(onPressed: () => context.pop()),
         title: Text(AppStrings.helpSupport),
       ),
-      body: CustomScrollView(
+      body: SafeArea(
+        top: false,
+        child: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(child: SizedBox(height: AppDimens.vxl)),
           SliverToBoxAdapter(
@@ -66,6 +68,7 @@ class HelpSupportScreen extends StatelessWidget {
           ),
           SliverToBoxAdapter(child: SizedBox(height: AppDimens.vmassive)),
         ],
+        ),
       ),
     );
   }

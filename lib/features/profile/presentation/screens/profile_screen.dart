@@ -5,6 +5,7 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/components/app_button.dart';
+import '../../../../core/components/shared_widgets.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
@@ -34,7 +35,7 @@ class ProfileScreen extends ConsumerWidget {
 
     return profileAsync.when(
       loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        body: SingleChildScrollView(child: ProfileShimmer()),
       ),
       error: (err, _) => Scaffold(
         body: Center(

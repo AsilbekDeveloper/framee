@@ -18,17 +18,35 @@ import '../providers/post_detail_provider.dart';
 import '../widgets/comment_input_bar.dart';
 import '../widgets/comment_tile.dart';
 
-class PostDetailScreen extends ConsumerWidget {
+class PostDetailScreen extends ConsumerStatefulWidget {
   const PostDetailScreen({super.key, required this.postId});
   final String postId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final postAsync = ref.watch(postDetailProvider(postId));
+  ConsumerState<PostDetailScreen> createState() => _PostDetailScreenState();
+}
+
+class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
+  final _commentController = TextEditingController();
+  final _commentFocusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    _commentFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final postAsync = ref.watch(postDetailProvider(widget.postId));
 
     return postAsync.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      loading: () => Scaffold(
+        appBar: AppBar(leading: BackButton(onPressed: () => context.pop())),
+        body: const SingleChildScrollView(
+          child: PostCardShimmer(),
+        ),
       ),
       error: (err, _) => Scaffold(
         appBar: AppBar(leading: BackButton(onPressed: () => context.pop())),
@@ -41,7 +59,7 @@ class PostDetailScreen extends ConsumerWidget {
               Text(AppStrings.errorOccurred, style: AppTextStyles.bodyMedium),
               const Gap(8),
               TextButton(
-                onPressed: () => ref.invalidate(postDetailProvider(postId)),
+                onPressed: () => ref.invalidate(postDetailProvider(widget.postId)),
                 child: Text(AppStrings.retry),
               ),
             ],
@@ -57,7 +75,7 @@ class PostDetailScreen extends ConsumerWidget {
           );
         }
 
-        final notifier = ref.read(postDetailProvider(postId).notifier);
+        final notifier = ref.read(postDetailProvider(widget.postId).notifier);
         final currentUserId = ref.read(currentUserIdProvider);
         final isOwnPost = post.author.id == currentUserId;
 
@@ -80,15 +98,17 @@ class PostDetailScreen extends ConsumerWidget {
                 ),
                 AppIconButton(
                   icon: Icons.delete_outline_rounded,
-                  onTap: () => _confirmDeletePost(context, ref),
+                  onTap: () => _confirmDeletePost(context),
                 ),
               ],
             ],
           ),
-          body: Column(
-            children: [
-              Expanded(
-                child: CustomScrollView(
+          body: SafeArea(
+            top: false,
+            child: Column(
+              children: [
+                Expanded(
+                  child: CustomScrollView(
                   slivers: [
                     SliverToBoxAdapter(
                       child: PostCard(
@@ -120,18 +140,27 @@ class PostDetailScreen extends ConsumerWidget {
                       SliverToBoxAdapter(
                         child: Padding(
                           padding: EdgeInsets.symmetric(
-                            vertical: AppDimens.vxxxl,
+                            vertical: AppDimens.vmassive,
+                            horizontal: AppDimens.screenPadding,
                           ),
-                          child: Center(
-                            child: Text(
-                              AppStrings.noCommentsYet,
-                              style: AppTextStyles.bodySmall.copyWith(
-                                color: Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? AppColors.darkTextMuted
-                                    : AppColors.lightTextMuted,
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.chat_bubble_outline_rounded,
+                                size: 36,
+                                color: AppColors.primary.withValues(alpha: 0.35),
                               ),
-                            ),
+                              Gap(AppDimens.vsm),
+                              Text(
+                                AppStrings.noCommentsYet,
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? AppColors.darkTextMuted
+                                      : AppColors.lightTextMuted,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       )
@@ -147,16 +176,16 @@ class PostDetailScreen extends ConsumerWidget {
                                 notifier.toggleCommentLike(comment.id),
                             onReplyLikeTap: (id) =>
                                 notifier.toggleCommentLike(id),
-                            onReplyTap: (username) => notifier.setReplyTo(
-                              comment.id,
-                              username,
-                            ),
+                            onReplyTap: (username) {
+                              notifier.setReplyTo(comment.id, username);
+                              _commentController.clear();
+                              _commentFocusNode.requestFocus();
+                            },
                             onDeleteTap: comment.author.id == currentUserId
-                                ? () => _confirmDeleteComment(
-                                      context, ref, comment.id)
+                                ? () => _confirmDeleteComment(context, comment.id)
                                 : null,
                             onReplyDeleteTap: (replyId) =>
-                                _confirmDeleteComment(context, ref, replyId),
+                                _confirmDeleteComment(context, replyId),
                           );
                         },
                       ),
@@ -183,18 +212,19 @@ class PostDetailScreen extends ConsumerWidget {
                   onClear: notifier.clearReply,
                 ),
               CommentInputBar(
-                controller: notifier.commentController,
-                focusNode: notifier.commentFocusNode,
-                onSend: notifier.addComment,
+                controller: _commentController,
+                focusNode: _commentFocusNode,
+                onSend: () => notifier.addComment(_commentController.text),
               ),
             ],
+          ),
           ),
         );
       },
     );
   }
 
-  Future<void> _confirmDeletePost(BuildContext context, WidgetRef ref) async {
+  Future<void> _confirmDeletePost(BuildContext context) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -215,7 +245,9 @@ class PostDetailScreen extends ConsumerWidget {
     );
     if (confirm == true && context.mounted) {
       try {
-        await ref.read(postDetailProvider(postId).notifier).deletePost();
+        await ref
+            .read(postDetailProvider(widget.postId).notifier)
+            .deletePost();
         if (context.mounted) {
           context.showSnackBar(AppStrings.postDeleted);
           context.pop();
@@ -230,7 +262,6 @@ class PostDetailScreen extends ConsumerWidget {
 
   Future<void> _confirmDeleteComment(
     BuildContext context,
-    WidgetRef ref,
     String commentId,
   ) async {
     final confirm = await showDialog<bool>(
@@ -253,7 +284,7 @@ class PostDetailScreen extends ConsumerWidget {
     );
     if (confirm == true && context.mounted) {
       await ref
-          .read(postDetailProvider(postId).notifier)
+          .read(postDetailProvider(widget.postId).notifier)
           .deleteComment(commentId);
     }
   }
@@ -261,5 +292,4 @@ class PostDetailScreen extends ConsumerWidget {
   void _sharePost(BuildContext context, Post post) {
     ShareUtils.sharePost(post);
   }
-
 }

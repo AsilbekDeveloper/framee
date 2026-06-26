@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/config/app_logger.dart';
@@ -57,19 +56,11 @@ class PostDetailState {
 // ── Notifier ──────────────────────────────────────────────────────────────────
 
 class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
-  final commentController = TextEditingController();
-  final commentFocusNode = FocusNode();
-
   String get _postId => arg;
   String? get _currentUserId => ref.read(currentUserIdProvider);
 
   @override
   Future<PostDetailState> build(String postId) async {
-    ref.onDispose(() {
-      commentController.dispose();
-      commentFocusNode.dispose();
-    });
-
     final userId = _currentUserId;
     if (userId == null) return const PostDetailState();
 
@@ -189,8 +180,6 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
         replyToUsername: username,
       ));
     });
-    commentController.clear();
-    commentFocusNode.requestFocus();
   }
 
   void clearReply() {
@@ -201,9 +190,9 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
 
   // ── Add Comment ─────────────────────────────────────────────────────────────
 
-  Future<void> addComment() async {
-    final text = commentController.text.trim();
-    if (text.isEmpty) return;
+  Future<void> addComment(String text) async {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return;
 
     final userId = _currentUserId;
     if (userId == null) return;
@@ -211,13 +200,10 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
     final current = state.valueOrNull;
     if (current == null) return;
 
-    commentController.clear();
-    commentFocusNode.unfocus();
-
     final params = AddCommentParams(
       postId: _postId,
       userId: userId,
-      text: text,
+      text: trimmed,
       parentId: current.replyToId,
     );
 

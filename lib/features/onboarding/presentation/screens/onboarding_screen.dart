@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/components/app_button.dart';
 import '../../../../core/components/responsive_builder.dart';
@@ -11,8 +12,31 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
 
-class OnboardingScreen extends StatelessWidget {
+class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
+
+  @override
+  State<OnboardingScreen> createState() => _OnboardingScreenState();
+}
+
+class _OnboardingScreenState extends State<OnboardingScreen> {
+  static const _seenKey = 'has_seen_onboarding';
+
+  @override
+  void initState() {
+    super.initState();
+    _redirectIfReturning();
+  }
+
+  Future<void> _redirectIfReturning() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    if (prefs.getBool(_seenKey) ?? false) {
+      context.go(AppRoutes.login);
+    } else {
+      await prefs.setBool(_seenKey, true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,8 +45,6 @@ class OnboardingScreen extends StatelessWidget {
         child: MaxWidthBox(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              // Kichik ekranlarda (< 600 px) scroll bilan ishlaydi,
-              // katta ekranlarda Spacer orqali vertikal markazda ko'rinadi.
               final isCompact = constraints.maxHeight < 600;
 
               if (isCompact) {

@@ -74,7 +74,8 @@ class _ChangePasswordSheetState extends ConsumerState<ChangePasswordSheet> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bottomPadding = MediaQuery.viewInsetsOf(context).bottom;
+    final bottomPadding = MediaQuery.viewInsetsOf(context).bottom +
+        MediaQuery.paddingOf(context).bottom;
 
     return Container(
       padding: EdgeInsets.fromLTRB(

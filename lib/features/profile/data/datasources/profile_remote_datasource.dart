@@ -14,6 +14,8 @@ abstract interface class ProfileRemoteDataSource {
   Future<Result<ProfileDto>> updateProfile(UpdateProfileParams params);
   Future<Result<bool>> isUsernameAvailable(String username, {String? excludeUserId});
   Stream<ProfileDto?> watchProfile(String userId);
+  Future<void> saveFcmToken(String userId, String token);
+  Future<void> clearFcmToken(String userId);
 }
 
 class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
@@ -74,36 +76,6 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         isRequested: isRequested,
         isFollowingMe: isFollowingMe,
       );
-
-      // No avatar stored, and this is the current user — fall back to auth metadata
-      // (only accept http URLs, not local file paths)
-      if (dto.avatarUrl == null && _client.auth.currentUser?.id == userId) {
-        final metaAvatar =
-            _client.auth.currentUser?.userMetadata?['avatar_url'] as String?;
-        if (metaAvatar != null && metaAvatar.startsWith('http')) {
-          AppLogger.d('ProfileDS: avatar resolved from auth metadata');
-          // Also sync to the profiles table so future fetches are faster
-          _syncAvatarToProfiles(userId: userId, avatarUrl: metaAvatar);
-          return Ok(ProfileDto(
-            id: dto.id,
-            username: dto.username,
-            displayName: dto.displayName,
-            avatarUrl: metaAvatar,
-            bio: dto.bio,
-            website: dto.website,
-            postsCount: dto.postsCount,
-            followersCount: dto.followersCount,
-            followingCount: dto.followingCount,
-            isPrivate: dto.isPrivate,
-            isVerified: dto.isVerified,
-            isFollowing: isFollowing,
-            isRequested: isRequested,
-            isFollowingMe: isFollowingMe,
-            createdAt: dto.createdAt,
-            updatedAt: dto.updatedAt,
-          ));
-        }
-      }
 
       return Ok(dto);
     } on PostgrestException catch (e) {
@@ -167,6 +139,18 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
           .single();
 
       AppLogger.i('ProfileDS: profile saved');
+
+      // Sync username to auth metadata so the router can detect returning users
+      // without a database round-trip. Failure is non-fatal.
+      if (params.username != null) {
+        _client.auth
+            .updateUser(UserAttributes(data: {'username': params.username!.trim()}))
+            .then((_) {})
+            .catchError((e) {
+          AppLogger.w('ProfileDS: auth metadata sync failed — $e');
+        });
+      }
+
       return Ok(ProfileDto.fromJson(data));
     } on PostgrestException catch (e) {
       AppLogger.e('ProfileDS: updateProfile DB error', error: e);
@@ -211,6 +195,37 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
         .map((rows) => rows.isEmpty ? null : ProfileDto.fromJson(rows.first));
   }
 
+  @override
+  Future<void> saveFcmToken(String userId, String token) async {
+    try {
+      // Remove this token from any other profile first — prevents a previously
+      // logged-out account on the same device from receiving push notifications.
+      await _client
+          .from(_table)
+          .update({'fcm_token': null})
+          .eq('fcm_token', token)
+          .neq('id', userId);
+
+      await _client.from(_table).update({'fcm_token': token}).eq('id', userId);
+      AppLogger.d('ProfileDS: FCM token saved — $userId');
+    } catch (e) {
+      AppLogger.w('ProfileDS: saveFcmToken failed — $e');
+    }
+  }
+
+  @override
+  Future<void> clearFcmToken(String userId) async {
+    try {
+      await _client
+          .from(_table)
+          .update({'fcm_token': null})
+          .eq('id', userId);
+      AppLogger.d('ProfileDS: FCM token cleared — $userId');
+    } catch (e) {
+      AppLogger.w('ProfileDS: clearFcmToken failed — $e');
+    }
+  }
+
   // ── Private helpers ─────────────────────────────────────────────────────────
 
   Future<Result<String>> _uploadAvatar({
@@ -241,19 +256,5 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       AppLogger.e('ProfileDS: avatar upload error', error: e, stackTrace: st);
       return Err(AvatarUploadFailure(originalError: e, stackTrace: st));
     }
-  }
-
-  /// Syncs the avatar URL from auth metadata into the profiles table in the background.
-  /// Errors are silently ignored — this is a best-effort optimisation, not critical.
-  void _syncAvatarToProfiles({
-    required String userId,
-    required String avatarUrl,
-  }) {
-    _client
-        .from(_table)
-        .update({'avatar_url': avatarUrl, 'updated_at': DateTime.now().toIso8601String()})
-        .eq('id', userId)
-        .then((_) => AppLogger.d('ProfileDS: avatar synced → profiles'))
-        .catchError((e) => AppLogger.w('ProfileDS: avatar sync error: $e'));
   }
 }

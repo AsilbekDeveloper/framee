@@ -78,7 +78,7 @@ class CreatePostScreen extends ConsumerWidget {
                               key: ValueKey(state.selectedImagePath),
                               path: state.selectedImagePath!,
                               onRemove: notifier.removeImage,
-                              onCrop: notifier.pickImage,
+                              onCrop: notifier.recropImage,
                             )
                           : _ImagePlaceholder(
                               key: const ValueKey('placeholder'),

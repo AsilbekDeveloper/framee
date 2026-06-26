@@ -42,7 +42,7 @@ class NotificationsNotifier extends AsyncNotifier<NotifFeedState> {
 
   @override
   Future<NotifFeedState> build() async {
-    final userId = ref.read(currentUserIdProvider);
+    final userId = ref.watch(currentUserIdProvider);
     if (userId == null) return const NotifFeedState();
 
     _watchRealtime(userId);

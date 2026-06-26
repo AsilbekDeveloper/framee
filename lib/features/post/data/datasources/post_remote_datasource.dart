@@ -7,7 +7,6 @@ import '../../../../core/errors/failure.dart';
 import '../../../../core/errors/result.dart';
 import '../../domain/entities/post.dart';
 import '../../domain/failures/post_failure.dart';
-import '../dtos/comment_dto.dart';
 import '../dtos/post_dto.dart';
 
 abstract interface class PostRemoteDataSource {
@@ -39,23 +38,6 @@ abstract interface class PostRemoteDataSource {
     required String currentUserId,
   });
 
-  Future<Result<List<CommentDto>>> getComments({
-    required String postId,
-    required String currentUserId,
-  });
-
-  Future<Result<CommentDto>> addComment(AddCommentParams params);
-
-  Future<Result<bool>> deleteComment({
-    required String commentId,
-    required String currentUserId,
-  });
-
-  Future<Result<bool>> toggleCommentLike({
-    required String commentId,
-    required String currentUserId,
-  });
-
   Future<Result<List<PostDto>>> getUserPosts({
     required String userId,
     required String currentUserId,
@@ -79,8 +61,6 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
   static const _postsTable = 'posts';
   static const _likesTable = 'post_likes';
   static const _savedTable = 'saved_posts';
-  static const _commentsTable = 'comments';
-  static const _commentLikesTable = 'comment_likes';
   static const _postImagesBucket = 'post-images';
 
   // ── Feed ────────────────────────────────────────────────────────────────────
@@ -94,7 +74,6 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     try {
       AppLogger.d('PostDS: loading feed — limit:$limit offset:$offset');
 
-      // get_feed_posts RPC: author info + is_liked + is_saved in a single query
       final data = await _client.rpc('get_feed_posts', params: {
         'p_user_id': currentUserId,
         'p_limit': limit,
@@ -153,7 +132,6 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
 
       String? imageUrl;
 
-      // 1. Upload image to Storage if provided
       if (params.imageLocalPath != null) {
         final uploadResult = await _uploadPostImage(
           userId: params.userId,
@@ -164,12 +142,10 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
             imageUrl = value;
           case Err(:final failure):
             AppLogger.e('PostDS: image upload failed', error: failure);
-            // Unlike avatar uploads, a missing image in an image post is a hard fail
             return Err(failure);
         }
       }
 
-      // 2. Insert row into posts table
       final insertData = <String, dynamic>{
         'user_id': params.userId,
         'image_url': ?imageUrl,
@@ -206,7 +182,6 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     required String currentUserId,
   }) async {
     try {
-      // Protected by RLS — only the owner can delete
       await _client
           .from(_postsTable)
           .delete()
@@ -232,7 +207,6 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     required String currentUserId,
   }) async {
     try {
-      // Check whether a like record already exists
       final existing = await _client
           .from(_likesTable)
           .select()
@@ -241,21 +215,18 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
           .maybeSingle();
 
       if (existing != null) {
-        // Unlike: remove the record
         await _client
             .from(_likesTable)
             .delete()
             .eq('post_id', postId)
             .eq('user_id', currentUserId);
       } else {
-        // Like: insert a record
         await _client.from(_likesTable).insert({
           'post_id': postId,
           'user_id': currentUserId,
         });
       }
 
-      // Fetch the updated likes count
       final postData = await _client
           .from(_postsTable)
           .select('likes_count')
@@ -263,7 +234,7 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
           .single();
 
       final likesCount = postData['likes_count'] as int? ?? 0;
-      final isLiked = existing == null; // was absent before — now liked
+      final isLiked = existing == null;
 
       return Ok((likesCount: likesCount, isLiked: isLiked));
     } on PostgrestException catch (e) {
@@ -295,150 +266,16 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
             .delete()
             .eq('post_id', postId)
             .eq('user_id', currentUserId);
-        return const Ok(false); // now unsaved
+        return const Ok(false);
       } else {
         await _client.from(_savedTable).insert({
           'post_id': postId,
           'user_id': currentUserId,
         });
-        return const Ok(true); // now saved
-      }
-    } on PostgrestException catch (e) {
-      AppLogger.e('PostDS: toggleSave error', error: e);
-      return Err(PostInteractionFailure(originalError: e));
-    } catch (e) {
-      return Err(PostInteractionFailure(originalError: e));
-    }
-  }
-
-  // ── Comments ────────────────────────────────────────────────────────────────
-
-  @override
-  Future<Result<List<CommentDto>>> getComments({
-    required String postId,
-    required String currentUserId,
-  }) async {
-    try {
-      AppLogger.d('PostDS: loading comments — $postId');
-
-      // Fetch all comments (including replies) in a single query
-      final data = await _client
-          .from(_commentsTable)
-          .select('''
-            id, post_id, user_id, parent_id, text, likes_count, created_at,
-            profiles!user_id(username, display_name, avatar_url)
-          ''')
-          .eq('post_id', postId)
-          .order('created_at');
-
-      // is_liked — separate query scoped to the current user
-      final likedData = await _client
-          .from(_commentLikesTable)
-          .select('comment_id')
-          .eq('user_id', currentUserId);
-
-      final likedIds = (likedData as List)
-          .map((e) => e['comment_id'] as String)
-          .toSet();
-
-      final dtos = (data as List).map((row) {
-        final map = Map<String, dynamic>.from(row as Map);
-        map['is_liked'] = likedIds.contains(map['id']);
-        return CommentDto.fromJson(map);
-      }).toList();
-
-      return Ok(dtos);
-    } on PostgrestException catch (e) {
-      AppLogger.e('PostDS: getComments error', error: e);
-      return Err(ServerFailure(message: e.message, originalError: e));
-    } catch (e, st) {
-      return Err(NetworkFailure(originalError: e, stackTrace: st));
-    }
-  }
-
-  @override
-  Future<Result<CommentDto>> addComment(AddCommentParams params) async {
-    try {
-      final insertData = <String, dynamic>{
-        'post_id': params.postId,
-        'user_id': params.userId,
-        'text': params.text,
-        if (params.parentId != null) 'parent_id': params.parentId,
-      };
-
-      final data = await _client
-          .from(_commentsTable)
-          .insert(insertData)
-          .select('''
-            id, post_id, user_id, parent_id, text, likes_count, created_at,
-            profiles!user_id(username, display_name, avatar_url)
-          ''')
-          .single();
-
-      final map = Map<String, dynamic>.from(data);
-      map['is_liked'] = false;
-      AppLogger.d('PostDS: comment added — ${data['id']}');
-      return Ok(CommentDto.fromJson(map));
-    } on PostgrestException catch (e) {
-      AppLogger.e('PostDS: addComment error', error: e);
-      return Err(CommentFailure(originalError: e));
-    } catch (e, st) {
-      return Err(CommentFailure(originalError: e, stackTrace: st));
-    }
-  }
-
-  @override
-  Future<Result<bool>> deleteComment({
-    required String commentId,
-    required String currentUserId,
-  }) async {
-    try {
-      await _client
-          .from(_commentsTable)
-          .delete()
-          .eq('id', commentId)
-          .eq('user_id', currentUserId);
-      return const Ok(true);
-    } on PostgrestException catch (e) {
-      AppLogger.e('PostDS: deleteComment error', error: e);
-      if (e.code == '42501') return const Err(PostUnauthorizedFailure());
-      return Err(PostDeleteFailure(originalError: e));
-    } catch (e, st) {
-      return Err(PostDeleteFailure(originalError: e, stackTrace: st));
-    }
-  }
-
-  // ── Comment Like ────────────────────────────────────────────────────────────
-
-  @override
-  Future<Result<bool>> toggleCommentLike({
-    required String commentId,
-    required String currentUserId,
-  }) async {
-    try {
-      final existing = await _client
-          .from(_commentLikesTable)
-          .select()
-          .eq('comment_id', commentId)
-          .eq('user_id', currentUserId)
-          .maybeSingle();
-
-      if (existing != null) {
-        await _client
-            .from(_commentLikesTable)
-            .delete()
-            .eq('comment_id', commentId)
-            .eq('user_id', currentUserId);
-        return const Ok(false);
-      } else {
-        await _client.from(_commentLikesTable).insert({
-          'comment_id': commentId,
-          'user_id': currentUserId,
-        });
         return const Ok(true);
       }
     } on PostgrestException catch (e) {
-      AppLogger.e('PostDS: toggleCommentLike error', error: e);
+      AppLogger.e('PostDS: toggleSave error', error: e);
       return Err(PostInteractionFailure(originalError: e));
     } catch (e) {
       return Err(PostInteractionFailure(originalError: e));
@@ -467,7 +304,6 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
           .order('created_at', ascending: false)
           .range(offset, offset + limit - 1);
 
-      // Fetch is_liked and is_saved separately, scoped to the current user
       final postIds = (data as List).map((e) => e['id'] as String).toList();
       final likedIds = await _getLikedPostIds(currentUserId, postIds);
       final savedIds = await _getSavedPostIds(currentUserId, postIds);
@@ -512,7 +348,7 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
 
       final dtos = (data as List).map((row) {
         final postMap = Map<String, dynamic>.from(row['posts'] as Map);
-        postMap['is_liked'] = false; // like status is not checked for saved posts
+        postMap['is_liked'] = false;
         postMap['is_saved'] = true;
         return PostDto.fromJoin(postMap);
       }).toList();
@@ -523,38 +359,6 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
       return Err(ServerFailure(message: e.message, originalError: e));
     } catch (e, st) {
       return Err(NetworkFailure(originalError: e, stackTrace: st));
-    }
-  }
-
-  // ── Private helpers ─────────────────────────────────────────────────────────
-
-  Future<Set<String>> _getLikedPostIds(
-      String userId, List<String> postIds) async {
-    if (postIds.isEmpty) return {};
-    try {
-      final data = await _client
-          .from(_likesTable)
-          .select('post_id')
-          .eq('user_id', userId)
-          .inFilter('post_id', postIds);
-      return (data as List).map((e) => e['post_id'] as String).toSet();
-    } catch (_) {
-      return {};
-    }
-  }
-
-  Future<Set<String>> _getSavedPostIds(
-      String userId, List<String> postIds) async {
-    if (postIds.isEmpty) return {};
-    try {
-      final data = await _client
-          .from(_savedTable)
-          .select('post_id')
-          .eq('user_id', userId)
-          .inFilter('post_id', postIds);
-      return (data as List).map((e) => e['post_id'] as String).toSet();
-    } catch (_) {
-      return {};
     }
   }
 
@@ -609,13 +413,44 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     }
   }
 
+  // ── Private helpers ─────────────────────────────────────────────────────────
+
+  Future<Set<String>> _getLikedPostIds(
+      String userId, List<String> postIds) async {
+    if (postIds.isEmpty) return {};
+    try {
+      final data = await _client
+          .from(_likesTable)
+          .select('post_id')
+          .eq('user_id', userId)
+          .inFilter('post_id', postIds);
+      return (data as List).map((e) => e['post_id'] as String).toSet();
+    } catch (_) {
+      return {};
+    }
+  }
+
+  Future<Set<String>> _getSavedPostIds(
+      String userId, List<String> postIds) async {
+    if (postIds.isEmpty) return {};
+    try {
+      final data = await _client
+          .from(_savedTable)
+          .select('post_id')
+          .eq('user_id', userId)
+          .inFilter('post_id', postIds);
+      return (data as List).map((e) => e['post_id'] as String).toSet();
+    } catch (_) {
+      return {};
+    }
+  }
+
   Future<Result<String>> _uploadPostImage({
     required String userId,
     required String localPath,
   }) async {
     try {
       final bytes = await File(localPath).readAsBytes();
-      // Unique filename — allows a single user to upload multiple posts
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final storagePath = '$userId/$timestamp.jpg';
 

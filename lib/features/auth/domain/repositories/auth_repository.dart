@@ -22,9 +22,7 @@ abstract interface class AuthRepository {
     required String password,
   });
 
-  /// Initiates OAuth sign-in. The result arrives via [authStateChanges].
   Future<Result<void>> signInWithGoogle();
-
   Future<Result<void>> signOut();
 
   Future<Result<void>> sendPasswordResetEmail(String email);

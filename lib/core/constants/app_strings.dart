@@ -33,8 +33,6 @@ abstract final class AppStrings {
   static String get minPasswordPlaceholder => _t.auth.minPasswordPlaceholder;
   static String get repeatPasswordPlaceholder => _t.auth.repeatPasswordPlaceholder;
   static String get fullNamePlaceholder => _t.auth.fullNamePlaceholder;
-  static String get continueWithGoogle => _t.auth.continueWithGoogle;
-  static String get orDivider => _t.auth.orDivider;
   static String get welcomeBack => _t.auth.welcomeBack;
   static String get forgotPassword => _t.auth.forgotPassword;
   static String get joinFramee => _t.auth.joinFramee;
@@ -43,6 +41,8 @@ abstract final class AppStrings {
   static String get bySigningUp => _t.auth.bySigningUp;
   static String get terms => _t.auth.terms;
   static String get privacyPolicy => _t.auth.privacyPolicy;
+  static String get continueWithGoogle => _t.auth.continueWithGoogle;
+  static String get orDivider => _t.auth.orDivider;
 
   // ─── Profile Setup ────────────────────────────────────────
   static String get setUpProfile => _t.setup.setUpProfile;
@@ -96,6 +96,8 @@ abstract final class AppStrings {
   static String get deleteComment => _t.post.deleteComment;
   static String get deleteCommentConfirm => _t.post.deleteCommentConfirm;
   static String get noCommentsYet => _t.post.noCommentsYet;
+  static String get viewComments => _t.post.viewComments;
+  static String get showLess => _t.post.showLess;
   static String get replyingTo => _t.post.replyingTo;
   static String get reportPost => _t.post.reportPost;
   static String get savePost => _t.post.savePost;

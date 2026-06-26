@@ -88,7 +88,7 @@ class EditProfileNotifier extends Notifier<EditProfileState> {
     final displayName = profile?.displayName ?? authUser?.fullName ?? '';
     final bio = profile?.bio ?? '';
     final website = profile?.website ?? '';
-    final avatarUrl = profile?.avatarUrl ?? authUser?.avatarUrl;
+    final avatarUrl = profile?.avatarUrl;
 
     usernameController.text = username;
     displayNameController.text = displayName;

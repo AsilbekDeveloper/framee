@@ -39,7 +39,9 @@ class SettingsScreen extends ConsumerWidget {
         leading: BackButton(onPressed: () => context.pop()),
         title: Text(AppStrings.settings),
       ),
-      body: CustomScrollView(
+      body: SafeArea(
+        top: false,
+        child: CustomScrollView(
         slivers: [
           if (profile != null)
             SliverToBoxAdapter(
@@ -173,6 +175,7 @@ class SettingsScreen extends ConsumerWidget {
             child: SizedBox(height: AppDimens.vmassive),
           ),
         ],
+        ),
       ),
     );
   }

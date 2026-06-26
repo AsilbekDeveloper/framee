@@ -23,8 +23,6 @@
     "minPasswordPlaceholder": "Kamida 8 ta belgi",
     "repeatPasswordPlaceholder": "Parolni takrorlang",
     "fullNamePlaceholder": "To'liq ismingiz",
-    "continueWithGoogle": "Google orqali davom etish",
-    "orDivider": "yoki",
     "welcomeBack": "Xush kelibsiz 👋",
     "forgotPassword": "Parolni unutdingizmi?",
     "joinFramee": "Framee'ga qo'shiling",
@@ -32,7 +30,9 @@
     "alreadyHaveAccount": "Hisobingiz bormi?",
     "bySigningUp": "Ro'yxatdan o'tib, Shartlar va Maxfiylik siyosatiga rozilik bildirasiz",
     "terms": "Shartlar",
-    "privacyPolicy": "Maxfiylik siyosati"
+    "privacyPolicy": "Maxfiylik siyosati",
+    "continueWithGoogle": "Google orqali kirish",
+    "orDivider": "yoki"
   },
   "setup": {
     "setUpProfile": "Profilingizni sozlang",
@@ -93,6 +93,8 @@
     "postPublished": "Post chop etildi!",
     "postReported": "Post shikoyat qilindi",
     "noCommentsYet": "Hali izohlar yoq",
+    "viewComments": "Izohlarni ko'rish",
+    "showLess": "kamroq",
     "replyingTo": "Javob yozilmoqda",
     "deleteComment": "Izohni ochirish",
     "deleteCommentConfirm": "Bu izoh butunlay ochiriladi.",

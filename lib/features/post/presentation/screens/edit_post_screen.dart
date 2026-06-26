@@ -1,13 +1,8 @@
-import 'dart:io';
-
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:gap/gap.dart';
-import 'package:go_router/go_router.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/app_logger.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -25,22 +20,23 @@ import '../../domain/entities/post.dart';
 import '../providers/create_post_provider.dart';
 import '../providers/post_detail_provider.dart';
 import '../widgets/caption_field.dart';
+import '../widgets/edit_post_widgets.dart';
 
 // ── Image State ───────────────────────────────────────────────────────────────
 
 sealed class EditImageState {}
 
-class _ExistingImage extends EditImageState {
-  _ExistingImage(this.url);
+class EditExistingImage extends EditImageState {
+  EditExistingImage(this.url);
   final String url;
 }
 
-class _NewLocalImage extends EditImageState {
-  _NewLocalImage(this.path);
+class EditNewLocalImage extends EditImageState {
+  EditNewLocalImage(this.path);
   final String path;
 }
 
-class _NoImage extends EditImageState {}
+class EditNoImage extends EditImageState {}
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -59,7 +55,7 @@ class _EditPostState {
   final String? errorMessage;
   final bool isSaved;
 
-  bool get hasImage => imageState is! _NoImage;
+  bool get hasImage => imageState is! EditNoImage;
   bool get hasError => errorMessage != null;
   bool get isSubmittable =>
       !isLoading &&
@@ -104,8 +100,8 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
     _captionController = TextEditingController(text: widget.post.caption ?? '');
     _state = _EditPostState(
       imageState: widget.post.imageUrl != null
-          ? _ExistingImage(widget.post.imageUrl!)
-          : _NoImage(),
+          ? EditExistingImage(widget.post.imageUrl!)
+          : EditNoImage(),
       captionLength: widget.post.caption?.length ?? 0,
     );
   }
@@ -119,12 +115,13 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
   bool get _hasUnsavedChanges {
     final captionChanged =
         _captionController.text.trim() != (widget.post.caption ?? '').trim();
-    final imageChanged = _state.imageState is! _ExistingImage ||
-        (_state.imageState as _ExistingImage).url != widget.post.imageUrl;
+    final imageChanged = _state.imageState is! EditExistingImage ||
+        (_state.imageState as EditExistingImage).url != widget.post.imageUrl;
     return captionChanged || imageChanged;
   }
 
-  void _updateState(_EditPostState newState) => setState(() => _state = newState);
+  void _updateState(_EditPostState newState) =>
+      setState(() => _state = newState);
 
   void _onCaptionChanged(String val) {
     _updateState(_state.copyWith(captionLength: val.length, clearError: true));
@@ -170,11 +167,11 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
     );
     if (cropped == null) return;
 
-    _updateState(_state.copyWith(imageState: _NewLocalImage(cropped.path)));
+    _updateState(_state.copyWith(imageState: EditNewLocalImage(cropped.path)));
   }
 
   void _removeImage() {
-    _updateState(_state.copyWith(imageState: _NoImage()));
+    _updateState(_state.copyWith(imageState: EditNoImage()));
   }
 
   Future<void> _submit() async {
@@ -191,8 +188,9 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
           ? null
           : _captionController.text.trim(),
       newImageLocalPath:
-          imageState is _NewLocalImage ? imageState.path : null,
-      removeImage: imageState is _NoImage && widget.post.imageUrl != null,
+          imageState is EditNewLocalImage ? imageState.path : null,
+      removeImage:
+          imageState is EditNoImage && widget.post.imageUrl != null,
     );
 
     final result = await ref.read(updatePostUseCaseProvider).call(params);
@@ -304,29 +302,26 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
             Expanded(
               child: CustomScrollView(
                 slivers: [
-                  // Image area
                   SliverToBoxAdapter(
                     child: switch (imageState) {
-                      _ExistingImage(:final url) => _RemoteImagePreview(
+                      EditExistingImage(:final url) => EditRemoteImagePreview(
                           url: url,
                           onReplace: _pickImage,
                           onRemove: _removeImage,
                           isDark: isDark,
                         ),
-                      _NewLocalImage(:final path) => _LocalImagePreview(
+                      EditNewLocalImage(:final path) => EditLocalImagePreview(
                           path: path,
                           onReplace: _pickImage,
                           onRemove: _removeImage,
                           isDark: isDark,
                         ),
-                      _NoImage() => _ImagePlaceholder(
+                      EditNoImage() => EditImagePlaceholder(
                           onTap: _pickImage,
                           isDark: isDark,
                         ),
                     },
                   ),
-
-                  // Error banner
                   if (_state.hasError)
                     SliverToBoxAdapter(
                       child: Container(
@@ -340,7 +335,7 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
                           children: [
                             const Icon(Icons.error_outline,
                                 color: AppColors.error, size: 16),
-                            const Gap(8),
+                            const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 _state.errorMessage!,
@@ -352,8 +347,6 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
                         ),
                       ),
                     ),
-
-                  // Caption field
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: EdgeInsets.symmetric(
@@ -371,195 +364,10 @@ class _EditPostScreenState extends ConsumerState<EditPostScreen> {
                 ],
               ),
             ),
-
-            // Bottom toolbar
-            _BottomToolbar(onGalleryTap: _pickImage, isDark: isDark),
+            EditBottomToolbar(onGalleryTap: _pickImage, isDark: isDark),
           ],
         ),
       ),
-    );
-  }
-}
-
-// ── Image Preview Widgets ─────────────────────────────────────────────────────
-
-class _RemoteImagePreview extends StatelessWidget {
-  const _RemoteImagePreview({
-    required this.url,
-    required this.onReplace,
-    required this.onRemove,
-    required this.isDark,
-  });
-
-  final String url;
-  final VoidCallback onReplace;
-  final VoidCallback onRemove;
-  final bool isDark;
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        AspectRatio(
-          aspectRatio: AppDimens.postImageAspectRatio,
-          child: GestureDetector(
-            onTap: onReplace,
-            child: CachedNetworkImage(
-              imageUrl: url,
-              fit: BoxFit.cover,
-              placeholder: (_, _) => Container(
-                color: isDark ? AppColors.darkElevated : AppColors.lightElevated,
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          top: 8,
-          right: 8,
-          child: _ImageActionButton(icon: Icons.close, onTap: onRemove),
-        ),
-      ],
-    );
-  }
-}
-
-class _LocalImagePreview extends StatelessWidget {
-  const _LocalImagePreview({
-    required this.path,
-    required this.onReplace,
-    required this.onRemove,
-    required this.isDark,
-  });
-
-  final String path;
-  final VoidCallback onReplace;
-  final VoidCallback onRemove;
-  final bool isDark;
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        AspectRatio(
-          aspectRatio: AppDimens.postImageAspectRatio,
-          child: GestureDetector(
-            onTap: onReplace,
-            child: Image.file(
-              File(path),
-              key: ValueKey(path),
-              fit: BoxFit.cover,
-            ),
-          ),
-        ),
-        Positioned(
-          top: 8,
-          right: 8,
-          child: _ImageActionButton(icon: Icons.close, onTap: onRemove),
-        ),
-      ],
-    );
-  }
-}
-
-class _ImagePlaceholder extends StatelessWidget {
-  const _ImagePlaceholder({required this.onTap, required this.isDark});
-  final VoidCallback onTap;
-  final bool isDark;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AspectRatio(
-        aspectRatio: AppDimens.postImageAspectRatio,
-        child: ColoredBox(
-          color: isDark ? AppColors.darkElevated : AppColors.lightElevated,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.add_photo_alternate_outlined,
-                size: 48.w,
-                color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-              ),
-              Gap(AppDimens.vsm),
-              Text(
-                AppStrings.addPhoto,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ImageActionButton extends StatelessWidget {
-  const _ImageActionButton({required this.icon, required this.onTap});
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(6),
-        decoration: const BoxDecoration(
-          color: Colors.black54,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(icon, color: Colors.white, size: 18),
-      ),
-    );
-  }
-}
-
-class _BottomToolbar extends StatelessWidget {
-  const _BottomToolbar({required this.onGalleryTap, required this.isDark});
-  final VoidCallback onGalleryTap;
-  final bool isDark;
-
-  @override
-  Widget build(BuildContext context) {
-    final dividerColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
-    final color = isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Divider(height: 1, thickness: 1, color: dividerColor),
-        SafeArea(
-          top: false,
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: AppDimens.screenPadding,
-              vertical: AppDimens.vsm,
-            ),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: onGalleryTap,
-                  behavior: HitTestBehavior.opaque,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.photo_library_outlined, size: 22.w, color: color),
-                      Gap(6.w),
-                      Text(
-                        AppStrings.addPhoto,
-                        style: AppTextStyles.caption.copyWith(color: color),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

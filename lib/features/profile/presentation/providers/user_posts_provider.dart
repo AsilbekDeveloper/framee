@@ -6,6 +6,7 @@ import '../../../../core/providers/current_user_provider.dart';
 import '../../../../core/services/post_cache_service.dart';
 import '../../../post/data/providers/post_data_providers.dart';
 import '../../../post/domain/entities/post.dart';
+import '../../../post/presentation/utils/post_interaction.dart';
 
 /// Loads posts for a specific user.
 /// The family argument [String] is the target user ID.
@@ -67,52 +68,26 @@ class UserPostsNotifier extends FamilyAsyncNotifier<List<Post>, String> {
 
   Future<void> toggleLike(Post post) async {
     final currentUserId = _currentUserId;
-    if (currentUserId == null) return;
-    if (state.valueOrNull == null) return;
-
-    final original = post;
-
-    _patchPost(post.id, (p) => p.copyWith(
-      isLiked: !p.isLiked,
-      likesCount: p.isLiked ? p.likesCount - 1 : p.likesCount + 1,
-    ));
-
-    final result = await ref.read(toggleLikeUseCaseProvider).call(
-          postId: post.id,
-          currentUserId: currentUserId,
-        );
-
-    switch (result) {
-      case Ok(:final value):
-        _patchPost(post.id, (p) => p.copyWith(
-          isLiked: value.isLiked,
-          likesCount: value.likesCount,
-        ));
-      case Err():
-        _patchPost(post.id, (p) => p.copyWith(
-          isLiked: original.isLiked,
-          likesCount: original.likesCount,
-        ));
-    }
+    if (currentUserId == null || state.valueOrNull == null) return;
+    await performToggleLike(
+      ref: ref,
+      postId: post.id,
+      currentUserId: currentUserId,
+      original: post,
+      patchPost: (update) => _patchPost(post.id, update),
+    );
   }
 
   Future<void> toggleSave(Post post) async {
     final currentUserId = _currentUserId;
-    if (currentUserId == null) return;
-    if (state.valueOrNull == null) return;
-
-    final original = post;
-
-    _patchPost(post.id, (p) => p.copyWith(isSaved: !p.isSaved));
-
-    final result = await ref.read(toggleSaveUseCaseProvider).call(
-          postId: post.id,
-          currentUserId: currentUserId,
-        );
-
-    if (result is Err) {
-      _patchPost(post.id, (p) => p.copyWith(isSaved: original.isSaved));
-    }
+    if (currentUserId == null || state.valueOrNull == null) return;
+    await performToggleSave(
+      ref: ref,
+      postId: post.id,
+      currentUserId: currentUserId,
+      original: post,
+      patchPost: (update) => _patchPost(post.id, update),
+    );
   }
 }
 

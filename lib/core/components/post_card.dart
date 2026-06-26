@@ -1,6 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:shimmer/shimmer.dart';
@@ -10,8 +9,8 @@ import '../constants/app_dimens.dart';
 import '../constants/app_strings.dart';
 import '../constants/app_text_styles.dart';
 import '../extensions/extensions.dart';
-import '../utils/share_utils.dart';
 import 'app_avatar.dart';
+import 'post_share_sheet.dart';
 import '../../features/post/domain/entities/post.dart';
 
 /// Universal post card used across home feed, post detail, profile list, and search.
@@ -178,6 +177,7 @@ class _PostImage extends StatelessWidget {
       imageUrl: imageUrl,
       width: double.infinity,
       memCacheWidth: 800,
+      memCacheHeight: 1000,
       fadeInDuration: Duration.zero,
       fadeOutDuration: Duration.zero,
       imageBuilder: (context, imageProvider) => ClipRRect(
@@ -233,12 +233,26 @@ class _TextPostBody extends StatelessWidget {
         AppDimens.lg,
         AppDimens.vlg,
       ),
-      child: Text(
-        caption,
-        style: AppTextStyles.h4.copyWith(
-          fontWeight: FontWeight.w600,
-          color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-          height: 1.5,
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(AppDimens.lg),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkElevated : AppColors.lightElevated,
+          borderRadius: BorderRadius.circular(AppDimens.radiusMd),
+          border: Border.all(
+            color: isDark
+                ? AppColors.darkBorderSubtle
+                : AppColors.lightBorderSubtle,
+          ),
+        ),
+        child: Text(
+          caption,
+          style: AppTextStyles.h4.copyWith(
+            fontWeight: FontWeight.w600,
+            color:
+                isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+            height: 1.5,
+          ),
         ),
       ),
     );
@@ -287,7 +301,7 @@ class _PostActions extends StatelessWidget {
           _ActionButton(
             icon: Icons.share_outlined,
             color: mutedColor,
-            onTap: () => _showShareSheet(context, post),
+            onTap: () => showPostShareSheet(context, post),
           ),
           const Spacer(),
           if (onSaveTap != null)
@@ -299,105 +313,6 @@ class _PostActions extends StatelessWidget {
               onTap: onSaveTap,
             ),
         ],
-      ),
-    );
-  }
-}
-
-void _showShareSheet(BuildContext context, Post post) {
-  final isDark = Theme.of(context).brightness == Brightness.dark;
-  final textColor =
-      isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-  final mutedColor =
-      isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted;
-  final bgColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
-
-  showModalBottomSheet(
-    context: context,
-    backgroundColor: bgColor,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(
-        top: Radius.circular(AppDimens.radiusXl),
-      ),
-    ),
-    builder: (_) => SafeArea(
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: AppDimens.vlg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 36.w,
-              height: 4.h,
-              margin: EdgeInsets.only(bottom: AppDimens.vlg),
-              decoration: BoxDecoration(
-                color: mutedColor.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            _ShareOption(
-              icon: Icons.share_outlined,
-              label: AppStrings.sharePost,
-              textColor: textColor,
-              onTap: () {
-                Navigator.pop(context);
-                ShareUtils.sharePost(post);
-              },
-            ),
-            _ShareOption(
-              icon: Icons.link_rounded,
-              label: AppStrings.copyLink,
-              textColor: textColor,
-              onTap: () {
-                Navigator.pop(context);
-                Clipboard.setData(
-                  ClipboardData(text: ShareUtils.postUrl(post.id)),
-                );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(AppStrings.linkCopied),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
-
-class _ShareOption extends StatelessWidget {
-  const _ShareOption({
-    required this.icon,
-    required this.label,
-    required this.textColor,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final Color textColor;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: EdgeInsets.symmetric(
-          horizontal: AppDimens.screenPadding,
-          vertical: AppDimens.vmd,
-        ),
-        child: Row(
-          children: [
-            Icon(icon, size: 22.w, color: textColor),
-            Gap(AppDimens.lg),
-            Text(label,
-                style: AppTextStyles.bodyMedium.copyWith(color: textColor)),
-          ],
-        ),
       ),
     );
   }

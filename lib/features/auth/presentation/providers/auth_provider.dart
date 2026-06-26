@@ -10,6 +10,9 @@ import '../../../notifications/presentation/providers/notifications_provider.dar
 import '../../../profile/presentation/providers/profile_provider.dart';
 import '../../../profile/presentation/providers/user_posts_provider.dart';
 import '../../../search/presentation/providers/search_provider.dart';
+import '../../../../core/providers/current_user_provider.dart';
+import '../../../../core/providers/locale_provider.dart';
+import '../../../profile/data/providers/profile_data_providers.dart';
 import '../../data/providers/auth_data_providers.dart';
 import '../../domain/entities/auth_user.dart';
 import '../../domain/usecases/send_password_reset_usecase.dart';
@@ -29,11 +32,11 @@ final _signUpUseCaseProvider = Provider<SignUpUseCase>(
 final _signOutUseCaseProvider = Provider<SignOutUseCase>(
   (ref) => SignOutUseCase(ref.read(authRepositoryProvider)),
 );
-final _signInWithGoogleUseCaseProvider = Provider<SignInWithGoogleUseCase>(
-  (ref) => SignInWithGoogleUseCase(ref.read(authRepositoryProvider)),
-);
 final _sendPasswordResetUseCaseProvider = Provider<SendPasswordResetUseCase>(
   (ref) => SendPasswordResetUseCase(ref.read(authRepositoryProvider)),
+);
+final _signInWithGoogleUseCaseProvider = Provider<SignInWithGoogleUseCase>(
+  (ref) => SignInWithGoogleUseCase(ref.read(authRepositoryProvider)),
 );
 
 // ── Auth State ────────────────────────────────────────────────────────────────
@@ -104,6 +107,26 @@ class AuthNotifier extends Notifier<AuthState> {
     return AuthState(user: current);
   }
 
+  /// Launches Google OAuth flow in the browser.
+  Future<void> signInWithGoogle() async {
+    AppLogger.i('Auth: sign in with Google');
+    state = state.copyWith(isLoading: true, clearError: true);
+
+    final result = await ref.read(_signInWithGoogleUseCaseProvider).call();
+
+    switch (result) {
+      case Ok():
+        final user = ref.read(authRepositoryProvider).currentUser;
+        state = state.copyWith(isLoading: false, user: user);
+        FcmService.instance.saveTokenAfterLogin();
+        ref.read(localeProvider.notifier).syncAfterLogin();
+      case Err(:final failure):
+        AppLogger.w('Auth: Google sign-in error — ${failure.code}');
+        state = state.copyWith(
+            isLoading: false, errorMessage: localizedFailure(failure));
+    }
+  }
+
   /// Signs in with email and password.
   Future<void> signIn({
     required String email,
@@ -121,6 +144,7 @@ class AuthNotifier extends Notifier<AuthState> {
         AppLogger.i('Auth: signed in — ${value.email}');
         state = state.copyWith(isLoading: false, user: value);
         FcmService.instance.saveTokenAfterLogin();
+        ref.read(localeProvider.notifier).syncAfterLogin();
       case Err(:final failure):
         AppLogger.w('Auth: sign-in error — ${failure.code}');
         state = state.copyWith(
@@ -163,20 +187,6 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  /// Initiates Google OAuth sign-in. The result arrives via the auth stream.
-  Future<void> signInWithGoogle() async {
-    AppLogger.i('Auth: Google sign-in');
-    state = state.copyWith(isLoading: true, clearError: true);
-
-    final result = await ref.read(_signInWithGoogleUseCaseProvider).call();
-    // On success, the auth stream delivers the new user — only handle errors here.
-    if (result case Err(:final failure)) {
-      AppLogger.w('Auth: Google sign-in error — ${failure.code}');
-      state = state.copyWith(
-          isLoading: false, errorMessage: localizedFailure(failure));
-    }
-  }
-
   /// Sends a password-reset email to the given address.
   Future<void> sendPasswordReset(String email) async {
     AppLogger.i('Auth: password reset — $email');
@@ -208,6 +218,11 @@ class AuthNotifier extends Notifier<AuthState> {
   /// Clears local state even if the network request fails.
   Future<void> signOut() async {
     AppLogger.i('Auth: sign out');
+    // Clear FCM token BEFORE signing out so we still have userId
+    final userId = ref.read(currentUserIdProvider);
+    if (userId != null) {
+      await ref.read(profileRepositoryProvider).clearFcmToken(userId);
+    }
     final result = await ref.read(_signOutUseCaseProvider).call();
     if (result case Err(:final failure)) {
       AppLogger.e('Auth: sign-out error — ${failure.code}');

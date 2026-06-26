@@ -90,6 +90,10 @@ class _CommentInputBarState extends ConsumerState<CommentInputBar> {
     setState(() => _isSending = true);
     try {
       await widget.onSend();
+      if (mounted) {
+        widget.controller.clear();
+        widget.focusNode?.unfocus();
+      }
     } finally {
       if (mounted) setState(() => _isSending = false);
     }

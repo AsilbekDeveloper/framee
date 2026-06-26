@@ -52,6 +52,19 @@ abstract final class AppColors {
   static const Color followBg = Color(0x1A40C480);
   static const Color commentBg = Color(0x1A40C480);
 
+  // ─── Post Grid Cell Gradients ─────────────────────────────
+  // Used when a post has no image — color chosen by post.id.hashCode % length.
+  static const List<List<Color>> postGridGradients = [
+    [Color(0xFFe8e5ff), Color(0xFFd4caff)],
+    [Color(0xFFffecd2), Color(0xFFfcb69f)],
+    [Color(0xFF667eea), Color(0xFF764ba2)],
+    [Color(0xFF4facfe), Color(0xFF00f2fe)],
+    [Color(0xFFf093fb), Color(0xFFf5576c)],
+    [Color(0xFFd4fc79), Color(0xFF96e6a1)],
+    [Color(0xFFf7971e), Color(0xFFffd200)],
+    [Color(0xFFa18cd1), Color(0xFFfbc2eb)],
+  ];
+
   // ─── Gradients ────────────────────────────────────────────
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.topLeft,

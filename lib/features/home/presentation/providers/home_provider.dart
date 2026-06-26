@@ -7,6 +7,7 @@ import '../../../../core/providers/current_user_provider.dart';
 import '../../../../core/services/post_cache_service.dart';
 import '../../../post/data/providers/post_data_providers.dart';
 import '../../../post/domain/entities/post.dart';
+import '../../../post/presentation/utils/post_interaction.dart';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -40,6 +41,7 @@ class HomeNotifier extends AsyncNotifier<HomeFeedState> {
 
   @override
   Future<HomeFeedState> build() async {
+    ref.watch(currentUserIdProvider);
     final cached = await ref.read(postCacheServiceProvider).loadFeed();
     if (cached.isNotEmpty) {
       Future.microtask(_backgroundRefresh);
@@ -142,64 +144,29 @@ class HomeNotifier extends AsyncNotifier<HomeFeedState> {
   Future<void> toggleLike(String postId) async {
     final original = _findPost(postId);
     if (original == null) return;
-
-    // Optimistic
-    _patchPost(
-      postId,
-      (p) => p.copyWith(
-        isLiked: !p.isLiked,
-        likesCount: p.isLiked ? p.likesCount - 1 : p.likesCount + 1,
-      ),
-    );
-
     final userId = _currentUserId;
     if (userId == null) return;
-
-    final result = await ref.read(toggleLikeUseCaseProvider).call(
-          postId: postId,
-          currentUserId: userId,
-        );
-
-    switch (result) {
-      case Ok(:final value):
-        _patchPost(
-          postId,
-          (p) => p.copyWith(
-            isLiked: value.isLiked,
-            likesCount: value.likesCount,
-          ),
-        );
-      case Err(:final failure):
-        AppLogger.w('HomeNotifier: toggleLike rollback — ${failure.code}');
-        _patchPost(
-          postId,
-          (p) => p.copyWith(
-            isLiked: original.isLiked,
-            likesCount: original.likesCount,
-          ),
-        );
-    }
+    await performToggleLike(
+      ref: ref,
+      postId: postId,
+      currentUserId: userId,
+      original: original,
+      patchPost: (update) => _patchPost(postId, update),
+    );
   }
 
   Future<void> toggleSave(String postId) async {
     final original = _findPost(postId);
     if (original == null) return;
-
-    // Optimistic
-    _patchPost(postId, (p) => p.copyWith(isSaved: !p.isSaved));
-
     final userId = _currentUserId;
     if (userId == null) return;
-
-    final result = await ref.read(toggleSaveUseCaseProvider).call(
-          postId: postId,
-          currentUserId: userId,
-        );
-
-    if (result case Err(:final failure)) {
-      AppLogger.w('HomeNotifier: toggleSave rollback — ${failure.code}');
-      _patchPost(postId, (p) => p.copyWith(isSaved: original.isSaved));
-    }
+    await performToggleSave(
+      ref: ref,
+      postId: postId,
+      currentUserId: userId,
+      original: original,
+      patchPost: (update) => _patchPost(postId, update),
+    );
   }
 
   Future<void> deletePost(String postId) async {

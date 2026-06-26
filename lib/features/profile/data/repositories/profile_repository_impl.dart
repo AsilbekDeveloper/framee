@@ -29,4 +29,12 @@ class ProfileRepositoryImpl implements ProfileRepository {
   @override
   Stream<Profile?> watchProfile(String userId) =>
       _dataSource.watchProfile(userId).map((dto) => dto?.toEntity());
+
+  @override
+  Future<void> saveFcmToken(String userId, String token) =>
+      _dataSource.saveFcmToken(userId, token);
+
+  @override
+  Future<void> clearFcmToken(String userId) =>
+      _dataSource.clearFcmToken(userId);
 }

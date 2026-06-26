@@ -1,15 +1,39 @@
 import 'dart:async';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+
+/// Background/terminated holatda kelgan FCM xabarlarini qayta ishlaydi.
+///
+/// Top-level funksiya bo'lishi SHART — u alohida (asosiy emas) isolate'da
+/// ishga tushadi, shuning uchun `@pragma('vm:entry-point')` kerak.
+/// `notification` payload'li xabarlarni Android tizimi avtomatik tray'da
+/// ko'rsatadi; bu handler isolate'ni Firebase bilan ishga tushirish uchun kerak,
+/// aks holda "background message could not be handled" ogohlantirishi chiqadi.
+@pragma('vm:entry-point')
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+}
 
 /// Handles Firebase Cloud Messaging (FCM) for Framee.
-/// Call [initialize] once in main() before runApp.
+///
+/// Call [setTokenSaver] once (before [initialize]) to wire up the persistence
+/// callback — keeps FCM concerns out of the data layer.
+/// Call [initialize] after the first frame from a ConsumerStatefulWidget.
 class FcmService {
   FcmService._();
   static final FcmService instance = FcmService._();
+
+  /// Called whenever a token is obtained or refreshed.
+  /// Set this from the app shell so the data layer (ProfileRepository)
+  /// handles the actual Supabase write.
+  Future<void> Function(String token)? _tokenSaver;
+
+  void setTokenSaver(Future<void> Function(String token) saver) {
+    _tokenSaver = saver;
+  }
 
   final _messaging = FirebaseMessaging.instance;
   final _localNotifications = FlutterLocalNotificationsPlugin();
@@ -81,36 +105,34 @@ class FcmService {
       if (route != null) _pendingRoute = route;
     }
 
-    // 7. Get FCM token and save to Supabase if user is logged in
-    final token = await _messaging.getToken();
-    if (kDebugMode) debugPrint('[FCM] Token: $token');
-    if (token != null) await _saveTokenToSupabase(token);
+    // 7. Get FCM token and save to Supabase if user is logged in.
+    // iOS'da APNS token tayyor bo'lmasa getToken() exception tashlashi mumkin —
+    // shuning uchun himoyalaymiz, aks holda butun initialize() to'xtab qoladi.
+    try {
+      final token = await _messaging.getToken();
+      if (kDebugMode) debugPrint('[FCM] Token: $token');
+      if (token != null) await _saveToken(token);
+    } catch (e) {
+      if (kDebugMode) debugPrint('[FCM] getToken failed: $e');
+    }
 
     // 8. Token refresh — save updated token
     _messaging.onTokenRefresh.listen((newToken) {
       if (kDebugMode) debugPrint('[FCM] Token refreshed: $newToken');
-      _saveTokenToSupabase(newToken);
+      _saveToken(newToken);
     });
   }
 
   /// Call this after a successful login to ensure the token is saved.
   Future<void> saveTokenAfterLogin() async {
     final token = await _messaging.getToken();
-    if (token != null) await _saveTokenToSupabase(token);
+    if (token != null) await _saveToken(token);
   }
 
-  Future<void> _saveTokenToSupabase(String token) async {
+  Future<void> _saveToken(String token) async {
     try {
-      final client = Supabase.instance.client;
-      final userId = client.auth.currentUser?.id;
-      if (userId == null) return;
-
-      await client
-          .from('profiles')
-          .update({'fcm_token': token})
-          .eq('id', userId);
-
-      if (kDebugMode) debugPrint('[FCM] Token saved to Supabase');
+      await _tokenSaver?.call(token);
+      if (kDebugMode) debugPrint('[FCM] Token saved');
     } catch (e) {
       if (kDebugMode) debugPrint('[FCM] Failed to save token: $e');
     }

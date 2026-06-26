@@ -220,6 +220,197 @@ class EmptyState extends StatelessWidget {
   }
 }
 
+// ─── Notification Tile Shimmer ────────────────────────────────────────────────
+class NotifTileShimmer extends StatelessWidget {
+  const NotifTileShimmer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: AppDimens.lg,
+        vertical: AppDimens.vmd,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          ShimmerBox(
+            width: 36.w,
+            height: 36.w,
+            borderRadius: AppDimens.radiusFull,
+          ),
+          Gap(AppDimens.md),
+          ShimmerBox(
+            width: AppDimens.avatarSm,
+            height: AppDimens.avatarSm,
+            borderRadius: AppDimens.radiusFull,
+          ),
+          Gap(AppDimens.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ShimmerBox(width: double.infinity, height: 13.h),
+                Gap(AppDimens.vxs),
+                ShimmerBox(width: 80.w, height: 11.h),
+              ],
+            ),
+          ),
+          Gap(AppDimens.md),
+          ShimmerBox(
+            width: 44.w,
+            height: 44.w,
+            borderRadius: AppDimens.radiusSm,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Profile Shimmer ──────────────────────────────────────────────────────────
+class ProfileShimmer extends StatelessWidget {
+  const ProfileShimmer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Avatar row + stats
+        Padding(
+          padding: EdgeInsets.fromLTRB(
+            AppDimens.xl,
+            AppDimens.vxl,
+            AppDimens.xl,
+            0,
+          ),
+          child: Row(
+            children: [
+              ShimmerBox(
+                width: AppDimens.avatarXl,
+                height: AppDimens.avatarXl,
+                borderRadius: AppDimens.radiusFull,
+              ),
+              Gap(AppDimens.lg),
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _StatShimmer(),
+                    _StatShimmer(),
+                    _StatShimmer(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        Gap(AppDimens.vmd),
+        // Display name
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppDimens.xl),
+          child: ShimmerBox(width: 140.w, height: 16.h),
+        ),
+        Gap(AppDimens.vsm),
+        // Bio lines
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppDimens.xl),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ShimmerBox(width: double.infinity, height: 13.h),
+              Gap(4.h),
+              ShimmerBox(width: 200.w, height: 13.h),
+            ],
+          ),
+        ),
+        Gap(AppDimens.vmd),
+        // Buttons row
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppDimens.xl),
+          child: Row(
+            children: [
+              Expanded(
+                child: ShimmerBox(
+                  width: double.infinity,
+                  height: AppDimens.buttonHeightSm,
+                  borderRadius: AppDimens.radiusFull,
+                ),
+              ),
+              Gap(AppDimens.sm),
+              Expanded(
+                child: ShimmerBox(
+                  width: double.infinity,
+                  height: AppDimens.buttonHeightSm,
+                  borderRadius: AppDimens.radiusFull,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Gap(AppDimens.vxl),
+        // Tab bar shimmer
+        Container(
+          height: 44.h,
+          color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+          child: Row(
+            children: [
+              Expanded(
+                child: Center(
+                  child: ShimmerBox(width: 60.w, height: 14.h),
+                ),
+              ),
+              Expanded(
+                child: Center(
+                  child: ShimmerBox(width: 60.w, height: 14.h),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Divider(
+          height: 1,
+          color:
+              isDark ? AppColors.darkBorderSubtle : AppColors.lightBorderSubtle,
+        ),
+        // Grid shimmer
+        Gap(AppDimens.vsm),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 2,
+          crossAxisSpacing: 2,
+          children: List.generate(
+            4,
+            (_) => const ShimmerBox(
+              width: double.infinity,
+              height: double.infinity,
+              borderRadius: 0,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StatShimmer extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        ShimmerBox(width: 36.w, height: 18.h),
+        Gap(4.h),
+        ShimmerBox(width: 48.w, height: 11.h),
+      ],
+    );
+  }
+}
+
 // ─── Section Label ────────────────────────────────────────────────────────────
 class SectionLabel extends StatelessWidget {
   const SectionLabel(this.text, {super.key});

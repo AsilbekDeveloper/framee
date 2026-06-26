@@ -13,6 +13,7 @@ import '../../../../core/constants/app_dimens.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/profile_setup_provider.dart';
 import '../widgets/setup_header.dart';
 
@@ -63,7 +64,23 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        actions: [
+          TextButton.icon(
+            onPressed: () =>
+                ref.read(authProvider.notifier).signOut(),
+            icon: const Icon(Icons.logout_rounded, size: 18),
+            label: Text(AppStrings.logOut),
+            style: TextButton.styleFrom(
+              foregroundColor:
+                  isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+            ),
+          ),
+        ],
+      ),
       body: SafeArea(
+        top: false,
         child: Column(
           children: [
             SetupHeader(step: state.step),
@@ -239,12 +256,6 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                         website: _websiteController.text,
                       ),
                       isLoading: state.isSaving,
-                    ),
-                    Gap(AppDimens.vmd),
-                    AppButton(
-                      label: AppStrings.skipForNow,
-                      variant: AppButtonVariant.ghost,
-                      onPressed: () => context.go(AppRoutes.home),
                     ),
                   ],
                 ),
