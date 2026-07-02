@@ -41,3 +41,6 @@ lib/generated/
 android/app/*.jks
 android/app/*.keystore
 android/key.properties
+
+# Claude Code local settings (may contain tokens)
+.claude/settings.local.json
