@@ -11,9 +11,6 @@ enum FollowStatus {
 
   /// Private account — a follow request has been sent but not yet accepted.
   requested,
-
-  /// This person follows the current user (but not vice versa).
-  followsYou,
 }
 
 class FollowUser {

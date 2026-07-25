@@ -17,22 +17,6 @@ final class FollowNotFoundFailure extends FollowFailure {
         );
 }
 
-final class AlreadyFollowingFailure extends FollowFailure {
-  const AlreadyFollowingFailure()
-      : super(
-          message: 'You are already following this user.',
-          code: 'follow/already-following',
-        );
-}
-
-final class FollowRequestSentFailure extends FollowFailure {
-  const FollowRequestSentFailure()
-      : super(
-          message: 'A follow request has already been sent.',
-          code: 'follow/request-sent',
-        );
-}
-
 final class CannotFollowSelfFailure extends FollowFailure {
   const CannotFollowSelfFailure()
       : super(

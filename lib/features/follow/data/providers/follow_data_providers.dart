@@ -3,7 +3,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/repositories/follow_repository.dart';
 import '../../domain/usecases/follow_user_usecase.dart';
-import '../../domain/usecases/get_follow_status_usecase.dart';
 import '../../domain/usecases/get_followers_usecase.dart';
 import '../../domain/usecases/get_following_usecase.dart';
 import '../../domain/usecases/unfollow_user_usecase.dart';
@@ -37,8 +36,4 @@ final getFollowersUseCaseProvider = Provider<GetFollowersUseCase>(
 
 final getFollowingUseCaseProvider = Provider<GetFollowingUseCase>(
   (ref) => GetFollowingUseCase(ref.read(followRepositoryProvider)),
-);
-
-final getFollowStatusUseCaseProvider = Provider<GetFollowStatusUseCase>(
-  (ref) => GetFollowStatusUseCase(ref.read(followRepositoryProvider)),
 );
