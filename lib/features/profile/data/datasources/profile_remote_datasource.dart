@@ -109,9 +109,13 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
           case Ok(:final value):
             avatarUrl = value;
           case Err(:final failure):
-            // Avatar upload failed — log only, continue saving profile
-            AppLogger.w(
+            // Avatar upload failed — log the underlying cause (a bare code hides
+            // whether this was an RLS denial, a missing bucket, or the network)
+            // and continue: the rest of the profile is still worth saving.
+            AppLogger.e(
               'ProfileDS: avatar upload failed (profile will still be saved) — ${failure.code}',
+              error: failure.originalError,
+              stackTrace: failure.stackTrace,
             );
         }
       } else {
@@ -141,14 +145,18 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       AppLogger.i('ProfileDS: profile saved');
 
       // Sync username to auth metadata so the router can detect returning users
-      // without a database round-trip. Failure is non-fatal.
+      // without a database round-trip. Awaited on purpose: the router's redirect
+      // reads username off the auth user, so navigating away before this lands
+      // would bounce a just-completed setup straight back to /profile-setup.
+      // Failure is non-fatal — the profile row is already saved.
       if (params.username != null) {
-        _client.auth
-            .updateUser(UserAttributes(data: {'username': params.username!.trim()}))
-            .then((_) {})
-            .catchError((e) {
+        try {
+          await _client.auth.updateUser(
+            UserAttributes(data: {'username': params.username!.trim()}),
+          );
+        } catch (e) {
           AppLogger.w('ProfileDS: auth metadata sync failed — $e');
-        });
+        }
       }
 
       return Ok(ProfileDto.fromJson(data));
@@ -234,13 +242,17 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   }) async {
     try {
       final bytes = await File(localPath).readAsBytes();
-      final storagePath = '$userId/avatar.jpg';
+      // The crop screen encodes PNG, but the picker can hand back other formats —
+      // declare the type the bytes actually are, or the CDN serves an image the
+      // browser/decoder refuses to render.
+      final isPng = localPath.toLowerCase().endsWith('.png');
+      final storagePath = '$userId/avatar.${isPng ? 'png' : 'jpg'}';
 
       await _client.storage.from(_avatarsBucket).uploadBinary(
             storagePath,
             bytes,
-            fileOptions: const FileOptions(
-              contentType: 'image/jpeg',
+            fileOptions: FileOptions(
+              contentType: isPng ? 'image/png' : 'image/jpeg',
               upsert: true,
             ),
           );

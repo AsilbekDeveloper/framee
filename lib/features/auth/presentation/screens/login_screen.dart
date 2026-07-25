@@ -189,7 +189,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                 AppButton(
                   label: AppStrings.continueWithGoogle,
-                  onPressed: () => ref.read(authProvider.notifier).signInWithGoogle(),
+                  // Disabled while any auth call is in flight so an email sign-in
+                  // and a Google sign-in can't be kicked off at the same time.
+                  onPressed: state.isLoading
+                      ? null
+                      : () => ref.read(authProvider.notifier).signInWithGoogle(),
                   variant: AppButtonVariant.secondary,
                   leadingIcon: const GoogleIcon(),
                 ),

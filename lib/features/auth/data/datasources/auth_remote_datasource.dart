@@ -167,16 +167,38 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<Result<void>> deleteAccount() async {
     try {
-      // Delete via Supabase Edge Function or RPC.
-      // Currently: delete the profile row and sign out (cascade removes all data).
       final userId = _client.auth.currentUser?.id;
       if (userId == null) {
         return const Err(UnknownAuthFailure(message: 'User not found.'));
       }
-      // Deleting the profile triggers a cascade that removes all user data.
-      await _client.from('profiles').delete().eq('id', userId);
+
+      // Account deletion must remove the auth.users entry, not just the profile
+      // row — a client cannot do that itself, so it runs in the service-role
+      // `delete-account` Edge Function (also clears storage + cascades content).
+      final res = await _client.functions.invoke('delete-account');
+
+      if (res.status != 200) {
+        final message =
+            (res.data is Map && res.data['error'] != null)
+                ? res.data['error'].toString()
+                : 'Account deletion failed (status ${res.status}).';
+        AppLogger.e('AuthDS: deleteAccount failed — $message');
+        return Err(UnknownAuthFailure(message: message));
+      }
+
+      // The account is gone server-side; drop the now-invalid local session.
       await _client.auth.signOut();
+      AppLogger.i('AuthDS: account deleted');
       return const Ok(null);
+    } on FunctionException catch (e, st) {
+      // invoke() throws for non-2xx; the server's JSON error lives in `details`.
+      final detail =
+          (e.details is Map && e.details['error'] != null)
+              ? e.details['error'].toString()
+              : 'Account deletion failed.';
+      AppLogger.e('AuthDS: deleteAccount function error — $detail',
+          error: e, stackTrace: st);
+      return Err(UnknownAuthFailure(message: detail));
     } on AuthException catch (e) {
       AppLogger.w('AuthDS: deleteAccount error — ${e.message}');
       return Err(_mapAuthException(e));

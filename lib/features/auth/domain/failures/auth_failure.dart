@@ -64,6 +64,15 @@ final class EmptyFieldsFailure extends AuthFailure {
         );
 }
 
+/// Email address is not a valid format (client-side check).
+final class InvalidEmailFailure extends AuthFailure {
+  const InvalidEmailFailure()
+      : super(
+          message: 'Please enter a valid email address.',
+          code: 'auth/invalid-email',
+        );
+}
+
 /// No account found for the given credentials.
 final class UserNotFoundFailure extends AuthFailure {
   const UserNotFoundFailure()

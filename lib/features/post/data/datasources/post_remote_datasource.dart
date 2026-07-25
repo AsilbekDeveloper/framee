@@ -153,18 +153,25 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
           'caption': params.caption!.trim(),
       };
 
-      final data = await _client
-          .from(_postsTable)
-          .insert(insertData)
-          .select('''
-            id, user_id, image_url, caption,
-            likes_count, comments_count, created_at,
-            profiles!user_id(id, username, display_name, avatar_url, is_verified)
-          ''')
-          .single();
+      try {
+        final data = await _client
+            .from(_postsTable)
+            .insert(insertData)
+            .select('''
+              id, user_id, image_url, caption,
+              likes_count, comments_count, created_at,
+              profiles!user_id(id, username, display_name, avatar_url, is_verified)
+            ''')
+            .single();
 
-      AppLogger.i('PostDS: post created — ${data['id']}');
-      return Ok(PostDto.fromJoin(data));
+        AppLogger.i('PostDS: post created — ${data['id']}');
+        return Ok(PostDto.fromJoin(data));
+      } catch (_) {
+        // The image is already in Storage but no row references it — remove it
+        // so a failed insert doesn't leave an orphaned file behind.
+        await _removePostImageByUrl(imageUrl);
+        rethrow;
+      }
     } on PostgrestException catch (e) {
       AppLogger.e('PostDS: createPost DB error', error: e);
       return Err(PostCreateFailure(originalError: e));
@@ -182,11 +189,22 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     required String currentUserId,
   }) async {
     try {
+      // Grab the image URL before the row is gone so its Storage object can be
+      // cleaned up — the DB cascade removes rows, never storage files.
+      final row = await _client
+          .from(_postsTable)
+          .select('image_url')
+          .eq('id', postId)
+          .eq('user_id', currentUserId)
+          .maybeSingle();
+
       await _client
           .from(_postsTable)
           .delete()
           .eq('id', postId)
           .eq('user_id', currentUserId);
+
+      await _removePostImageByUrl(row?['image_url'] as String?);
 
       AppLogger.i('PostDS: post deleted — $postId');
       return const Ok(true);
@@ -346,9 +364,19 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
           .order('created_at', ascending: false)
           .range(offset, offset + limit - 1);
 
-      final dtos = (data as List).map((row) {
+      // saved_posts is always the current user's own rows (RLS-scoped), so
+      // userId is the viewer — compute their real like state per post instead
+      // of hardcoding false, which showed every saved post as unliked.
+      final rows = data as List;
+      final postIds = rows
+          .map((row) => (row['posts'] as Map?)?['id'] as String?)
+          .whereType<String>()
+          .toList();
+      final likedIds = await _getLikedPostIds(userId, postIds);
+
+      final dtos = rows.map((row) {
         final postMap = Map<String, dynamic>.from(row['posts'] as Map);
-        postMap['is_liked'] = false;
+        postMap['is_liked'] = likedIds.contains(postMap['id']);
         postMap['is_saved'] = true;
         return PostDto.fromJoin(postMap);
       }).toList();
@@ -370,6 +398,21 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
       AppLogger.i('PostDS: updating post — ${params.postId}');
 
       final updates = <String, dynamic>{};
+
+      // Capture the existing image before overwriting/clearing it, so the old
+      // Storage object can be removed once the update succeeds.
+      final replacingImage =
+          params.removeImage || params.newImageLocalPath != null;
+      String? oldImageUrl;
+      if (replacingImage) {
+        final current = await _client
+            .from(_postsTable)
+            .select('image_url')
+            .eq('id', params.postId)
+            .eq('user_id', params.userId)
+            .maybeSingle();
+        oldImageUrl = current?['image_url'] as String?;
+      }
 
       if (params.removeImage) {
         updates['image_url'] = null;
@@ -401,6 +444,13 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
             profiles!user_id(id, username, display_name, avatar_url, is_verified)
           ''')
           .single();
+
+      // Update landed — drop the previous image if it was cleared or replaced.
+      // Skip when the new URL equals the old (nothing actually changed).
+      final newImageUrl = data['image_url'] as String?;
+      if (replacingImage && oldImageUrl != null && oldImageUrl != newImageUrl) {
+        await _removePostImageByUrl(oldImageUrl);
+      }
 
       AppLogger.i('PostDS: post updated — ${params.postId}');
       return Ok(PostDto.fromJoin(data));
@@ -472,6 +522,25 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
     } catch (e, st) {
       AppLogger.e('PostDS: image upload error', error: e, stackTrace: st);
       return Err(PostImageUploadFailure(originalError: e, stackTrace: st));
+    }
+  }
+
+  /// Removes a post image from Storage given its public URL. Best-effort: a
+  /// failure is logged, never thrown — storage cleanup must not fail the
+  /// user-facing operation that triggered it.
+  Future<void> _removePostImageByUrl(String? url) async {
+    if (url == null || url.isEmpty) return;
+    try {
+      const marker = '/$_postImagesBucket/';
+      final idx = url.indexOf(marker);
+      if (idx == -1) return;
+      var path = url.substring(idx + marker.length);
+      final q = path.indexOf('?');
+      if (q != -1) path = path.substring(0, q);
+      await _client.storage.from(_postImagesBucket).remove([path]);
+      AppLogger.d('PostDS: removed orphaned image — $path');
+    } catch (e) {
+      AppLogger.w('PostDS: failed to remove post image — $e');
     }
   }
 }

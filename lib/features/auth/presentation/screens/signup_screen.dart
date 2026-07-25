@@ -42,13 +42,16 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     showDialog<void>(
       context: ctx,
       barrierDismissible: false,
-      builder: (_) => AlertDialog(
+      builder: (dialogCtx) => AlertDialog(
         title: Text(AppStrings.confirmEmailTitle),
         content: Text(AppStrings.confirmEmailBody(_emailController.text)),
         actions: [
           TextButton(
             onPressed: () {
-              ctx.pop();
+              // Close the dialog via its own Navigator overlay — context.pop()
+              // (go_router) would pop the underlying route instead, leaving the
+              // dialog stuck on screen. Then route to login.
+              Navigator.of(dialogCtx).pop();
               ctx.go(AppRoutes.login);
             },
             child: Text(AppStrings.goToSignIn),
@@ -213,7 +216,13 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
                       AppButton(
                         label: AppStrings.continueWithGoogle,
-                        onPressed: () => ref.read(authProvider.notifier).signInWithGoogle(),
+                        // Disabled while a sign-up/sign-in call is in flight to
+                        // block a double submission from the two auth buttons.
+                        onPressed: state.isLoading
+                            ? null
+                            : () => ref
+                                .read(authProvider.notifier)
+                                .signInWithGoogle(),
                         variant: AppButtonVariant.secondary,
                         leadingIcon: const GoogleIcon(),
                       ),

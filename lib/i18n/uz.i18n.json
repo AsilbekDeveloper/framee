@@ -193,7 +193,8 @@
     "invalidCredentials": "Email yoki parol noto'g'ri.",
     "emailInUse": "Bu email allaqachon ro'yxatdan o'tgan.",
     "emailNotConfirmed": "Iltimos, email manzilingizni tasdiqlang.",
-    "weakPassword": "Parol kamida 6 ta belgidan iborat bo'lishi kerak."
+    "weakPassword": "Parol kamida 6 ta belgidan iborat bo'lishi kerak.",
+    "invalidEmail": "Iltimos, to'g'ri email manzil kiriting."
   },
   "privacyInfo": {
     "accountVisibility": "Hisob ko'rinishi",

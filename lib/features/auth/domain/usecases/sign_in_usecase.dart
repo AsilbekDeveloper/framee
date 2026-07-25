@@ -1,4 +1,5 @@
 import '../../../../core/errors/result.dart';
+import '../../../../core/extensions/extensions.dart';
 import '../entities/auth_user.dart';
 import '../failures/auth_failure.dart';
 import '../repositories/auth_repository.dart';
@@ -12,9 +13,15 @@ class SignInUseCase {
     required String email,
     required String password,
   }) {
-    if (email.trim().isEmpty || password.isEmpty) {
+    final trimmedEmail = email.trim();
+    if (trimmedEmail.isEmpty || password.isEmpty) {
       return Future.value(const Err(EmptyFieldsFailure()));
     }
-    return _repository.signIn(email: email.trim(), password: password);
+    // Catch a malformed address here so the user sees an instant, specific
+    // message instead of waiting for the server to reject it as bad credentials.
+    if (!trimmedEmail.isValidEmail) {
+      return Future.value(const Err(InvalidEmailFailure()));
+    }
+    return _repository.signIn(email: trimmedEmail, password: password);
   }
 }

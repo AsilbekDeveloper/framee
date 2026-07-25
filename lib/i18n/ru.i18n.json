@@ -193,7 +193,8 @@
     "invalidCredentials": "Неверный email или пароль.",
     "emailInUse": "Этот email уже зарегистрирован.",
     "emailNotConfirmed": "Пожалуйста, подтвердите свой email.",
-    "weakPassword": "Пароль должен содержать не менее 6 символов."
+    "weakPassword": "Пароль должен содержать не менее 6 символов.",
+    "invalidEmail": "Пожалуйста, введите корректный email."
   },
   "privacyInfo": {
     "accountVisibility": "Видимость аккаунта",

@@ -20,6 +20,7 @@ String localizedFailure(Failure failure) => switch (failure.code) {
       'auth/weak-password' => AppStrings.errorWeakPassword,
       'auth/password-mismatch' => AppStrings.passwordMismatch,
       'auth/empty-fields' => AppStrings.fillAllFields,
+      'auth/invalid-email' => AppStrings.errorInvalidEmail,
 
       // ── Session / authorization ─────────────────────────────────────────
       'auth/session-expired' ||

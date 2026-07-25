@@ -9,6 +9,7 @@ import '../../../post/data/providers/post_data_providers.dart';
 import '../../../post/domain/entities/post.dart';
 import '../../../profile/presentation/providers/profile_provider.dart';
 import '../../../profile/presentation/providers/user_posts_provider.dart';
+import '../utils/post_interaction.dart';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -107,34 +108,18 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
   Future<void> toggleLike() async {
     final post = state.valueOrNull?.post;
     if (post == null) return;
-
     final userId = _currentUserId;
     if (userId == null) return;
 
-    final original = post;
-    _patchPost((p) => p.copyWith(
-          isLiked: !p.isLiked,
-          likesCount: p.isLiked ? p.likesCount - 1 : p.likesCount + 1,
-        ));
-
-    final result = await ref.read(toggleLikeUseCaseProvider).call(
-          postId: post.id,
-          currentUserId: userId,
-        );
-
-    switch (result) {
-      case Ok(:final value):
-        _patchPost((p) => p.copyWith(
-              isLiked: value.isLiked,
-              likesCount: value.likesCount,
-            ));
-      case Err(:final failure):
-        AppLogger.w('PostDetail: toggleLike rollback — ${failure.code}');
-        _patchPost((p) => p.copyWith(
-              isLiked: original.isLiked,
-              likesCount: original.likesCount,
-            ));
-    }
+    // Same optimistic like/rollback flow the feed providers use — shared so the
+    // behaviour never drifts between the detail screen and the lists.
+    await performToggleLike(
+      ref: ref,
+      postId: post.id,
+      currentUserId: userId,
+      original: post,
+      patchPost: _patchPost,
+    );
   }
 
   // ── Comment Like ────────────────────────────────────────────────────────────
@@ -276,21 +261,16 @@ class PostDetailNotifier extends FamilyAsyncNotifier<PostDetailState, String> {
   Future<void> toggleSave() async {
     final post = state.valueOrNull?.post;
     if (post == null) return;
-
     final userId = _currentUserId;
     if (userId == null) return;
 
-    final original = post;
-    _patchPost((p) => p.copyWith(isSaved: !p.isSaved));
-
-    final result = await ref.read(toggleSaveUseCaseProvider).call(
-          postId: post.id,
-          currentUserId: userId,
-        );
-
-    if (result is Err) {
-      _patchPost((p) => p.copyWith(isSaved: original.isSaved));
-    }
+    await performToggleSave(
+      ref: ref,
+      postId: post.id,
+      currentUserId: userId,
+      original: post,
+      patchPost: _patchPost,
+    );
   }
 
   // ── Delete Post ─────────────────────────────────────────────────────────────

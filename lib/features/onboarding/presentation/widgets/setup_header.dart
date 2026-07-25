@@ -8,18 +8,15 @@ import '../../../../../core/constants/app_strings.dart';
 import '../../../../../core/constants/app_text_styles.dart';
 
 class SetupHeader extends StatelessWidget {
-  const SetupHeader({super.key, required this.step});
-  final int step;
+  const SetupHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      padding: EdgeInsets.fromLTRB(
-        AppDimens.screenPadding,
-        AppDimens.vxl,
-        AppDimens.screenPadding,
-        0,
+      padding: EdgeInsets.symmetric(
+        horizontal: AppDimens.screenPadding,
+        vertical: AppDimens.vxl,
       ),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
@@ -41,17 +38,6 @@ class SetupHeader extends StatelessWidget {
             style: AppTextStyles.bodySmall.copyWith(
               color:
                   isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-            ),
-          ),
-          Gap(AppDimens.vlg),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(2.r),
-            child: LinearProgressIndicator(
-              value: step / 3,
-              backgroundColor:
-                  isDark ? AppColors.darkElevated : AppColors.lightElevated,
-              color: AppColors.primary,
-              minHeight: 3.h,
             ),
           ),
         ],

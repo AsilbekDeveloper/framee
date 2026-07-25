@@ -83,7 +83,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
         top: false,
         child: Column(
           children: [
-            SetupHeader(step: state.step),
+            const SetupHeader(),
             Expanded(
               child: SingleChildScrollView(
                 padding: EdgeInsets.symmetric(

@@ -193,7 +193,8 @@
     "invalidCredentials": "Invalid email or password.",
     "emailInUse": "This email is already registered.",
     "emailNotConfirmed": "Please confirm your email address.",
-    "weakPassword": "Password must be at least 6 characters."
+    "weakPassword": "Password must be at least 6 characters.",
+    "invalidEmail": "Please enter a valid email address."
   },
   "privacyInfo": {
     "accountVisibility": "Account Visibility",

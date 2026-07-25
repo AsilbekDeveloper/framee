@@ -18,8 +18,6 @@ extension ContextX on BuildContext {
       SnackBar(content: Text(message)),
     );
   }
-
-  void hideKeyboard() => FocusScope.of(this).unfocus();
 }
 
 // ─── String Extensions ────────────────────────────────────────────────────────
@@ -31,27 +29,10 @@ extension StringX on String {
     return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
   }
 
-  String get firstInitial =>
-      isNotEmpty ? this[0].toUpperCase() : '?';
-
+  // Anchored, case-insensitive. The TLD is {2,} not {2,4} so long TLDs
+  // (.travel, .online) and country-code emails aren't wrongly rejected.
   bool get isValidEmail =>
-      RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(this);
-
-  bool get isValidUsername =>
-      RegExp(r'^[a-zA-Z0-9_]{3,20}$').hasMatch(this);
-
-  bool get isValidUrl =>
-      Uri.tryParse(this)?.hasAbsolutePath ?? false;
-
-  String get withAt => startsWith('@') ? this : '@$this';
-
-  String truncate(int maxLength, {String ellipsis = '...'}) {
-    if (length <= maxLength) return this;
-    return '${substring(0, maxLength)}$ellipsis';
-  }
-
-  String get capitalizeFirst =>
-      isEmpty ? this : '${this[0].toUpperCase()}${substring(1)}';
+      RegExp(r'^[\w.+-]+@([\w-]+\.)+[\w-]{2,}$').hasMatch(this);
 }
 
 // ─── DateTime Extensions ──────────────────────────────────────────────────────
@@ -66,10 +47,6 @@ extension DateTimeX on DateTime {
     if (diff.inDays < 7) return '${diff.inDays}d ago';
     return DateFormat('MMM d').format(this);
   }
-
-  String get fullDate => DateFormat('MMMM d, y').format(this);
-  String get shortDate => DateFormat('MMM d').format(this);
-  String get time => DateFormat('h:mm a').format(this);
 }
 
 // ─── num Extensions ───────────────────────────────────────────────────────────
@@ -79,12 +56,4 @@ extension NumX on num {
     if (this >= 1000) return '${(this / 1000).toStringAsFixed(1)}k';
     return toString();
   }
-}
-
-// ─── List Extensions ──────────────────────────────────────────────────────────
-extension ListX<T> on List<T> {
-  List<T> get safeReversed => reversed.toList();
-
-  T? get firstOrNull => isEmpty ? null : first;
-  T? get lastOrNull => isEmpty ? null : last;
 }

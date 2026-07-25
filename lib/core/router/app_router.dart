@@ -75,6 +75,14 @@ const _unauthenticatedRoutes = {
   AppRoutes.signUp,
 };
 
+/// Routes an authenticated user may reach before their profile exists.
+/// avatarCrop is part of the setup flow itself — redirecting it back to
+/// profileSetup would make picking a profile photo impossible.
+const _profileSetupRoutes = {
+  AppRoutes.profileSetup,
+  AppRoutes.avatarCrop,
+};
+
 final appRouterProvider = Provider<GoRouter>((ref) {
   final notifier = _AuthRouterNotifier(ref);
 
@@ -104,7 +112,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         final needsProfileSetup = user.username == null;
 
         // New user (no username yet) must complete profile setup first.
-        if (needsProfileSetup && location != AppRoutes.profileSetup) {
+        if (needsProfileSetup && !_profileSetupRoutes.contains(location)) {
           return AppRoutes.profileSetup;
         }
 

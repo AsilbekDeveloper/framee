@@ -16,7 +16,6 @@ import '../../../profile/domain/entities/profile.dart';
 
 class ProfileSetupState {
   const ProfileSetupState({
-    this.step = 1,
     this.avatarLocalPath,
     this.isUsernameAvailable,
     this.bioLength = 0,
@@ -25,7 +24,6 @@ class ProfileSetupState {
     this.errorMessage,
   });
 
-  final int step;
   final String? avatarLocalPath;
   final bool? isUsernameAvailable;
   final int bioLength;
@@ -35,7 +33,6 @@ class ProfileSetupState {
   final String? errorMessage;
 
   ProfileSetupState copyWith({
-    int? step,
     String? avatarLocalPath,
     bool? isUsernameAvailable,
     int? bioLength,
@@ -46,7 +43,6 @@ class ProfileSetupState {
     bool clearUsernameStatus = false,
   }) =>
       ProfileSetupState(
-        step: step ?? this.step,
         avatarLocalPath: avatarLocalPath ?? this.avatarLocalPath,
         isUsernameAvailable: clearUsernameStatus
             ? null
@@ -114,7 +110,12 @@ class ProfileSetupNotifier extends Notifier<ProfileSetupState> {
   }
 
   Future<void> pickAvatar(BuildContext context) async {
-    final file = await _picker.pickImage(source: ImageSource.gallery);
+    // imageQuality matches EditProfile — a full-resolution camera shot decoded
+    // at source size is enough to OOM on low-end devices before cropping.
+    final file = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
     if (file == null) return;
 
     if (!context.mounted) return;

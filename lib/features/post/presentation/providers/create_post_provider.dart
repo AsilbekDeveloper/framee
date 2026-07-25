@@ -94,38 +94,7 @@ class CreatePostNotifier extends AutoDisposeNotifier<CreatePostState> {
 
     AppLogger.d('CreatePost: image selected — ${file.path}');
 
-    final cropped = await ImageCropper().cropImage(
-      sourcePath: file.path,
-      uiSettings: [
-        AndroidUiSettings(
-          toolbarTitle: AppStrings.cropImage,
-          toolbarColor: AppColors.primary,
-          toolbarWidgetColor: Colors.white,
-          activeControlsWidgetColor: AppColors.primary,
-          backgroundColor: Colors.black,
-          aspectRatioPresets: [
-            CropAspectRatioPreset.original,
-            CropAspectRatioPreset.square,
-            CropAspectRatioPreset.ratio4x3,
-            CropAspectRatioPreset.ratio16x9,
-          ],
-          lockAspectRatio: false,
-        ),
-        IOSUiSettings(
-          title: AppStrings.cropImage,
-          doneButtonTitle: AppStrings.done,
-          cancelButtonTitle: AppStrings.cancel,
-          aspectRatioPresets: [
-            CropAspectRatioPreset.original,
-            CropAspectRatioPreset.square,
-            CropAspectRatioPreset.ratio4x3,
-            CropAspectRatioPreset.ratio16x9,
-          ],
-          resetAspectRatioEnabled: true,
-          aspectRatioLockEnabled: false,
-        ),
-      ],
-    );
+    final cropped = await _cropImage(file.path);
 
     // User cancelled the crop dialog
     if (cropped == null) {
@@ -142,8 +111,16 @@ class CreatePostNotifier extends AutoDisposeNotifier<CreatePostState> {
     final currentPath = state.selectedImagePath;
     if (currentPath == null) return;
 
-    final cropped = await ImageCropper().cropImage(
-      sourcePath: currentPath,
+    final cropped = await _cropImage(currentPath);
+    if (cropped == null) return;
+    state = state.copyWith(selectedImagePath: cropped.path);
+  }
+
+  /// Opens the native image cropper with the app's shared crop configuration.
+  /// Returns the cropped file, or null if the user cancelled.
+  Future<CroppedFile?> _cropImage(String sourcePath) {
+    return ImageCropper().cropImage(
+      sourcePath: sourcePath,
       uiSettings: [
         AndroidUiSettings(
           toolbarTitle: AppStrings.cropImage,
@@ -174,9 +151,6 @@ class CreatePostNotifier extends AutoDisposeNotifier<CreatePostState> {
         ),
       ],
     );
-
-    if (cropped == null) return;
-    state = state.copyWith(selectedImagePath: cropped.path);
   }
 
   void removeImage() => state = state.copyWith(clearImage: true);

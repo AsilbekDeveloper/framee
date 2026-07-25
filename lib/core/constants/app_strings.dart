@@ -211,6 +211,7 @@ abstract final class AppStrings {
   static String get errorEmailInUse => _t.errors.emailInUse;
   static String get errorEmailNotConfirmed => _t.errors.emailNotConfirmed;
   static String get errorWeakPassword => _t.errors.weakPassword;
+  static String get errorInvalidEmail => _t.errors.invalidEmail;
 
   // ─── Empty States ─────────────────────────────────────────
   static String get noPostsYet => _t.empty.noPostsYet;
