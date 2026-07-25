@@ -45,14 +45,13 @@ class HelpSupportScreen extends StatelessWidget {
                   _FaqTile(
                     question: "Why can't I see someone's posts?",
                     answer:
-                        'The account may be private. Send them a follow request to access their content. '
-                        'You may also have been blocked by that user.',
+                        'The account may be private. Send them a follow request to access their content.',
                   ),
                   AppDivider(),
                   _FaqTile(
-                    question: 'How do I report a post?',
+                    question: 'How do I report a post or user?',
                     answer:
-                        'Tap the three-dot menu on any post and select "Report". '
+                        'Email us at support@framee.app with a link to the post or profile and a brief description. '
                         'We review all reports and take appropriate action within 24 hours.',
                   ),
                   AppDivider(),

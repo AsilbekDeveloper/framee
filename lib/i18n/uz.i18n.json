@@ -162,7 +162,6 @@
     "passwordMismatch": "Parollar mos kelmadi",
     "notificationsLabel": "Bildirishnomalar",
     "pushNotifications": "Push bildirishnomalar",
-    "emailNotifications": "Email bildirishnomalar",
     "about": "Ilova haqida",
     "helpSupport": "Yordam va qo'llab-quvvatlash",
     "termsOfService": "Xizmat shartlari",
@@ -198,10 +197,8 @@
   "privacyInfo": {
     "accountVisibility": "Hisob ko'rinishi",
     "accountVisibilityBody": "Profilingiz, postlaringiz va faoliyatingizni kim ko'ra olishini boshqaring. Yopiq hisoblar kuzatish uchun tasdiq talab qiladi.",
-    "blockedUsers": "Bloklangan foydalanuvchilar",
-    "blockedUsersBody": "Bloklangan foydalanuvchilar profilingiz yoki kontentingizni ko'ra olmaydi va siz bilan hech qanday tarzda muloqot qila olmaydi.",
     "comments": "Izohlar",
-    "commentsBody": "Postlaringizga kim izoh qoldira olishini tanlang — hamma, faqat kuzatuvchilaringiz yoki hech kim.",
+    "commentsBody": "Postingizni ko'ra oladigan har qanday kishi unga izoh qoldira oladi. Postlaringizni kim ko'rishini cheklash uchun hisobingizni yopiq qiling.",
     "locationData": "Joylashuv ma'lumotlari",
     "locationDataBody": "Framee joylashuvingizni yig'maydi va saqlamaydi. Postlaringizga joylashuv ma'lumoti biriktirilmaydi."
   },

@@ -6,21 +6,17 @@ import '../../../../core/services/fcm_service.dart';
 import '../../../profile/data/providers/profile_data_providers.dart';
 
 const _kPushEnabled = 'notification_push_enabled';
-const _kEmailEnabled = 'notification_email_enabled';
 
 class NotificationSettingsState {
   const NotificationSettingsState({
     this.pushEnabled = true,
-    this.emailEnabled = false,
   });
 
   final bool pushEnabled;
-  final bool emailEnabled;
 
-  NotificationSettingsState copyWith({bool? pushEnabled, bool? emailEnabled}) =>
+  NotificationSettingsState copyWith({bool? pushEnabled}) =>
       NotificationSettingsState(
         pushEnabled: pushEnabled ?? this.pushEnabled,
-        emailEnabled: emailEnabled ?? this.emailEnabled,
       );
 }
 
@@ -31,7 +27,6 @@ class NotificationSettingsNotifier
     final prefs = await SharedPreferences.getInstance();
     return NotificationSettingsState(
       pushEnabled: prefs.getBool(_kPushEnabled) ?? true,
-      emailEnabled: prefs.getBool(_kEmailEnabled) ?? false,
     );
   }
 
@@ -57,12 +52,6 @@ class NotificationSettingsNotifier
     }
   }
 
-  Future<void> setEmailEnabled(bool value) async {
-    final current = state.valueOrNull ?? const NotificationSettingsState();
-    state = AsyncData(current.copyWith(emailEnabled: value));
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_kEmailEnabled, value);
-  }
 }
 
 final notificationSettingsProvider =

@@ -38,13 +38,6 @@ class PrivacyScreen extends StatelessWidget {
                   ),
                   const AppDivider(),
                   _PrivacySection(
-                    icon: Icons.block_outlined,
-                    title: AppStrings.pvBlockedUsers,
-                    body: AppStrings.pvBlockedUsersBody,
-                    isDark: isDark,
-                  ),
-                  const AppDivider(),
-                  _PrivacySection(
                     icon: Icons.comment_outlined,
                     title: AppStrings.pvComments,
                     body: AppStrings.pvCommentsBody,

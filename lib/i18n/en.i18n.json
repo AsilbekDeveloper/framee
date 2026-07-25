@@ -162,7 +162,6 @@
     "passwordMismatch": "Passwords don't match",
     "notificationsLabel": "Notifications",
     "pushNotifications": "Push Notifications",
-    "emailNotifications": "Email Notifications",
     "about": "About",
     "helpSupport": "Help & Support",
     "termsOfService": "Terms of Service",
@@ -198,10 +197,8 @@
   "privacyInfo": {
     "accountVisibility": "Account Visibility",
     "accountVisibilityBody": "Control who can see your profile, posts, and activity. Private accounts require approval before others can follow you.",
-    "blockedUsers": "Blocked Users",
-    "blockedUsersBody": "Blocked users cannot see your profile or content, and cannot interact with you in any way.",
     "comments": "Comments",
-    "commentsBody": "Choose who can comment on your posts — everyone, your followers only, or no one.",
+    "commentsBody": "Anyone who can see your post can comment on it. Set your account to private to limit who sees your posts.",
     "locationData": "Location Data",
     "locationDataBody": "Framee does not collect or store your location. No location data is attached to your posts."
   },

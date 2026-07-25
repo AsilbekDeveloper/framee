@@ -112,13 +112,6 @@ class SettingsScreen extends ConsumerWidget {
                   value: notifSettings.pushEnabled,
                   onChanged: (v) => notifNotifier.setPushEnabled(v),
                 ),
-                const AppDivider(),
-                SettingsToggleTile(
-                  icon: Icons.mail_outline_rounded,
-                  title: AppStrings.emailNotifications,
-                  value: notifSettings.emailEnabled,
-                  onChanged: (v) => notifNotifier.setEmailEnabled(v),
-                ),
               ],
             ),
           ),

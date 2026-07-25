@@ -178,7 +178,6 @@ abstract final class AppStrings {
   static String get passwordMismatch => _t.settings.passwordMismatch;
   static String get notificationsLabel => _t.settings.notificationsLabel;
   static String get pushNotifications => _t.settings.pushNotifications;
-  static String get emailNotifications => _t.settings.emailNotifications;
   static String get about => _t.settings.about;
   static String get helpSupport => _t.settings.helpSupport;
   static String get termsOfService => _t.settings.termsOfService;
@@ -223,8 +222,6 @@ abstract final class AppStrings {
   static String get pvAccountVisibility => _t.privacyInfo.accountVisibility;
   static String get pvAccountVisibilityBody =>
       _t.privacyInfo.accountVisibilityBody;
-  static String get pvBlockedUsers => _t.privacyInfo.blockedUsers;
-  static String get pvBlockedUsersBody => _t.privacyInfo.blockedUsersBody;
   static String get pvComments => _t.privacyInfo.comments;
   static String get pvCommentsBody => _t.privacyInfo.commentsBody;
   static String get pvLocationData => _t.privacyInfo.locationData;
