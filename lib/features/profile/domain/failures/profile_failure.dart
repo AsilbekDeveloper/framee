@@ -13,7 +13,7 @@ abstract class ProfileFailure extends Failure {
 
 /// Profile not found — no row in the `profiles` table for the given ID.
 final class ProfileNotFoundFailure extends ProfileFailure {
-  const ProfileNotFoundFailure({String? userId})
+  const ProfileNotFoundFailure()
       : super(
           message: 'Profile not found.',
           code: 'profile/not-found',

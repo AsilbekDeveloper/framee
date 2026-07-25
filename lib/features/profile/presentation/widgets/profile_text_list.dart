@@ -11,11 +11,18 @@ class ProfileTextList extends StatelessWidget {
     required this.posts,
     required this.onPostTap,
     required this.onUserTap,
+    required this.onLikeTap,
+    required this.onSaveTap,
   });
 
   final List<Post> posts;
   final ValueChanged<String> onPostTap;
   final ValueChanged<String> onUserTap;
+
+  /// Toggles the like on the tapped post — distinct from [onPostTap], which
+  /// navigates to the post detail screen.
+  final ValueChanged<Post> onLikeTap;
+  final ValueChanged<Post> onSaveTap;
 
   @override
   Widget build(BuildContext context) {
@@ -28,11 +35,11 @@ class ProfileTextList extends StatelessWidget {
         return PostCard(
           key: ValueKey(post.id),
           post: post,
-          onLikeTap: () => onPostTap(post.id),
+          onLikeTap: () => onLikeTap(post),
           onCommentTap: () => onPostTap(post.id),
           onUserTap: () => onUserTap(post.author.id),
           onMoreTap: null,
-          onSaveTap: null,
+          onSaveTap: () => onSaveTap(post),
         );
       },
     );

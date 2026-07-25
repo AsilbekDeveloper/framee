@@ -99,7 +99,6 @@ abstract final class AppStrings {
   static String get viewComments => _t.post.viewComments;
   static String get showLess => _t.post.showLess;
   static String get replyingTo => _t.post.replyingTo;
-  static String get reportPost => _t.post.reportPost;
   static String get savePost => _t.post.savePost;
   static String get copyLink => _t.post.copyLink;
   static String get sharePost => _t.post.sharePost;

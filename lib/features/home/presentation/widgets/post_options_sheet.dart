@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
@@ -8,17 +9,20 @@ import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_dimens.dart';
 import '../../../../../core/constants/app_strings.dart';
 import '../../../../../core/constants/app_text_styles.dart';
+import '../../../../../core/extensions/extensions.dart';
+import '../../../../../core/utils/share_utils.dart';
+import '../../../post/domain/entities/post.dart';
 
 class PostOptionsSheet extends StatelessWidget {
   const PostOptionsSheet({
     super.key,
-    required this.postId,
+    required this.post,
     required this.isSaved,
     required this.onToggleSave,
     this.onDelete,
   });
 
-  final String postId;
+  final Post post;
   final bool isSaved;
   final VoidCallback onToggleSave;
   final VoidCallback? onDelete;
@@ -54,13 +58,22 @@ class PostOptionsSheet extends StatelessWidget {
           SheetOption(
             icon: Icons.link_rounded,
             label: AppStrings.copyLink,
-            onTap: () => context.pop(),
+            onTap: () {
+              context.pop();
+              Clipboard.setData(
+                ClipboardData(text: ShareUtils.postUrl(post.id)),
+              );
+              context.showSnackBar(AppStrings.linkCopied);
+            },
           ),
           const AppDivider(),
           SheetOption(
             icon: Icons.share_outlined,
             label: AppStrings.sharePost,
-            onTap: () => context.pop(),
+            onTap: () {
+              context.pop();
+              ShareUtils.sharePost(post);
+            },
           ),
           const AppDivider(),
           SheetOption(
@@ -72,12 +85,6 @@ class PostOptionsSheet extends StatelessWidget {
               onToggleSave();
               context.pop();
             },
-          ),
-          const AppDivider(),
-          SheetOption(
-            icon: Icons.flag_outlined,
-            label: AppStrings.reportPost,
-            onTap: () => context.pop(),
           ),
           if (onDelete != null) ...[
             const AppDivider(),

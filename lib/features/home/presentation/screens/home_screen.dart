@@ -99,8 +99,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           onSaveTap: () => notifier.toggleSave(post.id),
                           onMoreTap: () => _showPostOptions(
                             context,
-                            postId: post.id,
-                            isSaved: post.isSaved,
+                            post: post,
                             isOwner: post.author.id == currentUserId,
                           ),
                           onUserTap: () => context.push(
@@ -133,19 +132,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _showPostOptions(
     BuildContext context, {
-    required String postId,
-    required bool isSaved,
+    required Post post,
     required bool isOwner,
   }) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (_) => PostOptionsSheet(
-        postId: postId,
-        isSaved: isSaved,
+        post: post,
+        isSaved: post.isSaved,
         onToggleSave: () =>
-            ref.read(homeProvider.notifier).toggleSave(postId),
-        onDelete: isOwner ? () => _confirmDeletePost(postId) : null,
+            ref.read(homeProvider.notifier).toggleSave(post.id),
+        onDelete: isOwner ? () => _confirmDeletePost(post.id) : null,
       ),
     );
   }

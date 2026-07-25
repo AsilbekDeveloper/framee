@@ -59,7 +59,8 @@ class ProfileScreen extends ConsumerWidget {
         appBar: ProfileAppBar(
           username: profile.username,
           isOwnProfile: isOwnProfile,
-          onSettingsTap: () => context.push(AppRoutes.settings),
+          onSettingsTap:
+              isOwnProfile ? () => context.push(AppRoutes.settings) : null,
           onCreateTap: () => context.push(AppRoutes.createPost),
           onBackTap: isOwnProfile ? null : () => context.pop(),
         ),

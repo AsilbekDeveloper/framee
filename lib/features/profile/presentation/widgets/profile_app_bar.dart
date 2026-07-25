@@ -10,14 +10,14 @@ class ProfileAppBar extends StatelessWidget implements PreferredSizeWidget {
     super.key,
     required this.username,
     required this.isOwnProfile,
-    required this.onSettingsTap,
+    this.onSettingsTap,
     required this.onCreateTap,
     this.onBackTap,
   });
 
   final String username;
   final bool isOwnProfile;
-  final VoidCallback onSettingsTap;
+  final VoidCallback? onSettingsTap;
   final VoidCallback onCreateTap;
   final VoidCallback? onBackTap;
 
@@ -58,10 +58,18 @@ class ProfileAppBar extends StatelessWidget implements PreferredSizeWidget {
           const Spacer(),
           Text(username, style: AppTextStyles.h3),
           const Spacer(),
-          AppIconButton(
-            icon: Icons.settings_outlined,
-            onTap: onSettingsTap,
-          ),
+          // Settings navigates to the viewer's own account settings — showing
+          // it on someone else's profile would open your settings while
+          // looking like it belongs to them.
+          if (isOwnProfile)
+            AppIconButton(
+              icon: Icons.settings_outlined,
+              onTap: onSettingsTap!,
+            )
+          else
+            // Matches AppIconButton's rendered width exactly (icon + its 8.w
+            // padding on each side) so the title stays visually centered.
+            SizedBox(width: AppDimens.iconMd + 16),
         ],
       ),
     );

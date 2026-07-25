@@ -196,10 +196,13 @@ class ProfileTextPostsTab extends ConsumerWidget {
             ),
           );
         }
+        final notifier = ref.read(userPostsProvider(userId).notifier);
         return ProfileTextList(
           posts: textPosts,
           onPostTap: onPostTap,
           onUserTap: onUserTap,
+          onLikeTap: notifier.toggleLike,
+          onSaveTap: notifier.toggleSave,
         );
       },
     );
