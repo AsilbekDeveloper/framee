@@ -25,6 +25,20 @@ class PostRepositoryImpl implements PostRepository {
   }
 
   @override
+  Future<Result<List<Post>>> getFollowingFeed({
+    required String currentUserId,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    final result = await _postDs.getFollowingFeed(
+      currentUserId: currentUserId,
+      limit: limit,
+      offset: offset,
+    );
+    return result.map((dtos) => dtos.map((d) => d.toEntity()).toList());
+  }
+
+  @override
   Future<Result<Post>> getPost({
     required String postId,
     required String currentUserId,

@@ -11,6 +11,7 @@ import '../../../../core/services/post_cache_service.dart';
 import '../../../follow/data/providers/follow_data_providers.dart';
 import '../../../follow/domain/entities/follow.dart';
 import '../../../post/domain/entities/post.dart';
+import '../../../post/presentation/utils/post_interaction.dart';
 import '../../data/providers/search_data_providers.dart';
 import '../../domain/entities/search_result.dart';
 
@@ -236,6 +237,51 @@ class SearchNotifier extends Notifier<SearchState> {
       userResults: state.userResults
           .map((u) => u.id == userId ? u.copyWith(followStatus: status) : u)
           .toList(),
+    );
+  }
+
+  // ── Explore post like/save ──────────────────────────────────────────────────
+
+  void _patchExplorePost(String postId, Post Function(Post) update) {
+    state = state.copyWith(
+      explorePosts: [
+        for (final p in state.explorePosts) p.id == postId ? update(p) : p,
+      ],
+    );
+  }
+
+  Post? _findExplorePost(String postId) {
+    for (final p in state.explorePosts) {
+      if (p.id == postId) return p;
+    }
+    return null;
+  }
+
+  Future<void> toggleLike(String postId) async {
+    final original = _findExplorePost(postId);
+    if (original == null) return;
+    final userId = _currentUserId;
+    if (userId == null) return;
+    await performToggleLike(
+      ref: ref,
+      postId: postId,
+      currentUserId: userId,
+      original: original,
+      patchPost: (update) => _patchExplorePost(postId, update),
+    );
+  }
+
+  Future<void> toggleSave(String postId) async {
+    final original = _findExplorePost(postId);
+    if (original == null) return;
+    final userId = _currentUserId;
+    if (userId == null) return;
+    await performToggleSave(
+      ref: ref,
+      postId: postId,
+      currentUserId: userId,
+      original: original,
+      patchPost: (update) => _patchExplorePost(postId, update),
     );
   }
 }

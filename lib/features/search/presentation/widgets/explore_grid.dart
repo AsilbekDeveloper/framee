@@ -14,12 +14,19 @@ class ExploreGrid extends StatelessWidget {
     required this.onPostTap,
     required this.onUserTap,
     required this.onRefresh,
+    required this.onLikeTap,
+    required this.onSaveTap,
   });
 
   final List<Post> posts;
   final ValueChanged<String> onPostTap;
   final ValueChanged<String> onUserTap;
   final RefreshCallback onRefresh;
+
+  /// Toggles the like/save on a post — distinct from [onPostTap], which
+  /// navigates to the post feed.
+  final ValueChanged<String> onLikeTap;
+  final ValueChanged<String> onSaveTap;
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +78,8 @@ class ExploreGrid extends StatelessWidget {
                   onPostTap: onPostTap,
                   onUserTap: onUserTap,
                   onRefresh: onRefresh,
+                  onLikeTap: onLikeTap,
+                  onSaveTap: onSaveTap,
                   isDark: isDark,
                 ),
               ],
@@ -146,6 +155,8 @@ class ExploreTextTab extends StatelessWidget {
     required this.onPostTap,
     required this.onUserTap,
     required this.onRefresh,
+    required this.onLikeTap,
+    required this.onSaveTap,
     required this.isDark,
   });
 
@@ -153,6 +164,8 @@ class ExploreTextTab extends StatelessWidget {
   final ValueChanged<String> onPostTap;
   final ValueChanged<String> onUserTap;
   final RefreshCallback onRefresh;
+  final ValueChanged<String> onLikeTap;
+  final ValueChanged<String> onSaveTap;
   final bool isDark;
 
   @override
@@ -189,11 +202,11 @@ class ExploreTextTab extends StatelessWidget {
           return PostCard(
             key: ValueKey(post.id),
             post: post,
-            onLikeTap: () => onPostTap(post.id),
+            onLikeTap: () => onLikeTap(post.id),
             onCommentTap: () => onPostTap(post.id),
             onUserTap: () => onUserTap(post.author.id),
             onMoreTap: null,
-            onSaveTap: null,
+            onSaveTap: () => onSaveTap(post.id),
           );
         },
       ),

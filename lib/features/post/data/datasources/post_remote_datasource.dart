@@ -10,7 +10,17 @@ import '../../domain/failures/post_failure.dart';
 import '../dtos/post_dto.dart';
 
 abstract interface class PostRemoteDataSource {
+  /// Global feed — every post on the platform, newest first. Used by
+  /// Explore/discovery, not Home.
   Future<Result<List<PostDto>>> getFeed({
+    required String currentUserId,
+    int limit = 20,
+    int offset = 0,
+  });
+
+  /// Home feed — the current user's own posts plus posts from accounts they
+  /// follow.
+  Future<Result<List<PostDto>>> getFollowingFeed({
     required String currentUserId,
     int limit = 20,
     int offset = 0,
@@ -92,6 +102,37 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
       return Err(ServerFailure(message: e.message, originalError: e));
     } catch (e, st) {
       AppLogger.e('PostDS: getFeed unexpected error', error: e, stackTrace: st);
+      return Err(NetworkFailure(originalError: e, stackTrace: st));
+    }
+  }
+
+  @override
+  Future<Result<List<PostDto>>> getFollowingFeed({
+    required String currentUserId,
+    int limit = 20,
+    int offset = 0,
+  }) async {
+    try {
+      AppLogger.d('PostDS: loading following feed — limit:$limit offset:$offset');
+
+      final data = await _client.rpc('get_following_feed_posts', params: {
+        'p_user_id': currentUserId,
+        'p_limit': limit,
+        'p_offset': offset,
+      }) as List<dynamic>;
+
+      final posts = data
+          .cast<Map<String, dynamic>>()
+          .map(PostDto.fromRpc)
+          .toList();
+
+      AppLogger.d('PostDS: ${posts.length} following-feed posts loaded');
+      return Ok(posts);
+    } on PostgrestException catch (e) {
+      AppLogger.e('PostDS: getFollowingFeed DB error', error: e);
+      return Err(ServerFailure(message: e.message, originalError: e));
+    } catch (e, st) {
+      AppLogger.e('PostDS: getFollowingFeed unexpected error', error: e, stackTrace: st);
       return Err(NetworkFailure(originalError: e, stackTrace: st));
     }
   }

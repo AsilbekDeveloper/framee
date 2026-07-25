@@ -8,9 +8,17 @@ import '../entities/post.dart';
 abstract interface class PostRepository {
   // ── Feed ───────────────────────────────────────────────────────────────────
 
-  /// Returns feed posts for the current user.
-  /// (Future: only from followed users; currently all public posts.)
+  /// Global feed — every post on the platform, newest first. Used by
+  /// Explore/discovery, not Home.
   Future<Result<List<Post>>> getFeed({
+    required String currentUserId,
+    int limit = 20,
+    int offset = 0,
+  });
+
+  /// Home feed — the current user's own posts plus posts from accounts they
+  /// follow.
+  Future<Result<List<Post>>> getFollowingFeed({
     required String currentUserId,
     int limit = 20,
     int offset = 0,

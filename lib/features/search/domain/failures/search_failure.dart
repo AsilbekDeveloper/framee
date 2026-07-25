@@ -9,19 +9,6 @@ abstract class SearchFailure extends Failure {
   });
 }
 
-final class SearchNetworkFailure extends SearchFailure {
-  const SearchNetworkFailure({super.originalError, super.stackTrace})
-      : super(
-          message: 'Network error. Please check your internet connection.',
-          code: 'search/network',
-        );
-}
-
-final class SearchServerFailure extends SearchFailure {
-  const SearchServerFailure({required super.message, super.originalError})
-      : super(code: 'search/server');
-}
-
 final class EmptyQueryFailure extends SearchFailure {
   const EmptyQueryFailure()
       : super(

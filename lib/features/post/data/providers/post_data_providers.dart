@@ -8,6 +8,7 @@ import '../../domain/usecases/delete_comment_usecase.dart';
 import '../../domain/usecases/delete_post_usecase.dart';
 import '../../domain/usecases/get_comments_usecase.dart';
 import '../../domain/usecases/get_feed_usecase.dart';
+import '../../domain/usecases/get_following_feed_usecase.dart';
 import '../../domain/usecases/get_post_usecase.dart';
 import '../../domain/usecases/get_saved_posts_usecase.dart';
 import '../../domain/usecases/get_user_posts_usecase.dart';
@@ -47,6 +48,10 @@ final postRepositoryProvider = Provider<PostRepository>(
 
 final getFeedUseCaseProvider = Provider<GetFeedUseCase>(
   (ref) => GetFeedUseCase(ref.read(postRepositoryProvider)),
+);
+
+final getFollowingFeedUseCaseProvider = Provider<GetFollowingFeedUseCase>(
+  (ref) => GetFollowingFeedUseCase(ref.read(postRepositoryProvider)),
 );
 
 final createPostUseCaseProvider = Provider<CreatePostUseCase>(

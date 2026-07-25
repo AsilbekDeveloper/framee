@@ -110,6 +110,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       onPostTap: (id) => context.push(AppRoutes.exploreFeedPath(id)),
       onUserTap: (id) => context.push(AppRoutes.userProfilePath(id)),
       onRefresh: () => notifier.refreshExplore(),
+      onLikeTap: (id) => notifier.toggleLike(id),
+      onSaveTap: (id) => notifier.toggleSave(id),
     );
   }
 }

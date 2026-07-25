@@ -80,8 +80,8 @@ class HomeNotifier extends AsyncNotifier<HomeFeedState> {
       return const [];
     }
 
-    AppLogger.d('HomeNotifier: loading feed — offset:$offset');
-    final result = await ref.read(getFeedUseCaseProvider).call(
+    AppLogger.d('HomeNotifier: loading following feed — offset:$offset');
+    final result = await ref.read(getFollowingFeedUseCaseProvider).call(
           currentUserId: userId,
           limit: _pageSize,
           offset: offset,
