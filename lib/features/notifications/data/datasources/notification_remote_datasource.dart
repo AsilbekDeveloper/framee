@@ -50,7 +50,6 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
           .select(_kNotifSelect)
           .eq('user_id', userId)
           .order('created_at', ascending: false)
-          .limit(limit)
           .range(offset, offset + limit - 1);
 
       var dtos = (data as List<dynamic>)

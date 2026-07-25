@@ -28,21 +28,6 @@ class NotificationDto {
   final String? postImageUrl;
   final FollowStatus actorFollowStatus;
 
-  /// RPC flat format (eski — backward compat uchun)
-  factory NotificationDto.fromRpc(Map<String, dynamic> json) =>
-      NotificationDto(
-        id: json['id'] as String,
-        type: json['type'] as String,
-        isRead: json['is_read'] as bool? ?? false,
-        createdAt: DateTime.parse(json['created_at'] as String),
-        actorId: json['actor_id'] as String,
-        actorUsername: json['actor_username'] as String? ?? '',
-        actorDisplayName: json['actor_display_name'] as String? ?? '',
-        actorAvatarUrl: json['actor_avatar_url'] as String?,
-        postId: json['post_id'] as String?,
-        postImageUrl: json['post_image_url'] as String?,
-      );
-
   /// Supabase direct query + embedded relations format:
   /// { ..., actor: { username, display_name, avatar_url }, post: { image_url } }
   factory NotificationDto.fromJson(Map<String, dynamic> json) {
