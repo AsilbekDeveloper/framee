@@ -11,6 +11,10 @@ Future<void> pumpApp(
   WidgetTester tester,
   Widget child, {
   List<Override> overrides = const [],
+  // Set to false when the widget renders a perpetually-animating widget
+  // (e.g. an indeterminate CircularProgressIndicator) on its first frame —
+  // pumpAndSettle() never converges against those and times out.
+  bool settle = true,
 }) async {
   // Match the app's phone-sized design so ScreenUtil-scaled layouts (built
   // for a 393x852 screen) don't overflow the default 800x600 test surface.
@@ -31,5 +35,9 @@ Future<void> pumpApp(
       ),
     ),
   );
-  await tester.pumpAndSettle();
+  if (settle) {
+    await tester.pumpAndSettle();
+  } else {
+    await tester.pump();
+  }
 }
