@@ -24,7 +24,10 @@ Future<void> pumpApp(
       overrides: overrides,
       child: ScreenUtilInit(
         designSize: const Size(393, 852),
-        builder: (context, _) => MaterialApp(home: child),
+        // Material wraps bare (non-Scaffold) widgets under test — e.g. list
+        // tiles — that rely on an InkWell/Ink ancestor providing Material,
+        // the same way their real Scaffold-based parent screen would.
+        builder: (context, _) => MaterialApp(home: Material(child: child)),
       ),
     ),
   );
