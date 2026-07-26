@@ -217,6 +217,9 @@ abstract final class AppStrings {
   static String get savedSub => _t.empty.savedSub;
   static String get noTextPosts => _t.empty.noTextPosts;
   static String get noTextPostsSub => _t.empty.noTextPostsSub;
+  static String get emptyHomeFeed => _t.empty.emptyHomeFeed;
+  static String get emptyHomeFeedSub => _t.empty.emptyHomeFeedSub;
+  static String get findPeopleToFollow => _t.empty.findPeopleToFollow;
 
   // ─── Privacy info ─────────────────────────────────────────
   static String get pvAccountVisibility => _t.privacyInfo.accountVisibility;

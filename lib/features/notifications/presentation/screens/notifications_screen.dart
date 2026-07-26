@@ -135,6 +135,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                         notifier.markRead(unread[i].id);
                         _navigate(context, unread[i]);
                       },
+                      onActorTap: () {
+                        notifier.markRead(unread[i].id);
+                        context.push(
+                            AppRoutes.userProfilePath(unread[i].actor.id));
+                      },
                       onFollowTap: () =>
                           _onFollowTap(notifier, unread[i]),
                     ),
@@ -150,6 +155,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                       key: ValueKey(read[i].id),
                       notif: read[i],
                       onTap: () => _navigate(context, read[i]),
+                      onActorTap: () => context.push(
+                          AppRoutes.userProfilePath(read[i].actor.id)),
                       onFollowTap: () =>
                           _onFollowTap(notifier, read[i]),
                     ),

@@ -181,6 +181,8 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                               _commentController.clear();
                               _commentFocusNode.requestFocus();
                             },
+                            onUserTap: (userId) => context
+                                .push(AppRoutes.userProfilePath(userId)),
                             onDeleteTap: comment.author.id == currentUserId
                                 ? () => _confirmDeleteComment(context, comment.id)
                                 : null,

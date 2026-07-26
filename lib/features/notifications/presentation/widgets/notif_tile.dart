@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:framee/features/follow/domain/entities/follow.dart';
@@ -18,11 +19,17 @@ class NotifTile extends StatelessWidget {
     super.key,
     required this.notif,
     required this.onTap,
+    required this.onActorTap,
     required this.onFollowTap,
   });
 
   final AppNotification notif;
   final VoidCallback onTap;
+
+  /// Called when the actor's avatar or username is tapped — navigates to
+  /// their profile instead of [onTap]'s destination (e.g. the post a
+  /// comment/like notification points to).
+  final VoidCallback onActorTap;
   final VoidCallback onFollowTap;
 
   @override
@@ -49,17 +56,20 @@ class NotifTile extends StatelessWidget {
           children: [
             NotifIcon(type: notif.type),
             Gap(AppDimens.md),
-            AppAvatar(
-              imageUrl: notif.actor.avatarUrl,
-              initials: notif.actor.initials,
-              size: AvatarSize.sm,
+            GestureDetector(
+              onTap: onActorTap,
+              child: AppAvatar(
+                imageUrl: notif.actor.avatarUrl,
+                initials: notif.actor.initials,
+                size: AvatarSize.sm,
+              ),
             ),
             Gap(AppDimens.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  NotifText(notif: notif),
+                  NotifText(notif: notif, onActorTap: onActorTap),
                   Gap(3.h),
                   Text(
                     notif.createdAt.timeAgo,
@@ -129,9 +139,35 @@ class NotifIcon extends StatelessWidget {
   }
 }
 
-class NotifText extends StatelessWidget {
-  const NotifText({super.key, required this.notif});
+class NotifText extends StatefulWidget {
+  const NotifText({super.key, required this.notif, required this.onActorTap});
   final AppNotification notif;
+  final VoidCallback onActorTap;
+
+  @override
+  State<NotifText> createState() => _NotifTextState();
+}
+
+class _NotifTextState extends State<NotifText> {
+  late TapGestureRecognizer _usernameTap;
+
+  @override
+  void initState() {
+    super.initState();
+    _usernameTap = TapGestureRecognizer()..onTap = widget.onActorTap;
+  }
+
+  @override
+  void didUpdateWidget(NotifText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _usernameTap.onTap = widget.onActorTap;
+  }
+
+  @override
+  void dispose() {
+    _usernameTap.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -139,7 +175,7 @@ class NotifText extends StatelessWidget {
     final textColor =
         isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
 
-    final body = switch (notif.type) {
+    final body = switch (widget.notif.type) {
       NotificationType.like => AppStrings.likedYourPost,
       NotificationType.follow => AppStrings.startedFollowingYou,
       NotificationType.followRequest => AppStrings.wantsToFollowYou,
@@ -153,8 +189,9 @@ class NotifText extends StatelessWidget {
       text: TextSpan(
         children: [
           TextSpan(
-            text: '${notif.actor.username} ',
+            text: '${widget.notif.actor.username} ',
             style: AppTextStyles.labelSmall.copyWith(color: textColor),
+            recognizer: _usernameTap,
           ),
           TextSpan(
             text: body,

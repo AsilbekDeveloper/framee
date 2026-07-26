@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:framee/core/components/app_avatar.dart';
 import 'package:framee/core/constants/app_strings.dart';
 import 'package:framee/features/follow/domain/entities/follow.dart';
 import 'package:framee/features/notifications/domain/entities/notification.dart';
@@ -31,7 +32,8 @@ void main() {
   testWidgets('renders the notification text for a like', (tester) async {
     await pumpApp(
       tester,
-      NotifTile(notif: notif(), onTap: () {}, onFollowTap: () {}),
+      NotifTile(
+          notif: notif(), onTap: () {}, onActorTap: () {}, onFollowTap: () {}),
     );
 
     expect(find.textContaining('jane', findRichText: true), findsOneWidget);
@@ -44,11 +46,53 @@ void main() {
     var tapped = false;
     await pumpApp(
       tester,
-      NotifTile(notif: notif(), onTap: () => tapped = true, onFollowTap: () {}),
+      NotifTile(
+        notif: notif(),
+        onTap: () => tapped = true,
+        onActorTap: () {},
+        onFollowTap: () {},
+      ),
     );
 
     await tester.tap(find.byType(InkWell));
     expect(tapped, isTrue);
+  });
+
+  testWidgets('tapping the avatar calls onActorTap, not onTap', (tester) async {
+    var tapped = false;
+    var actorTapped = false;
+    await pumpApp(
+      tester,
+      NotifTile(
+        notif: notif(),
+        onTap: () => tapped = true,
+        onActorTap: () => actorTapped = true,
+        onFollowTap: () {},
+      ),
+    );
+
+    await tester.tap(find.byType(AppAvatar));
+    expect(actorTapped, isTrue);
+    expect(tapped, isFalse);
+  });
+
+  testWidgets('tapping the username calls onActorTap', (tester) async {
+    var actorTapped = false;
+    await pumpApp(
+      tester,
+      NotifTile(
+        notif: notif(),
+        onTap: () {},
+        onActorTap: () => actorTapped = true,
+        onFollowTap: () {},
+      ),
+    );
+
+    await tester.tapAt(
+      tester.getTopLeft(find.textContaining('jane', findRichText: true)) +
+          const Offset(4, 8),
+    );
+    expect(actorTapped, isTrue);
   });
 
   testWidgets('a follow-request notification shows an Accept button',
@@ -59,6 +103,7 @@ void main() {
       NotifTile(
         notif: notif(type: NotificationType.followRequest),
         onTap: () {},
+        onActorTap: () {},
         onFollowTap: () => accepted = true,
       ),
     );
@@ -78,6 +123,7 @@ void main() {
           followStatus: FollowStatus.requested,
         ),
         onTap: () {},
+        onActorTap: () {},
         onFollowTap: () {},
       ),
     );
@@ -92,6 +138,7 @@ void main() {
       NotifTile(
         notif: notif(type: NotificationType.follow),
         onTap: () {},
+        onActorTap: () {},
         onFollowTap: () => followed = true,
       ),
     );
@@ -107,6 +154,7 @@ void main() {
       NotifTile(
         notif: notif(type: NotificationType.comment),
         onTap: () {},
+        onActorTap: () {},
         onFollowTap: () {},
       ),
     );

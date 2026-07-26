@@ -211,7 +211,10 @@
     "noResultsSub": "Boshqa qidiruv so'zini sinab ko'ring.",
     "savedSub": "Saqlagan postlaringiz bu yerda ko'rinadi.",
     "noTextPosts": "Hozircha matnli post yo'q",
-    "noTextPostsSub": "Yozgan matnli postlaringiz bu yerda ko'rinadi."
+    "noTextPostsSub": "Yozgan matnli postlaringiz bu yerda ko'rinadi.",
+    "emptyHomeFeed": "Lentangiz bo'sh",
+    "emptyHomeFeedSub": "Odamlarni kuzatib, ularning postlarini shu yerda ko'ring, yoki Qidiruvdan toping.",
+    "findPeopleToFollow": "Kuzatish uchun odamlarni toping"
   },
   "misc": {
     "more": "ko'proq",

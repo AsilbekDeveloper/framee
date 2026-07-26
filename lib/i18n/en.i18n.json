@@ -211,7 +211,10 @@
     "noResultsSub": "Try a different search term.",
     "savedSub": "Posts you save will appear here.",
     "noTextPosts": "No text posts yet",
-    "noTextPostsSub": "Text posts you write will appear here."
+    "noTextPostsSub": "Text posts you write will appear here.",
+    "emptyHomeFeed": "Your feed is empty",
+    "emptyHomeFeedSub": "Follow people to see their posts here, or find some in Explore.",
+    "findPeopleToFollow": "Find people to follow"
   },
   "misc": {
     "more": "more",

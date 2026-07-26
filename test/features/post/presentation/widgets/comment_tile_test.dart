@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:framee/core/components/app_avatar.dart';
 import 'package:framee/core/constants/app_strings.dart';
 import 'package:framee/features/post/domain/entities/post.dart';
 import 'package:framee/features/post/presentation/widgets/comment_tile.dart';
@@ -35,6 +36,7 @@ void main() {
         comment: comment('c1', username: 'jane', text: 'hello world'),
         onLikeTap: () {},
         onReplyTap: (_) {},
+        onUserTap: (_) {},
       ),
     );
 
@@ -52,6 +54,7 @@ void main() {
         comment: comment('c1', likesCount: 0),
         onLikeTap: () {},
         onReplyTap: (_) {},
+        onUserTap: (_) {},
       ),
     );
     expect(find.textContaining(AppStrings.likes), findsNothing);
@@ -62,6 +65,7 @@ void main() {
         comment: comment('c2', likesCount: 3),
         onLikeTap: () {},
         onReplyTap: (_) {},
+        onUserTap: (_) {},
       ),
     );
     expect(find.textContaining(AppStrings.likes), findsOneWidget);
@@ -75,6 +79,7 @@ void main() {
         comment: comment('c1'),
         onLikeTap: () => tapped = true,
         onReplyTap: (_) {},
+        onUserTap: (_) {},
       ),
     );
 
@@ -89,6 +94,7 @@ void main() {
         comment: comment('c1', isLiked: true),
         onLikeTap: () {},
         onReplyTap: (_) {},
+        onUserTap: (_) {},
       ),
     );
 
@@ -105,6 +111,7 @@ void main() {
         comment: comment('c1', username: 'jane'),
         onLikeTap: () {},
         onReplyTap: (username) => repliedTo = username,
+        onUserTap: (_) {},
       ),
     );
 
@@ -120,6 +127,7 @@ void main() {
         comment: comment('c1'),
         onLikeTap: () {},
         onReplyTap: (_) {},
+        onUserTap: (_) {},
       ),
     );
     expect(find.text(AppStrings.delete), findsNothing);
@@ -131,6 +139,7 @@ void main() {
         comment: comment('c1'),
         onLikeTap: () {},
         onReplyTap: (_) {},
+        onUserTap: (_) {},
         onDeleteTap: () => deleted = true,
       ),
     );
@@ -151,6 +160,7 @@ void main() {
         ]),
         onLikeTap: () {},
         onReplyTap: (_) {},
+        onUserTap: (_) {},
         currentUserId: 'reply-author',
         onReplyLikeTap: (id) => likedReplyId = id,
         onReplyDeleteTap: (id) => deletedReplyId = id,
@@ -166,5 +176,61 @@ void main() {
 
     await tester.tap(find.text(AppStrings.delete));
     expect(deletedReplyId, 'r1');
+  });
+
+  testWidgets('tapping the avatar calls onUserTap with the author id',
+      (tester) async {
+    String? tappedUserId;
+    await pumpApp(
+      tester,
+      CommentTile(
+        comment: comment('c1', authorId: 'author-1'),
+        onLikeTap: () {},
+        onReplyTap: (_) {},
+        onUserTap: (id) => tappedUserId = id,
+      ),
+    );
+
+    await tester.tap(find.byType(AppAvatar));
+    expect(tappedUserId, 'author-1');
+  });
+
+  testWidgets('tapping the username in the bubble calls onUserTap',
+      (tester) async {
+    String? tappedUserId;
+    await pumpApp(
+      tester,
+      CommentTile(
+        comment: comment('c1', authorId: 'author-1', username: 'jane'),
+        onLikeTap: () {},
+        onReplyTap: (_) {},
+        onUserTap: (id) => tappedUserId = id,
+      ),
+    );
+
+    await tester.tapAt(
+      tester.getTopLeft(find.textContaining('jane', findRichText: true)) +
+          const Offset(4, 8),
+    );
+    expect(tappedUserId, 'author-1');
+  });
+
+  testWidgets('tapping a reply\'s avatar calls onUserTap with the reply author id',
+      (tester) async {
+    String? tappedUserId;
+    await pumpApp(
+      tester,
+      CommentTile(
+        comment: comment('c1', replies: [
+          comment('r1', authorId: 'reply-author', username: 'bob'),
+        ]),
+        onLikeTap: () {},
+        onReplyTap: (_) {},
+        onUserTap: (id) => tappedUserId = id,
+      ),
+    );
+
+    await tester.tap(find.byType(AppAvatar).last);
+    expect(tappedUserId, 'reply-author');
   });
 }

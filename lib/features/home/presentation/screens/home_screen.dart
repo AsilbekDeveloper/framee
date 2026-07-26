@@ -75,8 +75,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ? _ScrollableFill(
                   child: EmptyState(
                     icon: Icons.photo_library_outlined,
-                    title: AppStrings.noPostsYet,
-                    subtitle: AppStrings.noPostsYetSub,
+                    title: AppStrings.emptyHomeFeed,
+                    subtitle: AppStrings.emptyHomeFeedSub,
+                    action: () => StatefulNavigationShell.of(context)
+                        .goBranch(1),
+                    actionLabel: AppStrings.findPeopleToFollow,
                   ),
                 )
               : CustomScrollView(

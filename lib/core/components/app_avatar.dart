@@ -39,15 +39,6 @@ class AppAvatar extends StatelessWidget {
         AvatarSize.xxl => AppDimens.avatarXxl,
       };
 
-  double get _fontSize => switch (size) {
-    AvatarSize.xs => 10.sp,
-    AvatarSize.sm => 13.sp,
-    AvatarSize.md => 17.sp,
-    AvatarSize.lg => 24.sp,
-    AvatarSize.xl => 32.sp,
-    AvatarSize.xxl => 36.sp,
-  };
-
   @override
   Widget build(BuildContext context) {
     Widget avatar = _buildAvatar(context);
@@ -101,10 +92,8 @@ class AppAvatar extends StatelessWidget {
                     highlightColor: isDark ? AppColors.darkBorderSubtle : AppColors.lightBorderSubtle,
                     child: Container(color: Colors.white),
                   ),
-                  errorWidget: (context, url, error) => _Initials(
-                    initials: initials,
-                    fontSize: _fontSize,
-                  ),
+                  errorWidget: (context, url, error) =>
+                      _DefaultAvatar(size: _size),
                 )
               : Image.file(
                   File(imageUrl!),
@@ -112,33 +101,32 @@ class AppAvatar extends StatelessWidget {
                   width: double.infinity,
                   height: double.infinity,
                   // The local path can point to a cache file that the OS has
-                  // since evicted — fall back to initials instead of throwing
-                  // a PathNotFoundException / showing a broken image.
-                  errorBuilder: (_, _, _) =>
-                      _Initials(initials: initials, fontSize: _fontSize),
+                  // since evicted — fall back to the default avatar instead
+                  // of throwing a PathNotFoundException / showing a broken
+                  // image.
+                  errorBuilder: (_, _, _) => _DefaultAvatar(size: _size),
                 )
-          : _Initials(initials: initials, fontSize: _fontSize),
+          : _DefaultAvatar(size: _size),
     );
   }
 }
 
-class _Initials extends StatelessWidget {
-  const _Initials({this.initials, required this.fontSize});
+/// Shown whenever a profile has no avatar (or it fails to load) — a generic
+/// silhouette rather than initials, so profiles are visually consistent
+/// before the user picks a real photo.
+class _DefaultAvatar extends StatelessWidget {
+  const _DefaultAvatar({required this.size});
 
-  final String? initials;
-  final double fontSize;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
-      child: Text(
-        initials?.isNotEmpty == true
-            ? initials![0].toUpperCase()
-            : '?',
-        style: AppTextStyles.h4.copyWith(
-          fontSize: fontSize,
-          color: AppColors.primary,
-        ),
+      child: Icon(
+        Icons.person_rounded,
+        size: size * 0.65,
+        color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
       ),
     );
   }
