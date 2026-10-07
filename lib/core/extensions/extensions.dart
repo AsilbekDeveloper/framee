@@ -23,7 +23,7 @@ extension ContextX on BuildContext {
 // ─── String Extensions ────────────────────────────────────────────────────────
 extension StringX on String {
   String get initials {
-    final parts = trim().split(' ');
+    final parts = trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
     if (parts.isEmpty) return '';
     if (parts.length == 1) return parts[0][0].toUpperCase();
     return '${parts[0][0]}${parts[1][0]}'.toUpperCase();

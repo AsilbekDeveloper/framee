@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 
 import '../constants/app_colors.dart';
+import '../constants/app_strings.dart';
 import '../constants/app_text_styles.dart';
 import '../providers/connectivity_provider.dart';
 
@@ -52,7 +53,7 @@ class _OfflineBanner extends StatelessWidget {
               Icon(Icons.wifi_off_rounded, size: 16.w, color: Colors.white),
               Gap(8.w),
               Text(
-                'No internet connection',
+                AppStrings.noInternetConnection,
                 style: AppTextStyles.labelSmall
                     .copyWith(color: Colors.white),
               ),
