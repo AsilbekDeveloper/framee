@@ -202,6 +202,36 @@
     "locationData": "Joylashuv ma'lumotlari",
     "locationDataBody": "Framee joylashuvingizni yig'maydi va saqlamaydi. Postlaringizga joylashuv ma'lumoti biriktirilmaydi."
   },
+  "faq": {
+    "q1": "Parolimni qanday tiklayman?",
+    "a1": "Sozlamalar → Parolni o'zgartirish bo'limiga o'ting. Joriy parolingizni kiriting va yangisini tanlang. Agar parolingizni unutgan bo'lsangiz, kirish ekranidagi \"Parolni unutdingizmi\" havolasidan foydalaning.",
+    "q2": "Hisobimni qanday o'chiraman?",
+    "a2": "Sozlamalarga o'ting va pastda \"Hisobni o'chirish\"ni bosing. Bu amal qaytarib bo'lmaydi va doimiydir.",
+    "q3": "Nega kimdir postlarini ko'ra olmayapman?",
+    "a3": "Hisob yopiq bo'lishi mumkin. Kontentiga kirish uchun unga kuzatuv so'rovi yuboring.",
+    "q4": "Post yoki foydalanuvchini qanday shikoyat qilaman?",
+    "a4": "support@framee.app manziliga post yoki profil havolasi va qisqa tavsif bilan yozing. Biz barcha shikoyatlarni ko'rib chiqamiz va 24 soat ichida tegishli chora ko'ramiz.",
+    "q5": "Qo'llab-quvvatlash xizmati bilan qanday bog'lanaman?",
+    "a5": "support@framee.app manziliga yozing. Barcha murojaatlarga 2 ish kuni ichida javob beramiz."
+  },
+  "terms": {
+    "lastUpdated": "Oxirgi yangilanish: 2025-yil iyun",
+    "section1Title": "1. Shartlarni qabul qilish",
+    "section1Body": "Framee'dan foydalanish orqali siz ushbu Foydalanish shartlariga rozilik bildirasiz. Agar rozi bo'lmasangiz, ilovadan foydalanmang.",
+    "section2Title": "2. Foydalanuvchi kontenti",
+    "section2Body": "Siz joylagan kontent egaligi sizda qoladi. Kontent joylash orqali siz Framee'ga uni ilova ichida ko'rsatish uchun eksklyuziv bo'lmagan litsenziya berasiz. Ulashayotgan kontentingizga huquqingiz borligiga javobgarsiz.",
+    "section3Title": "3. Taqiqlangan xatti-harakatlar",
+    "section3Body": "Framee orqali noqonuniy kontent joylash, boshqalarni ta'qib qilish, noto'g'ri ma'lumot tarqatish yoki amaldagi qonunlarni buzish taqiqlanadi. Biz ushbu shartlarni buzgan kontentni o'chirish va hisoblarni to'xtatib qo'yish huquqini saqlab qolamiz.",
+    "section4Title": "4. Maxfiylik",
+    "section4Body": "Biz xizmatni taqdim etish uchun zarur bo'lgan ma'lumotlarnigina yig'amiz. Shaxsiy ma'lumotlaringizni uchinchi shaxslarga sotmaymiz. To'liq ma'lumot uchun Maxfiylik siyosatimizga qarang.",
+    "section5Title": "5. Bekor qilish",
+    "section5Body": "Biz ushbu shartlarni buzgan taqdirda hisobingizni istalgan vaqtda to'xtatib qo'yishimiz yoki bekor qilishimiz mumkin. Siz hisobingizni istalgan vaqtda Sozlamalar orqali o'chirishingiz mumkin.",
+    "section6Title": "6. Javobgarlikni cheklash",
+    "section6Body": "Framee hech qanday kafolatsiz, \"bor holicha\" taqdim etiladi. Biz xizmatdan foydalanishingiz natijasida yuzaga kelgan har qanday zararlar uchun javobgar emasmiz.",
+    "section7Title": "7. Shartlardagi o'zgarishlar",
+    "section7Body": "Biz ushbu shartlarni vaqti-vaqti bilan yangilashimiz mumkin. Framee'dan o'zgarishlardan keyin foydalanishni davom ettirish yangi shartlarni qabul qilish hisoblanadi.",
+    "contact": "Savollar uchun legal@framee.app manziliga murojaat qiling"
+  },
   "empty": {
     "noPostsYet": "Hali postlar yo'q",
     "noPostsYetSub": "Biror narsa postlaganingizda, bu yerda ko'rinadi.",

@@ -229,6 +229,36 @@ abstract final class AppStrings {
   static String get pvCommentsBody => _t.privacyInfo.commentsBody;
   static String get pvLocationData => _t.privacyInfo.locationData;
   static String get pvLocationDataBody => _t.privacyInfo.locationDataBody;
+
+  // ─── FAQ (Help & Support) ─────────────────────────────────
+  static String get faqResetPasswordQ => _t.faq.q1;
+  static String get faqResetPasswordA => _t.faq.a1;
+  static String get faqDeleteAccountQ => _t.faq.q2;
+  static String get faqDeleteAccountA => _t.faq.a2;
+  static String get faqPrivateAccountQ => _t.faq.q3;
+  static String get faqPrivateAccountA => _t.faq.a3;
+  static String get faqReportQ => _t.faq.q4;
+  static String get faqReportA => _t.faq.a4;
+  static String get faqContactQ => _t.faq.q5;
+  static String get faqContactA => _t.faq.a5;
+
+  // ─── Terms of Service ─────────────────────────────────────
+  static String get termsLastUpdated => _t.terms.lastUpdated;
+  static String get termsSection1Title => _t.terms.section1Title;
+  static String get termsSection1Body => _t.terms.section1Body;
+  static String get termsSection2Title => _t.terms.section2Title;
+  static String get termsSection2Body => _t.terms.section2Body;
+  static String get termsSection3Title => _t.terms.section3Title;
+  static String get termsSection3Body => _t.terms.section3Body;
+  static String get termsSection4Title => _t.terms.section4Title;
+  static String get termsSection4Body => _t.terms.section4Body;
+  static String get termsSection5Title => _t.terms.section5Title;
+  static String get termsSection5Body => _t.terms.section5Body;
+  static String get termsSection6Title => _t.terms.section6Title;
+  static String get termsSection6Body => _t.terms.section6Body;
+  static String get termsSection7Title => _t.terms.section7Title;
+  static String get termsSection7Body => _t.terms.section7Body;
+  static String get termsContact => _t.terms.contact;
   static String get noNotifications => _t.empty.noNotifications;
   static String get noNotificationsSub => _t.empty.noNotificationsSub;
   static String get noResults => _t.empty.noResults;

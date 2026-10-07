@@ -26,40 +26,31 @@ class HelpSupportScreen extends StatelessWidget {
           SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: AppDimens.screenPadding),
-              child: const SettingsCard(
+              child: SettingsCard(
                 children: [
                   _FaqTile(
-                    question: 'How do I reset my password?',
-                    answer:
-                        'Go to Settings → Change Password. Enter your current password and choose a new one. '
-                        'If you have forgotten your password, use the "Forgot Password" link on the login screen.',
+                    question: AppStrings.faqResetPasswordQ,
+                    answer: AppStrings.faqResetPasswordA,
                   ),
-                  AppDivider(),
+                  const AppDivider(),
                   _FaqTile(
-                    question: 'How do I delete my account?',
-                    answer:
-                        'Go to Settings and tap "Delete Account" at the bottom. '
-                        'This action is permanent and cannot be undone.',
+                    question: AppStrings.faqDeleteAccountQ,
+                    answer: AppStrings.faqDeleteAccountA,
                   ),
-                  AppDivider(),
+                  const AppDivider(),
                   _FaqTile(
-                    question: "Why can't I see someone's posts?",
-                    answer:
-                        'The account may be private. Send them a follow request to access their content.',
+                    question: AppStrings.faqPrivateAccountQ,
+                    answer: AppStrings.faqPrivateAccountA,
                   ),
-                  AppDivider(),
+                  const AppDivider(),
                   _FaqTile(
-                    question: 'How do I report a post or user?',
-                    answer:
-                        'Email us at support@framee.app with a link to the post or profile and a brief description. '
-                        'We review all reports and take appropriate action within 24 hours.',
+                    question: AppStrings.faqReportQ,
+                    answer: AppStrings.faqReportA,
                   ),
-                  AppDivider(),
+                  const AppDivider(),
                   _FaqTile(
-                    question: 'How do I contact support?',
-                    answer:
-                        'Email us at support@framee.app. '
-                        'We respond to all inquiries within 2 business days.',
+                    question: AppStrings.faqContactQ,
+                    answer: AppStrings.faqContactA,
                   ),
                 ],
               ),

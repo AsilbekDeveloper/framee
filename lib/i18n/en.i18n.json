@@ -202,6 +202,36 @@
     "locationData": "Location Data",
     "locationDataBody": "Framee does not collect or store your location. No location data is attached to your posts."
   },
+  "faq": {
+    "q1": "How do I reset my password?",
+    "a1": "Go to Settings → Change Password. Enter your current password and choose a new one. If you have forgotten your password, use the \"Forgot Password\" link on the login screen.",
+    "q2": "How do I delete my account?",
+    "a2": "Go to Settings and tap \"Delete Account\" at the bottom. This action is permanent and cannot be undone.",
+    "q3": "Why can't I see someone's posts?",
+    "a3": "The account may be private. Send them a follow request to access their content.",
+    "q4": "How do I report a post or user?",
+    "a4": "Email us at support@framee.app with a link to the post or profile and a brief description. We review all reports and take appropriate action within 24 hours.",
+    "q5": "How do I contact support?",
+    "a5": "Email us at support@framee.app. We respond to all inquiries within 2 business days."
+  },
+  "terms": {
+    "lastUpdated": "Last updated: June 2025",
+    "section1Title": "1. Acceptance of Terms",
+    "section1Body": "By using Framee, you agree to these Terms of Service. If you do not agree, please do not use the app.",
+    "section2Title": "2. User Content",
+    "section2Body": "You retain ownership of content you post. By posting, you grant Framee a non-exclusive license to display your content within the app. You are responsible for ensuring you have the rights to any content you share.",
+    "section3Title": "3. Prohibited Conduct",
+    "section3Body": "You may not use Framee to post illegal content, harass others, spread misinformation, or violate any applicable laws. We reserve the right to remove content and suspend accounts that violate these terms.",
+    "section4Title": "4. Privacy",
+    "section4Body": "We collect only the data necessary to provide the service. We do not sell your personal data to third parties. See our Privacy Policy for full details.",
+    "section5Title": "5. Termination",
+    "section5Body": "We may suspend or terminate your account at any time for violations of these terms. You may delete your account at any time from Settings.",
+    "section6Title": "6. Limitation of Liability",
+    "section6Body": "Framee is provided \"as is\" without warranty of any kind. We are not liable for any damages arising from your use of the service.",
+    "section7Title": "7. Changes to Terms",
+    "section7Body": "We may update these terms periodically. Continued use of Framee after changes constitutes acceptance of the new terms.",
+    "contact": "For questions, contact us at legal@framee.app"
+  },
   "empty": {
     "noPostsYet": "No posts yet",
     "noPostsYetSub": "When you post something, it will appear here.",

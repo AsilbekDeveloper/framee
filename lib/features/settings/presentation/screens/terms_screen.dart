@@ -33,65 +33,48 @@ class TermsScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Last updated: June 2025',
+              AppStrings.termsLastUpdated,
               style: AppTextStyles.caption.copyWith(color: mutedColor),
             ),
             SizedBox(height: AppDimens.vxl),
             _Section(
-              title: '1. Acceptance of Terms',
-              body:
-                  'By using Framee, you agree to these Terms of Service. '
-                  'If you do not agree, please do not use the app.',
+              title: AppStrings.termsSection1Title,
+              body: AppStrings.termsSection1Body,
               bodyColor: bodyColor,
             ),
             _Section(
-              title: '2. User Content',
-              body:
-                  'You retain ownership of content you post. By posting, you grant Framee '
-                  'a non-exclusive license to display your content within the app. '
-                  'You are responsible for ensuring you have the rights to any content you share.',
+              title: AppStrings.termsSection2Title,
+              body: AppStrings.termsSection2Body,
               bodyColor: bodyColor,
             ),
             _Section(
-              title: '3. Prohibited Conduct',
-              body:
-                  'You may not use Framee to post illegal content, harass others, '
-                  'spread misinformation, or violate any applicable laws. '
-                  'We reserve the right to remove content and suspend accounts that violate these terms.',
+              title: AppStrings.termsSection3Title,
+              body: AppStrings.termsSection3Body,
               bodyColor: bodyColor,
             ),
             _Section(
-              title: '4. Privacy',
-              body:
-                  'We collect only the data necessary to provide the service. '
-                  'We do not sell your personal data to third parties. '
-                  'See our Privacy Policy for full details.',
+              title: AppStrings.termsSection4Title,
+              body: AppStrings.termsSection4Body,
               bodyColor: bodyColor,
             ),
             _Section(
-              title: '5. Termination',
-              body:
-                  'We may suspend or terminate your account at any time for violations of these terms. '
-                  'You may delete your account at any time from Settings.',
+              title: AppStrings.termsSection5Title,
+              body: AppStrings.termsSection5Body,
               bodyColor: bodyColor,
             ),
             _Section(
-              title: '6. Limitation of Liability',
-              body:
-                  'Framee is provided "as is" without warranty of any kind. '
-                  'We are not liable for any damages arising from your use of the service.',
+              title: AppStrings.termsSection6Title,
+              body: AppStrings.termsSection6Body,
               bodyColor: bodyColor,
             ),
             _Section(
-              title: '7. Changes to Terms',
-              body:
-                  'We may update these terms periodically. '
-                  'Continued use of Framee after changes constitutes acceptance of the new terms.',
+              title: AppStrings.termsSection7Title,
+              body: AppStrings.termsSection7Body,
               bodyColor: bodyColor,
             ),
             SizedBox(height: AppDimens.vmd),
             Text(
-              'For questions, contact us at legal@framee.app',
+              AppStrings.termsContact,
               style: AppTextStyles.caption.copyWith(color: mutedColor),
             ),
             SizedBox(height: AppDimens.vmassive),
