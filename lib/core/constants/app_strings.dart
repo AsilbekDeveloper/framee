@@ -247,8 +247,10 @@ abstract final class AppStrings {
   static String get postNotFound => _t.misc.postNotFound;
   static String get galleryOpened => _t.misc.galleryOpened;
   static const String charCountFormat = '{count} / {max}';
+  static String get justNow => _t.misc.justNow;
   static String get minutesAgo => _t.misc.minutesAgo;
   static String get hourAgo => _t.misc.hourAgo;
+  static String get daysAgo => _t.misc.daysAgo;
   static String get yesterday => _t.misc.yesterday;
   static String get of => _t.misc.of;
 }

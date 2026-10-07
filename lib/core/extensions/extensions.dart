@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../constants/app_strings.dart';
+
 // ─── BuildContext Extensions ───────────────────────────────────────────────────
 extension ContextX on BuildContext {
   ThemeData get theme => Theme.of(this);
@@ -41,10 +43,10 @@ extension DateTimeX on DateTime {
     final now = DateTime.now();
     final diff = now.difference(this);
 
-    if (diff.inSeconds < 60) return 'just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    if (diff.inSeconds < 60) return AppStrings.justNow;
+    if (diff.inMinutes < 60) return '${diff.inMinutes} ${AppStrings.minutesAgo}';
+    if (diff.inHours < 24) return '${diff.inHours} ${AppStrings.hourAgo}';
+    if (diff.inDays < 7) return '${diff.inDays} ${AppStrings.daysAgo}';
     return DateFormat('MMM d').format(this);
   }
 }
