@@ -134,6 +134,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<Result<void>> signOut() async {
     try {
       await _client.auth.signOut();
+      // Also clear the native Google session — otherwise a user who signed
+      // in with Google gets silently re-authenticated with the same account
+      // next time, with no way to pick a different one. Best-effort: a
+      // failure here (e.g. they never signed in with Google) must not stop
+      // the app's own sign-out from completing.
+      try {
+        await GoogleSignIn.instance.signOut();
+      } catch (e) {
+        AppLogger.w('AuthDS: GoogleSignIn.signOut failed — $e');
+      }
       return const Ok(null);
     } catch (e, st) {
       AppLogger.e('AuthDS: signOut error', error: e, stackTrace: st);
@@ -180,19 +190,17 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       // Account deletion must remove the auth.users entry, not just the profile
       // row — a client cannot do that itself, so it runs in the service-role
       // `delete-account` Edge Function (also clears storage + cascades content).
-      final res = await _client.functions.invoke('delete-account');
-
-      if (res.status != 200) {
-        final message =
-            (res.data is Map && res.data['error'] != null)
-                ? res.data['error'].toString()
-                : 'Account deletion failed (status ${res.status}).';
-        AppLogger.e('AuthDS: deleteAccount failed — $message');
-        return Err(UnknownAuthFailure(message: message));
-      }
+      // invoke() throws FunctionException for any non-2xx response (see the
+      // catch clause below), so success here always means status 2xx.
+      await _client.functions.invoke('delete-account');
 
       // The account is gone server-side; drop the now-invalid local session.
       await _client.auth.signOut();
+      try {
+        await GoogleSignIn.instance.signOut();
+      } catch (e) {
+        AppLogger.w('AuthDS: GoogleSignIn.signOut failed — $e');
+      }
       AppLogger.i('AuthDS: account deleted');
       return const Ok(null);
     } on FunctionException catch (e, st) {

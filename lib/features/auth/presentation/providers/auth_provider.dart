@@ -86,7 +86,11 @@ class AuthNotifier extends Notifier<AuthState> {
     // and sign-outs triggered from other tabs/devices.
     ref.listen<AsyncValue<AuthUser?>>(authUserStreamProvider, (_, next) {
       final incoming = next.valueOrNull;
-      if (incoming?.id != state.user?.id) {
+      // Compares every field, not just id — a metadata-only update (e.g.
+      // username written to auth metadata right after profile setup) must
+      // still refresh state, or this notifier's user silently goes stale
+      // for the rest of the session even though the id never changed.
+      if (incoming != state.user) {
         AppLogger.i(
           incoming == null
               ? 'Auth: user signed out'
