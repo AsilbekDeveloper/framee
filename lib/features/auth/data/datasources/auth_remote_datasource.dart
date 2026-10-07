@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' hide AuthUser;
 import '../../../../core/config/app_logger.dart';
 import '../../../../core/errors/failure.dart';
 import '../../../../core/errors/result.dart';
+import '../../../../core/services/google_sign_in_init.dart';
 import '../../domain/entities/auth_user.dart';
 import '../../domain/failures/auth_failure.dart';
 
@@ -102,6 +103,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<Result<void>> signInWithGoogle() async {
     try {
+      // No-op if startup init already succeeded; otherwise retries it (the
+      // user may have a connection now even if the app didn't at cold
+      // start). A renewed failure falls through to the catch blocks below.
+      await GoogleSignInInit.ensureInitialized();
       final account = await GoogleSignIn.instance.authenticate();
       final idToken = account.authentication.idToken;
       if (idToken == null) {

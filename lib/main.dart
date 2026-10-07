@@ -7,11 +7,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/config/supabase_config.dart';
 import 'core/services/fcm_service.dart';
+import 'core/services/google_sign_in_init.dart';
 import 'core/l10n/app_localizations.dart';
 import 'features/profile/data/providers/profile_data_providers.dart';
 import 'core/providers/locale_provider.dart';
@@ -50,9 +50,9 @@ void main() async {
     anonKey: SupabaseConfig.anonKey,
   );
 
-  await GoogleSignIn.instance.initialize(
-    serverClientId: '410555718765-uuvj8u3hl1m7qf67ofjv8h8ittrt4tn1.apps.googleusercontent.com',
-  );
+  // Never throws — a failure here (e.g. no network on cold start) must not
+  // block the rest of the app, which doesn't depend on Google sign-in.
+  await GoogleSignInInit.initAtStartup();
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
