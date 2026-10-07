@@ -186,7 +186,33 @@ class NotificationRemoteDataSourceImpl implements NotificationRemoteDataSource {
                   .select(_kNotifSelect)
                   .eq('id', id)
                   .single();
-              controller.add(NotificationDto.fromJson(row));
+              var dto = NotificationDto.fromJson(row);
+
+              // Mirror getNotifications' enrichment — a follow/follow_request
+              // notification must reflect the real follow status, otherwise
+              // it renders a "Follow" button for an already-pending request.
+              if (dto.type == 'follow' || dto.type == 'follow_request') {
+                final statuses = await getFollowStatuses(
+                  currentUserId: userId,
+                  actorIds: [dto.actorId],
+                );
+                final status = _parseFollowStatus(statuses[dto.actorId]);
+                dto = NotificationDto(
+                  id: dto.id,
+                  type: dto.type,
+                  isRead: dto.isRead,
+                  createdAt: dto.createdAt,
+                  actorId: dto.actorId,
+                  actorUsername: dto.actorUsername,
+                  actorDisplayName: dto.actorDisplayName,
+                  actorAvatarUrl: dto.actorAvatarUrl,
+                  postId: dto.postId,
+                  postImageUrl: dto.postImageUrl,
+                  actorFollowStatus: status,
+                );
+              }
+
+              controller.add(dto);
             } catch (e) {
               AppLogger.w('NotificationDS: could not load realtime notification — $e');
             }
