@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../core/config/app_logger.dart';
 import '../../../../core/providers/current_user_provider.dart';
 import '../../../../core/services/fcm_service.dart';
 import '../../../profile/data/providers/profile_data_providers.dart';
@@ -42,13 +43,21 @@ class NotificationSettingsNotifier
 
     final repo = ref.read(profileRepositoryProvider);
 
-    if (value) {
-      // Re-enable: save the current FCM token back to DB
-      final token = await FcmService.instance.getToken();
-      if (token != null) await repo.saveFcmToken(userId, token);
-    } else {
-      // Disable: remove token from DB so no pushes are sent
-      await repo.clearFcmToken(userId);
+    try {
+      if (value) {
+        // Re-enable: save the current FCM token back to DB
+        final token = await FcmService.instance.getToken();
+        if (token != null) await repo.saveFcmToken(userId, token);
+      } else {
+        // Disable: remove token from DB so no pushes are sent
+        await repo.clearFcmToken(userId);
+      }
+    } catch (e) {
+      // The toggle itself already flipped (state above) — a token error
+      // (e.g. no APNs token yet on iOS) must not surface as an uncaught
+      // Future rejection. Push stays visually "on" but won't actually
+      // deliver until the token becomes available on a future call.
+      AppLogger.w('NotificationSettings: FCM token sync failed — $e');
     }
   }
 

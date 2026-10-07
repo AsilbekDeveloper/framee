@@ -13,6 +13,8 @@ import '../../../../core/providers/current_user_provider.dart';
 import '../../../home/presentation/providers/home_provider.dart';
 import '../../../post/data/providers/post_data_providers.dart';
 import '../../../post/domain/entities/post.dart';
+import '../../../profile/presentation/providers/profile_provider.dart';
+import '../../../profile/presentation/providers/user_posts_provider.dart';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -185,8 +187,13 @@ class CreatePostNotifier extends AutoDisposeNotifier<CreatePostState> {
     switch (result) {
       case Ok(:final value):
         AppLogger.i('CreatePost: post created — ${value.id}');
-        // Invalidate the feed so the new post appears immediately
+        // Invalidate the feed and the author's own profile so the new post
+        // (and its updated postsCount) appears immediately everywhere,
+        // instead of only after a manual pull-to-refresh.
         ref.invalidate(homeProvider);
+        ref.invalidate(userPostsProvider(userId));
+        ref.invalidate(profileProvider(userId));
+        ref.invalidate(profileProvider(null));
         state = state.copyWith(isLoading: false, publishedPost: value);
 
       case Err(:final failure):

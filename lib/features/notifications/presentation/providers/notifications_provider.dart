@@ -4,7 +4,6 @@ import '../../../../core/config/app_logger.dart';
 import '../../../../core/constants/app_config.dart';
 import '../../../../core/errors/result.dart';
 import '../../../../core/providers/current_user_provider.dart';
-import '../../../auth/data/providers/auth_data_providers.dart';
 import '../../../follow/data/providers/follow_data_providers.dart';
 import '../../../follow/domain/entities/follow.dart';
 import '../../data/providers/notification_data_providers.dart';
@@ -72,7 +71,14 @@ class NotificationsNotifier extends AsyncNotifier<NotifFeedState> {
   }
 
   void _watchRealtime(String userId) {
-    var subscription = ref
+    // No need to recreate this subscription on token refresh — the
+    // supabase_flutter client already listens for tokenRefreshed/signedIn
+    // internally and calls realtime.setAuth() to keep the existing
+    // websocket connection authenticated. Recreating the whole channel on
+    // every same-user auth event (which fires on ANY metadata change, not
+    // just token refresh) only adds reconnect churn and a window where
+    // incoming notifications can be missed.
+    final subscription = ref
         .read(notificationRepositoryProvider)
         .watchNewNotifications(userId)
         .listen(
@@ -90,35 +96,6 @@ class NotificationsNotifier extends AsyncNotifier<NotifFeedState> {
       },
     );
 
-    ref.listen(authUserStreamProvider, (prev, next) {
-      final prevUser = prev?.valueOrNull;
-      final nextUser = next.valueOrNull;
-      if (nextUser != null && prevUser?.id == nextUser.id) {
-        AppLogger.d(
-            'NotificationsNotifier: token refreshed — reconnecting realtime');
-        subscription.cancel();
-        subscription = ref
-            .read(notificationRepositoryProvider)
-            .watchNewNotifications(userId)
-            .listen(
-          (newNotif) {
-            state.whenData((feed) {
-              if (feed.notifications.any((n) => n.id == newNotif.id)) return;
-              state = AsyncData(feed.copyWith(
-                  notifications: [newNotif, ...feed.notifications]));
-            });
-          },
-          onError: (Object e) {
-            AppLogger.w(
-                'NotificationsNotifier: realtime error (retry) — $e');
-          },
-        );
-      }
-    });
-
-    // Wrap in a closure so dispose cancels whatever `subscription` currently
-    // points to — after a token-refresh reconnect it is reassigned, and a bare
-    // `subscription.cancel` tear-off would leak the reconnected subscription.
     ref.onDispose(() => subscription.cancel());
   }
 

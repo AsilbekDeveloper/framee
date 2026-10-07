@@ -42,7 +42,7 @@ class _ExplorePostFeedScreenState
   }
 
   void _onScroll() {
-    if (_loadMorePending) return;
+    if (_loadMorePending || !_scrollController.hasClients) return;
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 400) {
       _loadMorePending = true;

@@ -415,12 +415,18 @@ class PostRemoteDataSourceImpl implements PostRemoteDataSource {
           .toList();
       final likedIds = await _getLikedPostIds(userId, postIds);
 
-      final dtos = rows.map((row) {
-        final postMap = Map<String, dynamic>.from(row['posts'] as Map);
-        postMap['is_liked'] = likedIds.contains(postMap['id']);
-        postMap['is_saved'] = true;
-        return PostDto.fromJoin(postMap);
-      }).toList();
+      // row['posts'] is null when the saved post no longer exists (deleted)
+      // or is no longer visible to this viewer (e.g. the author went
+      // private) — skip it instead of crashing on a null join.
+      final dtos = rows
+          .where((row) => row['posts'] is Map)
+          .map((row) {
+            final postMap = Map<String, dynamic>.from(row['posts'] as Map);
+            postMap['is_liked'] = likedIds.contains(postMap['id']);
+            postMap['is_saved'] = true;
+            return PostDto.fromJoin(postMap);
+          })
+          .toList();
 
       return Ok(dtos);
     } on PostgrestException catch (e) {

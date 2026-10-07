@@ -205,17 +205,20 @@ class FollowRemoteDataSourceImpl implements FollowRemoteDataSource {
           .eq('status', 'accepted')
           .range(offset, offset + limit - 1);
 
+      // row['profiles'] can be null if the follower's profile is no longer
+      // visible to the viewer — skip those rows instead of crashing.
+      final rows = (data as List).where((e) => e['profiles'] is Map).toList();
+
       // Resolve the current user's follow status for each fetched user
-      final followerIds = (data as List)
-          .map((e) => (e['profiles'] as Map)['id'] as String)
-          .toList();
+      final followerIds =
+          rows.map((e) => (e['profiles'] as Map)['id'] as String).toList();
 
       final myFollowStatuses = await _getFollowStatusBatch(
         currentUserId: currentUserId,
         targetIds: followerIds,
       );
 
-      final dtos = data.map((row) {
+      final dtos = rows.map((row) {
         final profile = row['profiles'] as Map<String, dynamic>;
         final uid = profile['id'] as String;
         return FollowUserDto.fromJson(
@@ -248,16 +251,19 @@ class FollowRemoteDataSourceImpl implements FollowRemoteDataSource {
           .eq('status', 'accepted')
           .range(offset, offset + limit - 1);
 
-      final followingIds = (data as List)
-          .map((e) => (e['profiles'] as Map)['id'] as String)
-          .toList();
+      // row['profiles'] can be null if the followed user's profile is no
+      // longer visible to the viewer — skip those rows instead of crashing.
+      final rows = (data as List).where((e) => e['profiles'] is Map).toList();
+
+      final followingIds =
+          rows.map((e) => (e['profiles'] as Map)['id'] as String).toList();
 
       final myFollowStatuses = await _getFollowStatusBatch(
         currentUserId: currentUserId,
         targetIds: followingIds,
       );
 
-      final dtos = data.map((row) {
+      final dtos = rows.map((row) {
         final profile = row['profiles'] as Map<String, dynamic>;
         final uid = profile['id'] as String;
         return FollowUserDto.fromJson(

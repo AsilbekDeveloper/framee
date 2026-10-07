@@ -47,6 +47,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
 
     ref.listen<ProfileSetupState>(profileSetupProvider, (prev, next) {
       if (next.isSaved) {
+        if (!context.mounted) return;
         context.go(AppRoutes.home);
       } else if (next.errorMessage != null &&
           next.errorMessage != prev?.errorMessage) {

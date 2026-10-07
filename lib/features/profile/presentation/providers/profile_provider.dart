@@ -112,6 +112,8 @@ class ProfileNotifier extends FamilyAsyncNotifier<Profile, String?> {
           // Rollback
           state = AsyncData(profile);
           AppLogger.w('ProfileNotifier: unfollow error — rolling back');
+        } else {
+          _invalidateOwnProfile(currentUserId);
         }
       } else {
         final result = await ref.read(followUserUseCaseProvider).call(
@@ -126,6 +128,7 @@ class ProfileNotifier extends FamilyAsyncNotifier<Profile, String?> {
                 profile.copyWith(isFollowing: false, isRequested: true),
               );
             }
+            _invalidateOwnProfile(currentUserId);
           case Err(:final failure):
             state = AsyncData(profile);
             AppLogger.w(
@@ -136,6 +139,14 @@ class ProfileNotifier extends FamilyAsyncNotifier<Profile, String?> {
     } finally {
       _isTogglingFollow = false;
     }
+  }
+
+  /// A follow/unfollow started from someone else's profile changes the
+  /// viewer's own followingCount — refresh their own profile instance(s) so
+  /// that number isn't stuck stale until a manual pull-to-refresh.
+  void _invalidateOwnProfile(String currentUserId) {
+    ref.invalidate(profileProvider(null));
+    ref.invalidate(profileProvider(currentUserId));
   }
 
   void updateProfile(Profile updated) {
