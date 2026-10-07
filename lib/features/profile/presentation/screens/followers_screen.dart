@@ -42,7 +42,9 @@ class _FollowersScreenState extends ConsumerState<FollowersScreen>
       vsync: this,
       initialIndex: widget.initialTab == 'following' ? 1 : 0,
     );
-    _tabController.addListener(() => setState(() {}));
+    _tabController.addListener(() {
+      if (mounted) setState(() {});
+    });
   }
 
   @override

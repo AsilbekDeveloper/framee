@@ -109,7 +109,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (!isAuthenticated && !isUnauthRoute) return AppRoutes.onboarding;
 
       if (isAuthenticated) {
-        final needsProfileSetup = user.username == null;
+        final needsProfileSetup =
+            user.username == null || user.username!.trim().isEmpty;
 
         // New user (no username yet) must complete profile setup first.
         if (needsProfileSetup && !_profileSetupRoutes.contains(location)) {

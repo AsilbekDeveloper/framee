@@ -64,7 +64,7 @@ class ProfileAppBar extends StatelessWidget implements PreferredSizeWidget {
           if (isOwnProfile)
             AppIconButton(
               icon: Icons.settings_outlined,
-              onTap: onSettingsTap!,
+              onTap: onSettingsTap ?? () {},
             )
           else
             // Matches AppIconButton's rendered width exactly (icon + its 8.w

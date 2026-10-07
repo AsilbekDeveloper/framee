@@ -10,8 +10,10 @@ import '../../../../core/providers/current_user_provider.dart';
 import '../../../../core/services/post_cache_service.dart';
 import '../../../follow/data/providers/follow_data_providers.dart';
 import '../../../follow/domain/entities/follow.dart';
+import '../../../home/presentation/providers/home_provider.dart';
 import '../../../post/domain/entities/post.dart';
 import '../../../post/presentation/utils/post_interaction.dart';
+import '../../../profile/presentation/providers/profile_provider.dart';
 import '../../data/providers/search_data_providers.dart';
 import '../../domain/entities/search_result.dart';
 
@@ -217,7 +219,14 @@ class SearchNotifier extends Notifier<SearchState> {
             currentUserId: userId,
             targetUserId: targetUserId,
           );
-      if (result.isErr) _updateUserStatus(targetUserId, target.followStatus);
+      if (result.isErr) {
+        _updateUserStatus(targetUserId, target.followStatus);
+      } else {
+        ref.invalidate(homeProvider);
+        ref.invalidate(profileProvider(targetUserId));
+        ref.invalidate(profileProvider(userId));
+        ref.invalidate(profileProvider(null));
+      }
     } else {
       final result = await ref.read(followUserUseCaseProvider).call(
             currentUserId: userId,
@@ -226,6 +235,10 @@ class SearchNotifier extends Notifier<SearchState> {
       switch (result) {
         case Ok(:final value):
           _updateUserStatus(targetUserId, value);
+          ref.invalidate(homeProvider);
+          ref.invalidate(profileProvider(targetUserId));
+          ref.invalidate(profileProvider(userId));
+          ref.invalidate(profileProvider(null));
         case Err():
           _updateUserStatus(targetUserId, target.followStatus);
       }

@@ -5,6 +5,8 @@ import '../../../../core/errors/result.dart';
 import '../../../../core/providers/current_user_provider.dart';
 import '../../../follow/data/providers/follow_data_providers.dart';
 import '../../../follow/domain/entities/follow.dart';
+import '../../../home/presentation/providers/home_provider.dart';
+import 'profile_provider.dart';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -103,6 +105,11 @@ class FollowersNotifier extends FamilyAsyncNotifier<FollowersState, String> {
           );
       if (result.isErr) {
         _updateStatus(targetUserId, user.followStatus, isFollowers: isFollowers);
+      } else {
+        ref.invalidate(homeProvider);
+        ref.invalidate(profileProvider(targetUserId));
+        ref.invalidate(profileProvider(currentUserId));
+        ref.invalidate(profileProvider(null));
       }
     } else {
       final result = await ref.read(followUserUseCaseProvider).call(
@@ -112,6 +119,10 @@ class FollowersNotifier extends FamilyAsyncNotifier<FollowersState, String> {
       switch (result) {
         case Ok(:final value):
           _updateStatus(targetUserId, value, isFollowers: isFollowers);
+          ref.invalidate(homeProvider);
+          ref.invalidate(profileProvider(targetUserId));
+          ref.invalidate(profileProvider(currentUserId));
+          ref.invalidate(profileProvider(null));
         case Err():
           _updateStatus(targetUserId, user.followStatus, isFollowers: isFollowers);
       }
