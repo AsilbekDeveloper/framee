@@ -34,6 +34,18 @@ void main() {
         ],
       );
 
+  // ForgotPasswordDialog's own Cancel/Send buttons call context.pop() via
+  // go_router, which needs a real GoRouter — a plain MaterialApp throws
+  // "No GoRouter found in context".
+  Future<void> pumpLoginWithRouter(WidgetTester tester) => pumpAppWithRouter(
+        tester,
+        const LoginScreen(),
+        overrides: [
+          authRepositoryProvider.overrideWithValue(authRepository),
+          profileRepositoryProvider.overrideWithValue(profileRepository),
+        ],
+      );
+
   testWidgets('renders the sign-in form', (tester) async {
     await pumpLogin(tester);
 
@@ -107,6 +119,51 @@ void main() {
 
     await tester.pumpAndSettle();
     expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
+
+  group('forgot password', () {
+    testWidgets('shows the success snackbar when the reset email sends',
+        (tester) async {
+      when(() => authRepository.sendPasswordResetEmail(any()))
+          .thenAnswer((_) async => const Ok(null));
+
+      await pumpLoginWithRouter(tester);
+      await tester.tap(find.text(AppStrings.forgotPassword));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+          find.descendant(
+            of: find.byType(AlertDialog),
+            matching: find.byType(TextField),
+          ),
+          'jane@example.com',
+        );
+      await tester.tap(find.text(AppStrings.send));
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.passwordResetSent), findsOneWidget);
+    });
+
+    testWidgets(
+        'does not show the success snackbar when the reset email fails',
+        (tester) async {
+      when(() => authRepository.sendPasswordResetEmail(any())).thenAnswer(
+          (_) async => const Err(UnknownAuthFailure(message: 'boom')));
+
+      await pumpLoginWithRouter(tester);
+      await tester.tap(find.text(AppStrings.forgotPassword));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+          find.descendant(
+            of: find.byType(AlertDialog),
+            matching: find.byType(TextField),
+          ),
+          'jane@example.com',
+        );
+      await tester.tap(find.text(AppStrings.send));
+      await tester.pumpAndSettle();
+
+      expect(find.text(AppStrings.passwordResetSent), findsNothing);
+    });
   });
 
   testWidgets('tapping the Google button triggers Google sign-in',

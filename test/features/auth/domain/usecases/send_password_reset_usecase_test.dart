@@ -23,6 +23,13 @@ void main() {
       verifyNever(() => repository.sendPasswordResetEmail(any()));
     });
 
+    test('returns InvalidEmailFailure for a malformed address', () async {
+      final result = await useCase.call('not-an-email');
+
+      expect((result as Err).failure, isA<InvalidEmailFailure>());
+      verifyNever(() => repository.sendPasswordResetEmail(any()));
+    });
+
     test('trims the email before delegating', () async {
       when(() => repository.sendPasswordResetEmail('test@example.com'))
           .thenAnswer((_) async => const Ok(null));

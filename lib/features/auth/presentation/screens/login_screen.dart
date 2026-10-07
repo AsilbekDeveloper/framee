@@ -39,16 +39,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       context: ctx,
       builder: (_) => ForgotPasswordDialog(
         initialEmail: _emailController.text,
-        onSend: (email) {
+        onSend: (email) async {
           if (email.isEmpty) return;
           // Actually trigger the reset email — previously this only showed a
           // success snackbar without sending anything.
-          ref.read(authProvider.notifier).sendPasswordReset(email);
-          ScaffoldMessenger.of(ctx).showSnackBar(
-            SnackBar(
-              content: Text(AppStrings.passwordResetSent),
-            ),
-          );
+          await ref.read(authProvider.notifier).sendPasswordReset(email);
+          if (!ctx.mounted) return;
+          // Only celebrate a real success — sendPasswordReset() clears any
+          // stale error before running, so a non-null errorMessage here is
+          // this call's own failure (invalid email, network, rate limit).
+          // The screen already renders that error inline; showing "sent!" on
+          // top of it would tell the user two contradictory things at once.
+          if (ref.read(authProvider).errorMessage == null) {
+            ScaffoldMessenger.of(ctx).showSnackBar(
+              SnackBar(
+                content: Text(AppStrings.passwordResetSent),
+              ),
+            );
+          }
         },
       ),
     );

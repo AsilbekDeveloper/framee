@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 
 /// Wraps [child] with the same [ScreenUtilInit]/[MaterialApp] shell the real
 /// app builds, plus a [ProviderScope] carrying [overrides], so widgets that
@@ -32,6 +33,45 @@ Future<void> pumpApp(
         // tiles — that rely on an InkWell/Ink ancestor providing Material,
         // the same way their real Scaffold-based parent screen would.
         builder: (context, _) => MaterialApp(home: Material(child: child)),
+      ),
+    ),
+  );
+  if (settle) {
+    await tester.pumpAndSettle();
+  } else {
+    await tester.pump();
+  }
+}
+
+/// Like [pumpApp], but wraps [child] in a real single-route [GoRouter]
+/// instead of a plain [MaterialApp] — needed for widgets that call
+/// `context.pop()`/`context.push()` via go_router's extensions (e.g. a
+/// dialog's own Cancel/Send buttons), which throw "No GoRouter found in
+/// context" under a plain [Navigator].
+Future<void> pumpAppWithRouter(
+  WidgetTester tester,
+  Widget child, {
+  List<Override> overrides = const [],
+  bool settle = true,
+}) async {
+  tester.view.physicalSize = const Size(393, 852);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+
+  final router = GoRouter(
+    initialLocation: '/',
+    routes: [
+      GoRoute(path: '/', builder: (_, _) => Material(child: child)),
+    ],
+  );
+
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: overrides,
+      child: ScreenUtilInit(
+        designSize: const Size(393, 852),
+        builder: (context, _) => MaterialApp.router(routerConfig: router),
       ),
     ),
   );
