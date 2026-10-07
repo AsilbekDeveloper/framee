@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../config/app_logger.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_dimens.dart';
 import '../constants/app_strings.dart';
@@ -35,7 +36,7 @@ class _ScaffoldWithNavBarState extends ConsumerState<ScaffoldWithNavBar> {
   void initState() {
     super.initState();
     _fcmSub = FcmService.instance.navigationStream.listen((route) {
-      if (mounted) context.push(route);
+      if (mounted) _safePush(route);
     });
   }
 
@@ -46,7 +47,7 @@ class _ScaffoldWithNavBarState extends ConsumerState<ScaffoldWithNavBar> {
     final pending = FcmService.instance.consumePendingRoute();
     if (pending != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) context.push(pending);
+        if (mounted) _safePush(pending);
       });
     }
   }
@@ -55,6 +56,17 @@ class _ScaffoldWithNavBarState extends ConsumerState<ScaffoldWithNavBar> {
   void dispose() {
     _fcmSub.cancel();
     super.dispose();
+  }
+
+  /// Pushes a route coming from an FCM payload, which is server-controlled
+  /// but not guaranteed to match a route this build of the app knows about
+  /// (e.g. an older client receiving a route added in a newer release).
+  void _safePush(String route) {
+    try {
+      context.push(route);
+    } catch (e) {
+      AppLogger.w('FCM: failed to push notification route "$route" — $e');
+    }
   }
 
   @override
